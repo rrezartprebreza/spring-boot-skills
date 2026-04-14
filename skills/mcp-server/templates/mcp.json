@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "order-service": {
+      "command": "java",
+      "args": [
+        "-jar",
+        "/path/to/your/order-service.jar",
+        "--spring.profiles.active=mcp",
+        "--spring.ai.mcp.server.transport=stdio"
+      ],
+      "env": {
+        "SPRING_DATASOURCE_URL": "jdbc:postgresql://localhost:5432/orders",
+        "SPRING_DATASOURCE_USERNAME": "postgres",
+        "SPRING_DATASOURCE_PASSWORD": "your-password",
+        "ANTHROPIC_API_KEY": "sk-ant-..."
+      }
+    }
+  }
+}
