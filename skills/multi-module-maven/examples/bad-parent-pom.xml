@@ -1,0 +1,58 @@
+<!-- ❌ BAD — every common multi-module Maven mistake -->
+
+<project>
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.3.5</version>
+    </parent>
+
+    <groupId>com.example</groupId>
+    <artifactId>order-system</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <packaging>pom</packaging>
+
+    <modules>
+        <module>domain</module>
+        <module>application</module>
+        <module>infrastructure</module>
+        <module>web</module>
+    </modules>
+
+    <!-- ❌ <dependencies> in parent — adds spring-boot-starter-web to ALL modules,
+         including domain which should have ZERO Spring dependencies -->
+    <dependencies>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-web</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <plugins>
+            <!-- ❌ spring-boot-maven-plugin in parent — tries to repackage ALL modules
+                 as executable JARs, breaking library modules (domain, application) -->
+            <plugin>
+                <groupId>org.springframework.boot</groupId>
+                <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+        </plugins>
+    </build>
+
+    <!-- ❌ Missing <dependencyManagement> — each child module specifies its own versions,
+         leading to version mismatches and diamond dependency conflicts -->
+
+    <!-- ❌ No inter-module version management — children use hardcoded versions:
+         <dependency>
+             <groupId>com.example</groupId>
+             <artifactId>domain</artifactId>
+             <version>1.0.0-SNAPSHOT</version>  instead of ${project.version}
+         </dependency>
+    -->
+</project>

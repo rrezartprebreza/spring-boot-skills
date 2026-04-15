@@ -116,8 +116,49 @@ public class OrderController {
 }
 ```
 
+## RepresentationModelAssembler Pattern
+- Spring's recommended way to build HATEOAS models from entities
+- Implements `RepresentationModelAssembler<Entity, Model>` — reusable across controllers
+- Inject the assembler into controllers instead of calling `Model.from()` directly
+
+```java
+@Component
+public class OrderModelAssembler implements RepresentationModelAssembler<Order, EntityModel<OrderResponse>> {
+
+    @Override
+    public EntityModel<OrderResponse> toModel(Order order) {
+        EntityModel<OrderResponse> model = EntityModel.of(OrderResponse.from(order),
+            linkTo(methodOn(OrderController.class).getById(order.getId())).withSelfRel(),
+            linkTo(methodOn(OrderController.class).list(null)).withRel("orders"));
+
+        if (order.getStatus() == OrderStatus.PENDING) {
+            model.add(linkTo(methodOn(OrderController.class)
+                .cancelOrder(order.getId())).withRel("cancel"));
+        }
+        return model;
+    }
+}
+```
+
+## PagedModel for Paginated Collections
+- Use `PagedResourcesAssembler` for automatic pagination links (first, prev, next, last)
+- Inject `PagedResourcesAssembler<Order>` into controllers — Spring creates it automatically
+
+```java
+@GetMapping
+public ResponseEntity<PagedModel<EntityModel<OrderResponse>>> list(
+        Pageable pageable, PagedResourcesAssembler<Order> pagedAssembler) {
+    Page<Order> orders = orderService.findAll(pageable);
+    PagedModel<EntityModel<OrderResponse>> pagedModel =
+        pagedAssembler.toModel(orders, orderModelAssembler);
+    return ResponseEntity.ok(pagedModel);
+}
+```
+
 ## Gotchas
 - Agent adds all links regardless of state — only add action links when the action is valid
 - Agent hardcodes URLs in links — always use `linkTo(methodOn(...))` for type-safe links
 - Agent returns plain DTO — wrap in `EntityModel.of(dto, links...)` or extend `RepresentationModel`
-- Agent puts link logic in controller — link building belongs in the model's factory method
+- Agent puts link logic in controller — extract to `RepresentationModelAssembler`
+- Agent manually builds pagination links — use `PagedResourcesAssembler` instead
+- Agent forgets `self` link — every resource must have a `self` link

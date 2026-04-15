@@ -122,9 +122,25 @@ public class InsufficientInventoryException extends DomainException {
 }
 ```
 
+## Content Negotiation
+
+Clients can request problem details explicitly with `Accept: application/problem+json`. Spring handles this automatically when `problemdetails.enabled: true` — your handler returns `ProblemDetail` and Spring sets the correct `Content-Type: application/problem+json`.
+
+## ProblemDetail vs ApiResponse Envelope
+
+| Use Case | Approach |
+|---|---|
+| Error responses only | ProblemDetail (RFC 9457) |
+| All responses (success + error) | ApiResponse envelope |
+| Public API with diverse clients | ProblemDetail — RFC standard |
+| Internal microservices | Either — be consistent across services |
+
+Choose one approach per project. Don't mix `ApiResponse` for success and `ProblemDetail` for errors — it confuses API consumers who see two different shapes.
+
 ## Gotchas
 - Agent returns `Map<String, Object>` for errors — use `ProblemDetail`
 - Agent exposes raw exception messages in 500 errors — log it, return generic message
 - Agent uses custom error envelope alongside ProblemDetail — pick one standard
 - Agent forgets to set `type` URI — required for RFC 9457 compliance
 - Agent returns 200 with error in body — always use the correct HTTP status code
+- Agent creates handler without extending `ResponseEntityExceptionHandler` — extend it to get Spring's built-in exception handling for free

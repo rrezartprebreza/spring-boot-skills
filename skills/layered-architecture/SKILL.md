@@ -98,8 +98,55 @@ public record OrderResponse(UUID id, String status, List<LineItemResponse> items
 }
 ```
 
+## Mapper Pattern
+- Keep mapping logic out of controllers and services — use dedicated mapper classes or static factory methods
+- Mapper is a plain class or utility — not a Spring bean unless it needs injected dependencies
+- Entity → Response DTO: static method on the response DTO (`OrderResponse.from(order)`)
+- Request DTO → Entity: static factory on the entity (`Order.from(request)`) or a mapper class
+- Collection mapping: use `.stream().map(OrderResponse::from).toList()` — never manual loops
+
+```java
+// ✅ GOOD — dedicated mapper for complex mappings
+public class OrderMapper {
+
+    public static OrderResponse toResponse(Order order) {
+        return new OrderResponse(
+            order.getId(),
+            order.getStatus().name(),
+            order.getItems().stream().map(OrderMapper::toLineItem).toList(),
+            order.getCreatedAt()
+        );
+    }
+
+    public static Order toEntity(CreateOrderRequest request, User user) {
+        Order order = Order.create(request.customerEmail(), user);
+        request.items().forEach(item ->
+            order.addItem(item.productId(), item.quantity()));
+        return order;
+    }
+
+    private static LineItemResponse toLineItem(OrderItem item) {
+        return new LineItemResponse(item.getProductId(), item.getQuantity(), item.getPrice());
+    }
+}
+```
+
+## Configuration Layer
+- `@Configuration` classes live in a `config/` package — never in `service/` or `controller/`
+- Configuration never imports service or controller classes
+- Use `@ConfigurationProperties` for type-safe config — never raw `@Value` for groups of related settings
+- Bean definitions for infrastructure concerns only (RestTemplate, ObjectMapper, SecurityFilterChain)
+
+## Cross-Cutting Concerns
+- Logging: use `@Slf4j` — never `System.out.println`
+- Validation: `@Valid` on controller parameters, custom validators as `@Component`
+- Exception handling: single `@RestControllerAdvice` class, never try/catch in controllers
+- Auditing: `@CreatedDate` / `@LastModifiedDate` with `@EnableJpaAuditing`
+
 ## Gotchas
 - Agent tends to put `@Transactional` on controllers — move it to services
 - Agent uses `@Autowired` field injection — always use constructor injection (`@RequiredArgsConstructor`)
 - Agent returns `List<Entity>` from controllers — always map to `List<ResponseDto>`
 - Agent creates `OrderAndInventoryService` god classes — split by aggregate
+- Agent puts mapping logic inside controllers — extract to mapper class or DTO factory method
+- Agent creates `@Configuration` classes that depend on `@Service` beans — configuration should only wire infrastructure

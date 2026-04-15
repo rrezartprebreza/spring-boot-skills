@@ -127,6 +127,14 @@ public class DevDataSeeder implements ApplicationRunner {
 }
 ```
 
+## Team Workflow: Concurrent Migrations
+- Multiple developers creating migrations simultaneously will cause version conflicts
+- Solution: use a shared tracker (Slack channel, wiki page) or timestamp-based versions (`V20260414_1__`)
+- If two migrations target the same version, one developer must bump theirs
+- Run `flyway info` before committing to check for version gaps or duplicates
+- In CI/CD: run `flyway validate` as a pre-deploy step to catch conflicts early
+- Never set `out-of-order: true` in production — it masks migration ordering bugs
+
 ## Gotchas
 - Agent names files `V1_create_users.sql` (single underscore) — must be double `__`
 - Agent modifies existing migration files — never edit a migration that has run
@@ -134,3 +142,4 @@ public class DevDataSeeder implements ApplicationRunner {
 - Agent renames columns directly — use multi-step add/backfill/drop across deploys
 - Agent seeds data in Flyway migrations — use `@Profile("dev")` seeders instead
 - Agent skips indexes — always index foreign keys and columns used in WHERE/ORDER BY
+- Agent creates migration with `DROP TABLE` or `DROP COLUMN` as first step — always add new column, deploy code, then drop old in a later migration

@@ -137,9 +137,42 @@ Specification<Order> spec = OrderSpecifications.byStatus(PLACED)
 orderRepository.findAll(spec, pageable);
 ```
 
+## Anti-Corruption Layer (ACL)
+- When integrating with external systems or legacy code, don't let their models leak into your domain
+- Create an ACL — a translation layer that converts external data to your domain language
+- ACL lives in infrastructure layer, not domain
+
+```java
+// ✅ GOOD — ACL translates external payment API to domain concepts
+@Component
+@RequiredArgsConstructor
+public class PaymentGatewayAdapter implements PaymentPort {
+
+    private final ExternalPaymentClient client;  // third-party SDK
+
+    @Override
+    public PaymentConfirmation charge(OrderId orderId, Money amount) {
+        // Translate domain → external
+        PaymentApiRequest apiRequest = new PaymentApiRequest(
+            orderId.value().toString(),
+            amount.amount().doubleValue(),
+            amount.currency().getCurrencyCode());
+
+        // Call external system
+        PaymentApiResponse apiResponse = client.charge(apiRequest);
+
+        // Translate external → domain
+        return new PaymentConfirmation(
+            PaymentId.of(apiResponse.getTransactionId()),
+            apiResponse.isSuccessful() ? PaymentStatus.CONFIRMED : PaymentStatus.DECLINED);
+    }
+}
+```
+
 ## Gotchas
 - Agent creates anemic models with only getters/setters — put behavior on domain objects
 - Agent uses `Long` for entity IDs — use typed value objects (`OrderId`, `CustomerId`)
 - Agent puts domain logic in services — services should orchestrate, not decide
 - Agent accesses child entities directly from outside — always go through aggregate root
 - Agent publishes events before saving — publish after successful save/commit
+- Agent lets external API models into domain — use an Anti-Corruption Layer to translate
