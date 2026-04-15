@@ -247,5 +247,4 @@ Skills for Spring Boot AI coding agents · Java 21 · Spring Boot 3.x · Claude 
 
 ---
 
-*Built by [@rrezartprebreza](https://github.com/rrezartprebreza) · Pristina, Kosovo*  
-*Educator at [UNI](https://uni-edu.net) · Open source developer · Spring Boot practitioner*
+*Built by [@rrezartprebreza](https://github.com/rrezartprebreza) · Pristina, Kosovo
