@@ -77,6 +77,11 @@ ALTER TABLE orders ADD COLUMN notes TEXT;
 ALTER TABLE orders ADD COLUMN priority INT NOT NULL DEFAULT 0;
 
 -- ✅ Safe: add index CONCURRENTLY (no table lock in Postgres)
+-- ⚠️ BUT: CONCURRENTLY cannot run inside a transaction, and Flyway wraps every
+-- migration in one by default → the migration FAILS. Opt that one script out
+-- with a sidecar config file:
+--   V4__add_orders_email_index.sql.conf  →  executeInTransaction=false
+-- Keep the CONCURRENTLY statement alone in its own migration file.
 CREATE INDEX CONCURRENTLY idx_orders_email ON orders(customer_email);
 
 -- ✅ Safe: rename via add + backfill + drop (multi-step)
@@ -141,5 +146,6 @@ public class DevDataSeeder implements ApplicationRunner {
 - Agent adds `NOT NULL` column without default — use nullable or provide default
 - Agent renames columns directly — use multi-step add/backfill/drop across deploys
 - Agent seeds data in Flyway migrations — use `@Profile("dev")` seeders instead
+- Agent uses `CREATE INDEX CONCURRENTLY` in a normal migration — fails inside Flyway's transaction; needs `executeInTransaction=false` in a `.sql.conf` sidecar and its own file
 - Agent skips indexes — always index foreign keys and columns used in WHERE/ORDER BY
 - Agent creates migration with `DROP TABLE` or `DROP COLUMN` as first step — always add new column, deploy code, then drop old in a later migration

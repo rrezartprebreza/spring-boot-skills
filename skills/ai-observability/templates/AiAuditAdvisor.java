@@ -2,9 +2,10 @@ package com.example.ai.observability;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.ai.chat.client.advisor.api.CallAroundAdvisor;
-import org.springframework.ai.chat.client.advisor.api.CallAroundAdvisorChain;
 import org.springframework.ai.chat.client.ChatClientRequest;
+import org.springframework.ai.chat.client.ChatClientResponse;
+import org.springframework.ai.chat.client.advisor.api.CallAdvisor;
+import org.springframework.ai.chat.client.advisor.api.CallAdvisorChain;
 import org.springframework.ai.chat.model.ChatResponse;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
@@ -13,16 +14,21 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Production audit advisor for Spring AI.
+ * Production audit advisor for Spring AI 1.0 GA.
  * Tracks latency, token usage, and errors without logging PII.
+ *
+ * GA API notes:
+ * - CallAroundAdvisor / AdvisedRequest / AdvisedResponse were removed at 1.0 GA.
+ *   The interface is CallAdvisor with adviseCall(ChatClientRequest, CallAdvisorChain).
+ * - Usage.getGenerationTokens() was renamed to getCompletionTokens().
  */
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AiAuditAdvisor implements CallAroundAdvisor {
+public class AiAuditAdvisor implements CallAdvisor {
 
     private final AiMetrics metrics;
-    private final AiAuditLogRepository auditRepository;
+    private final AiAuditRecorder auditRecorder;   // separate bean — see note on @Async below
 
     @Override
     public int getOrder() {
@@ -35,51 +41,64 @@ public class AiAuditAdvisor implements CallAroundAdvisor {
     }
 
     @Override
-    public ChatResponse aroundCall(ChatClientRequest request, CallAroundAdvisorChain chain) {
+    public ChatClientResponse adviseCall(ChatClientRequest request, CallAdvisorChain chain) {
         String requestId = UUID.randomUUID().toString();
-        String model = request.chatOptions() != null ? request.chatOptions().getModel() : "unknown";
         Instant startTime = Instant.now();
 
         try {
-            ChatResponse response = metrics.track("chat", model, () -> chain.nextAroundCall(request));
+            ChatClientResponse response = metrics.track("chat", () -> chain.nextCall(request));
+            ChatResponse chatResponse = response.chatResponse();
 
             // Extract token usage if available
-            if (response.getMetadata() != null && response.getMetadata().getUsage() != null) {
-                var usage = response.getMetadata().getUsage();
+            if (chatResponse != null && chatResponse.getMetadata() != null
+                    && chatResponse.getMetadata().getUsage() != null) {
+                var usage = chatResponse.getMetadata().getUsage();
                 long inputTokens = usage.getPromptTokens();
-                long outputTokens = usage.getGenerationTokens();
-                metrics.recordTokens(model, inputTokens, outputTokens);
+                long outputTokens = usage.getCompletionTokens();
+                metrics.recordTokens(inputTokens, outputTokens);
 
                 // Log metadata only — never log prompt content (PII risk)
-                log.info("AI request completed: requestId={}, model={}, inputTokens={}, outputTokens={}",
-                    requestId, model, inputTokens, outputTokens);
+                log.info("AI request completed: requestId={}, inputTokens={}, outputTokens={}",
+                    requestId, inputTokens, outputTokens);
             }
 
             // Persist audit asynchronously — don't block the response
-            persistAuditAsync(requestId, model, "SUCCESS", null, startTime);
+            auditRecorder.record(requestId, "SUCCESS", null, startTime);
 
             return response;
         } catch (Exception e) {
-            log.error("AI request failed: requestId={}, model={}", requestId, model, e);
-            persistAuditAsync(requestId, model, "ERROR", e.getMessage(), startTime);
+            log.error("AI request failed: requestId={}", requestId, e);
+            auditRecorder.record(requestId, "ERROR", e.getMessage(), startTime);
             throw e;
         }
     }
+}
+
+/**
+ * Async persistence lives in its OWN bean on purpose: an @Async method invoked on
+ * `this` bypasses the Spring proxy and runs synchronously (self-invocation pitfall,
+ * same as @Transactional). A separate component goes through the proxy.
+ */
+@Component
+@RequiredArgsConstructor
+class AiAuditRecorder {
+
+    private final AiAuditLogRepository auditRepository;
 
     @Async
-    void persistAuditAsync(String requestId, String model, String status,
-                           String errorMessage, Instant startTime) {
+    public void record(String requestId, String status, String errorMessage, Instant startTime) {
         try {
             auditRepository.save(new AiAuditLog(
                 UUID.fromString(requestId),
-                model,
                 status,
                 errorMessage,
                 startTime,
                 Instant.now()
             ));
         } catch (Exception e) {
-            log.warn("Failed to persist AI audit log: {}", requestId, e);
+            // Never let audit failures break the AI call path
+            org.slf4j.LoggerFactory.getLogger(AiAuditRecorder.class)
+                .warn("Failed to persist AI audit log: {}", requestId, e);
         }
     }
 }

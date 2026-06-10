@@ -30,8 +30,8 @@ spring:
   ai:
     chat:
       observations:
-        include-prompt: true       # log prompt content (disable in prod for PII)
-        include-completion: true   # log response content
+        log-prompt: true       # GA renamed include-prompt → log-prompt. OFF in prod (PII).
+        log-completion: true   # GA renamed include-completion → log-completion
 management:
   metrics:
     tags:
@@ -42,9 +42,10 @@ management:
         include: health,prometheus,metrics
 ```
 
-Auto-generated metrics:
-- `spring.ai.chat.client.operation.seconds` — latency histogram
-- `spring.ai.chat.client.token.usage` — token counts (input/output/total)
+Auto-generated metrics (OpenTelemetry GenAI semantic conventions):
+- `gen_ai.client.operation` — model call latency, tagged with provider and model
+- `gen_ai.client.token.usage` — token counts (input/output/total)
+- `spring.ai.chat.client` — ChatClient-level operation timer/span
 
 ## Custom AI Metrics
 
@@ -89,32 +90,34 @@ public class AiMetrics {
 
 ## Prompt/Response Logging Advisor
 
+GA replaced the whole advisor API: `CallAroundAdvisor` → `CallAdvisor`, `AdvisedRequest` →
+`ChatClientRequest`, `AdvisedResponse` → `ChatClientResponse`, and `Usage.getGenerationTokens()` →
+`getCompletionTokens()`. Agents reliably generate the old one — it does not compile on 1.0.
+
 ```java
 @Component
-public class AiAuditAdvisor implements CallAroundAdvisor {
+public class AiAuditAdvisor implements CallAdvisor {
 
     private static final Logger log = LoggerFactory.getLogger(AiAuditAdvisor.class);
 
     @Override
-    public AdvisedResponse aroundCall(AdvisedRequest request, CallAroundAdvisorChain chain) {
+    public ChatClientResponse adviseCall(ChatClientRequest request, CallAdvisorChain chain) {
         String requestId = UUID.randomUUID().toString();
         long start = System.currentTimeMillis();
 
-        log.info("[AI-AUDIT] requestId={} model={} promptLength={}",
-            requestId,
-            request.chatOptions() != null ? request.chatOptions().getModel() : "default",
-            request.userText().length());
+        log.info("[AI-AUDIT] requestId={} promptLength={}",
+            requestId, request.prompt().getUserMessage().getText().length());
 
         try {
-            AdvisedResponse response = chain.nextAroundCall(request);
+            ChatClientResponse response = chain.nextCall(request);
             long latency = System.currentTimeMillis() - start;
 
-            ChatResponse chatResponse = response.response();
+            ChatResponse chatResponse = response.chatResponse();
             if (chatResponse != null && chatResponse.getMetadata() != null) {
                 Usage usage = chatResponse.getMetadata().getUsage();
                 log.info("[AI-AUDIT] requestId={} latencyMs={} inputTokens={} outputTokens={}",
                     requestId, latency,
-                    usage.getPromptTokens(), usage.getGenerationTokens());
+                    usage.getPromptTokens(), usage.getCompletionTokens()); // GA: not getGenerationTokens()
             }
             return response;
         } catch (Exception e) {
@@ -200,7 +203,9 @@ logging:
 ```
 
 ## Gotchas
-- Agent logs full prompts in production — disable with `include-prompt: false` for PII safety
-- Agent skips async on audit saves — always `@Async` to avoid latency impact
+- Agent implements `CallAroundAdvisor`/`AdvisedRequest` — removed in GA; use `CallAdvisor`/`ChatClientRequest`
+- Agent calls `usage.getGenerationTokens()` — GA renamed it to `getCompletionTokens()`
+- Agent logs full prompts in production — keep `log-prompt: false` for PII safety
+- Agent skips async on audit saves — always `@Async` to avoid latency impact, and put the `@Async` method on a **separate bean**; calling it on `this` bypasses the proxy and runs synchronously
 - Agent hardcodes token pricing — extract to config, prices change
 - Agent misses failed calls in metrics — track errors separately with error tag

@@ -157,20 +157,58 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
 
         String token = authHeader.substring(7);
-        String username = jwtService.extractUsername(token);
+        try {
+            String username = jwtService.extractUsername(token);
 
-        if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-            UserDetails user = userDetailsService.loadUserByUsername(username);
-            if (jwtService.isTokenValid(token, user)) {
-                var auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-                auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                SecurityContextHolder.getContext().setAuthentication(auth);
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails user = userDetailsService.loadUserByUsername(username);
+                if (jwtService.isTokenValid(token, user)) {
+                    var auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                    auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
             }
+        } catch (ExpiredJwtException | MalformedJwtException | SignatureException e) {
+            // Parsing throws on expired/tampered tokens. Without this catch the exception
+            // escapes the filter chain as a 500. Leave the context empty — the entry
+            // point below turns it into a clean 401.
+            SecurityContextHolder.clearContext();
         }
         chain.doFilter(request, response);
     }
 }
 ```
+
+## JSON 401/403 — Don't Ship the Defaults
+
+Out of the box, an unauthenticated API request gets an empty 401 (or worse, a redirect to a login
+page) and `AccessDeniedException` becomes an empty 403. REST clients need a body:
+
+```java
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    return http
+        // ... as above ...
+        .exceptionHandling(ex -> ex
+            .authenticationEntryPoint((request, response, e) -> {       // 401 — not authenticated
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                response.getWriter().write("""
+                    {"success":false,"error":{"code":"UNAUTHORIZED","message":"Authentication required"}}""");
+            })
+            .accessDeniedHandler((request, response, e) -> {            // 403 — authenticated, no permission
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                response.getWriter().write("""
+                    {"success":false,"error":{"code":"FORBIDDEN","message":"Insufficient permissions"}}""");
+            })
+        )
+        .build();
+}
+```
+
+`@RestControllerAdvice` cannot catch these — security filters run **before** the dispatcher servlet,
+so exceptions thrown there never reach your exception handler.
 
 ## Auth Controller
 
@@ -227,8 +265,11 @@ app:
 
 ## Gotchas
 - Agent uses `HttpSecurity.csrf().disable()` old API — use `AbstractHttpConfigurer::disable`
-- Agent stores JWT secret in code — always `${JWT_SECRET}` from environment
+- Agent lets `ExpiredJwtException` escape the filter — expired token becomes a 500 instead of 401; catch in filter
+- Agent skips `exceptionHandling()` — clients get empty 401/403 bodies (or a login-page redirect); `@RestControllerAdvice` can't catch filter-level exceptions
+- Agent stores JWT secret in code — always `${JWT_SECRET}` from environment (HS256 needs a ≥256-bit key or `Keys.hmacShaKeyFor` throws `WeakKeyException`)
 - Agent uses `SessionCreationPolicy.IF_REQUIRED` — must be `STATELESS` for JWT
 - Agent forgets `@EnableMethodSecurity` for `@PreAuthorize` to work
 - Agent uses BCrypt strength < 10 — use 12 for production
 - Agent puts token validation logic in controller — belongs in filter
+- Agent puts refresh tokens in localStorage examples — recommend httpOnly cookies or secure storage; refresh tokens are long-lived credentials

@@ -115,6 +115,18 @@ public ApiResponse<Page<OrderResponse>> list(Pageable pageable) {
 }
 ```
 
+**Cap the page size.** A bare `Pageable` accepts `?size=100000` from any client — one request can
+drag your whole table into memory. Spring's default cap is 2000, still too high for most APIs:
+
+```yaml
+spring:
+  data:
+    web:
+      pageable:
+        default-page-size: 20
+        max-page-size: 100   # requests above this are silently clamped
+```
+
 ## Global Exception Handler
 
 ```java
@@ -147,3 +159,5 @@ public class GlobalExceptionHandler {
 - Agent uses `ResponseEntity<Map<String, Object>>` for errors — use `ApiResponse`
 - Agent puts exception handlers in controllers — always use `@RestControllerAdvice`
 - Agent uses `Long` IDs in URLs — use `UUID`
+- Agent accepts unbounded `Pageable` — set `spring.data.web.pageable.max-page-size` or one request can pull the whole table
+- Agent returns `Page<Entity>` serialized directly — exposes Hibernate internals; map to DTOs first

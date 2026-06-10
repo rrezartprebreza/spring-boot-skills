@@ -1,17 +1,29 @@
-# spring-boot-skills
+<div align="center">
 
-**Production-grade Claude Code skills for Spring Boot developers**
+<img src="assets/banner.svg" alt="spring-boot-skills — production-grade Claude Code skills for Spring Boot" width="100%"/>
 
-[![skills](https://img.shields.io/badge/skills-18-4A90D9?style=flat&labelColor=1a1a2e)](https://github.com/rrezartprebreza/spring-boot-skills/tree/main/skills)
-[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=flat&labelColor=1a1a2e&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![Java](https://img.shields.io/badge/Java-21%2B-ED8B00?style=flat&labelColor=1a1a2e&logo=openjdk&logoColor=white)](https://openjdk.org/)
-[![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-white?style=flat&labelColor=555)](https://code.claude.com)
-[![MCP Java SDK](https://img.shields.io/badge/MCP_Java_SDK-compatible-white?style=flat&labelColor=555)](https://github.com/modelcontextprotocol/java-sdk)
-[![GitHub Stars](https://img.shields.io/github/stars/rrezartprebreza/spring-boot-skills?style=flat&label=⭐&labelColor=555&color=white)](https://github.com/rrezartprebreza/spring-boot-skills/stargazers)
+<br/>
+<br/>
 
-> Drop a skill into your project. Your AI coding agent instantly understands your Spring Boot codebase — architecture, patterns, conventions — and codes like a senior engineer who's been on your team for years.
+**Drop a skill into your project. Your AI coding agent instantly understands your Spring Boot codebase — architecture, patterns, conventions — and codes like a senior engineer who's been on your team for years.**
 
-This is a practical collection of Claude Code skills that teach AI coding agents how to work inside real Spring Boot projects: architecture rules, REST conventions, persistence patterns, security, testing, Spring AI, and MCP server development.
+<br/>
+
+[![skills](https://img.shields.io/badge/skills-18-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=for-the-badge&labelColor=0f172a&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![Java](https://img.shields.io/badge/Java-21%2B-ED8B00?style=for-the-badge&labelColor=0f172a&logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![License](https://img.shields.io/badge/License-MIT-94a3b8?style=for-the-badge&labelColor=0f172a)](LICENSE)
+
+[![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-d97757?style=flat-square&labelColor=1e293b)](https://code.claude.com)
+[![Spring AI](https://img.shields.io/badge/Spring_AI-1.0_GA-6DB33F?style=flat-square&labelColor=1e293b)](https://spring.io/projects/spring-ai)
+[![MCP Java SDK](https://img.shields.io/badge/MCP_Java_SDK-1.0-e879f9?style=flat-square&labelColor=1e293b)](https://github.com/modelcontextprotocol/java-sdk)
+[![GitHub Stars](https://img.shields.io/github/stars/rrezartprebreza/spring-boot-skills?style=flat-square&label=stars&labelColor=1e293b&color=fbbf24)](https://github.com/rrezartprebreza/spring-boot-skills/stargazers)
+
+<br/>
+
+[**Quick Start**](#-quick-start) · [**Skills Catalog**](#-skills) · [**Before / After**](#-before--after) · [**Skill Anatomy**](#-skill-anatomy) · [**Contributing**](#-contributing)
+
+</div>
 
 ---
 
@@ -19,17 +31,32 @@ This is a practical collection of Claude Code skills that teach AI coding agents
 
 AI coding agents are great at Python. They hallucinate in Spring Boot.
 
-They generate `@Autowired` field injection instead of constructor injection. They use `ResponseEntity<?>` where you have a standard response wrapper. They ignore your existing exception hierarchy and invent a new one. They don't know your project uses Flyway, so they generate schema SQL by hand.
+They generate `@Autowired` field injection instead of constructor injection. They use `ResponseEntity<?>` where you have a standard response wrapper. They ignore your existing exception hierarchy and invent a new one. They don't know your project uses Flyway, so they generate schema SQL by hand. They emit pre-GA Spring AI artifact names that no longer exist in Maven Central.
 
-Skills fix this. A skill is a markdown file your agent reads before touching your code. It tells the agent **your** conventions, your stack, your gotchas — not generic Spring Boot from 2020.
+**Skills fix this.** A skill is a markdown file your agent reads before touching your code. It tells the agent *your* conventions, your stack, your gotchas — not generic Spring Boot from 2020.
+
+```mermaid
+flowchart LR
+    A["💬 You ask:<br/>&quot;add an orders endpoint&quot;"] --> B{Claude matches<br/>skill triggers}
+    B -->|"REST code?"| C["📜 rest-api-conventions"]
+    B -->|"persistence?"| D["📜 spring-data-jpa"]
+    C --> E["🤖 Agent codes with<br/>YOUR envelope, YOUR<br/>status mapping, YOUR<br/>pagination contract"]
+    D --> E
+    E --> F["✅ Code that looks like<br/>your team wrote it"]
+
+    style A fill:#0f172a,stroke:#38bdf8,color:#e2e8f0
+    style B fill:#1e293b,stroke:#94a3b8,color:#e2e8f0
+    style C fill:#10241a,stroke:#6DB33F,color:#a7f3d0
+    style D fill:#10241a,stroke:#6DB33F,color:#a7f3d0
+    style E fill:#0f172a,stroke:#d97757,color:#e2e8f0
+    style F fill:#10241a,stroke:#6DB33F,color:#a7f3d0
+```
 
 This repo is a collection of battle-tested skills. Copy, adapt, drop in.
 
-**GitHub description suggestion:** Production-grade Claude Code skills for Spring Boot, Java, JPA, Flyway, Security, Spring AI, and MCP development.
-
 ---
 
-## 🧠 CONCEPTS
+## 🧠 Concepts
 
 | Concept | Description |
 |---------|-------------|
@@ -41,7 +68,7 @@ This repo is a collection of battle-tested skills. Copy, adapt, drop in.
 
 ---
 
-## 📦 SKILLS
+## 📦 Skills
 
 Drop any skill folder into `.claude/skills/` in your project. Claude Code auto-discovers them.
 
@@ -51,7 +78,7 @@ Drop any skill folder into `.claude/skills/` in your project. Claude Code auto-d
 |-------|-------------|------|
 | [**layered-architecture**](skills/layered-architecture/) | Enforces Controller → Service → Repository separation. Prevents business logic leaking into controllers or repositories. | `architecture` |
 | [**hexagonal-architecture**](skills/hexagonal-architecture/) | Ports and adapters pattern for Spring Boot. Keeps domain clean of framework dependencies. | `architecture` `ddd` |
-| [**domain-driven-design**](skills/domain-driven-design/) | Aggregates, value objects, domain events in Spring Boot. Includes JPA mapping conventions. | `ddd` `jpa` |
+| [**domain-driven-design**](skills/domain-driven-design/) | Aggregates, value objects, domain events with commit-safe publication. Includes JPA mapping conventions. | `ddd` `jpa` |
 | [**multi-module-maven**](skills/multi-module-maven/) | Parent POM conventions, shared BOM, inter-module dependency rules. Prevents circular deps. | `maven` `architecture` |
 
 ### 🔌 API Design
@@ -67,10 +94,10 @@ Drop any skill folder into `.claude/skills/` in your project. Claude Code auto-d
 
 | Skill | Description | Tags |
 |-------|-------------|------|
-| [**spring-data-jpa**](skills/spring-data-jpa/) | Entity conventions, repository patterns, query naming rules, N+1 prevention, projection usage. | `jpa` `hibernate` |
-| [**flyway-migrations**](skills/flyway-migrations/) | Migration naming convention, repeatable scripts, undo scripts, multi-tenant strategy. | `flyway` `migrations` |
-| [**spring-data-redis**](skills/spring-data-redis/) | Cache-aside pattern, key naming, TTL strategy, serialization config. | `redis` `caching` |
-| [**transactional-patterns**](skills/transactional-patterns/) | `@Transactional` propagation rules, read-only optimization, saga pattern for distributed transactions. | `transactions` |
+| [**spring-data-jpa**](skills/spring-data-jpa/) | Entity conventions, N+1 prevention, projections, keyset pagination, batch inserts. | `jpa` `hibernate` |
+| [**flyway-migrations**](skills/flyway-migrations/) | Migration naming convention, safe multi-step schema changes, team workflow for concurrent migrations. | `flyway` `migrations` |
+| [**spring-data-redis**](skills/spring-data-redis/) | Cache-aside pattern, key naming, TTL strategy, stampede protection, serialization config. | `redis` `caching` |
+| [**transactional-patterns**](skills/transactional-patterns/) | `@Transactional` propagation rules, self-invocation pitfall, after-commit side effects, saga pattern. | `transactions` |
 
 ### 🔒 Security
 
@@ -83,19 +110,19 @@ Drop any skill folder into `.claude/skills/` in your project. Claude Code auto-d
 
 | Skill | Description | Tags |
 |-------|-------------|------|
-| [**spring-ai-integration**](skills/spring-ai-integration/) | Spring AI chat client, embedding, RAG pipeline patterns. Prompt template conventions. | `spring-ai` `llm` |
-| [**mcp-server**](skills/mcp-server/) | Build MCP servers with the official Java SDK. Tool registration, resource exposure, prompt templates. | `mcp` `ai-agents` |
+| [**spring-ai-integration**](skills/spring-ai-integration/) | Spring AI 1.0 GA ChatClient, chat memory, RAG pipeline, structured output. GA artifact names — no dead pre-1.0 coordinates. | `spring-ai` `llm` |
+| [**mcp-server**](skills/mcp-server/) | Build MCP servers with the official Java SDK 1.0 + Spring AI starters. Tool registration, transports, stdio pitfalls. | `mcp` `ai-agents` |
 | [**ai-observability**](skills/ai-observability/) | Token usage tracking, latency monitoring, prompt/response logging for Spring AI apps. | `observability` `spring-ai` |
 
 ### 🧪 Testing
 
 | Skill | Description | Tags |
 |-------|-------------|------|
-| [**testing-pyramid**](skills/testing-pyramid/) | Unit → Slice → Integration test conventions. `@WebMvcTest`, `@DataJpaTest`, Testcontainers setup. | `testing` |
+| [**testing-pyramid**](skills/testing-pyramid/) | Unit → Slice → Integration conventions. `@WebMvcTest`, `@DataJpaTest`, `@MockitoBean`, Testcontainers. | `testing` |
 
 ---
 
-## ⚡ QUICK START
+## ⚡ Quick Start
 
 **1. Install Claude Code** (if not already)
 ```bash
@@ -109,7 +136,7 @@ cp -r spring-boot-skills/skills/rest-api-conventions .claude/skills/
 cp -r spring-boot-skills/skills/spring-data-jpa .claude/skills/
 ```
 
-**3. Tell Claude to use it**
+**3. Tell Claude what you want**
 ```
 claude
 > Generate a CRUD endpoint for the Order entity following our REST conventions
@@ -119,11 +146,17 @@ That's it. Claude reads the skill before writing a single line.
 
 ---
 
-## BEFORE / AFTER
+## ⚔️ Before / After
 
 The value of these skills is not generic Spring Boot advice. The value is preventing the small mistakes AI agents make when they do not know your backend conventions.
 
-### Without a skill
+<table>
+<tr>
+<th>❌ Without a skill</th>
+<th>✅ With <code>layered-architecture</code> + <code>rest-api-conventions</code></th>
+</tr>
+<tr>
+<td>
 
 ```java
 @RestController
@@ -132,21 +165,16 @@ public class OrderController {
     private OrderRepository repository;
 
     @PostMapping("/orders")
-    public ResponseEntity<?> create(@RequestBody Order order) {
-        return ResponseEntity.ok(repository.save(order));
+    public ResponseEntity<?> create(
+            @RequestBody Order order) {
+        return ResponseEntity.ok(
+            repository.save(order));
     }
 }
 ```
 
-Problems:
-
-- Business logic leaks into the controller.
-- No request DTO or validation boundary.
-- Repository is called directly from the web layer.
-- Response shape does not follow project conventions.
-- Errors and status codes are left to framework defaults.
-
-### With `layered-architecture` + `rest-api-conventions`
+</td>
+<td>
 
 ```java
 @RestController
@@ -156,30 +184,54 @@ class OrderController {
     private final OrderService orderService;
 
     @PostMapping
-    ResponseEntity<ApiResponse<OrderResponse>> create(@Valid @RequestBody CreateOrderRequest request) {
+    ResponseEntity<ApiResponse<OrderResponse>> create(
+            @Valid @RequestBody CreateOrderRequest request) {
         OrderResponse response = orderService.create(request);
-        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
+        return ResponseEntity.status(HttpStatus.CREATED)
+            .body(ApiResponse.ok(response));
     }
 }
 ```
 
-The agent now follows the intended design: controller as HTTP adapter, service for business rules, DTO validation at the boundary, and consistent response contracts.
+</td>
+</tr>
+<tr>
+<td>
+
+- Business logic leaks into the controller
+- No request DTO or validation boundary
+- Repository called directly from the web layer
+- Response shape ignores project conventions
+- Status codes left to framework defaults
+
+</td>
+<td>
+
+- Controller as a pure HTTP adapter
+- Service owns the business rules
+- DTO validation at the boundary
+- Consistent response envelope
+- Correct `201 Created` semantics
+
+</td>
+</tr>
+</table>
 
 ---
 
-## 📐 SKILL ANATOMY
+## 📐 Skill Anatomy
 
 Every skill in this repo follows the same structure:
 
 ```
 skills/rest-api-conventions/
-├── SKILL.md          ← agent reads this (description + trigger conditions)
-├── conventions.md    ← your actual conventions
-├── examples/         ← good and bad examples
-│   ├── good-response.java
-│   └── bad-response.java
+├── SKILL.md          ← the skill: trigger description + conventions + gotchas
+├── examples/         ← good and bad examples, side by side
+│   ├── good-controller.java
+│   └── bad-controller.java
 └── templates/        ← copy-paste starting points
-    └── ResponseWrapper.java
+    ├── ApiResponse.java
+    └── GlobalExceptionHandler.java
 ```
 
 **SKILL.md** has two critical parts:
@@ -198,11 +250,13 @@ description: >
 
 The `description` is a **trigger** — write it as "use when [condition]", not as a summary. This is what makes the agent actually load the skill.
 
+The **Gotchas** section at the bottom of each skill is the secret weapon: a running list of the exact mistakes agents make in that domain, phrased as `Agent does X — do Y instead`.
+
 ---
 
-## 💡 TIPS (from the trenches)
+## 💡 Tips from the trenches
 
-**Gotchas section is the most valuable** — add every time the agent does something wrong. Your future self will thank you.
+**The Gotchas section is the most valuable part** — add to it every time the agent does something wrong. Your future self will thank you.
 
 **Don't describe what Spring Boot already knows.** Skills should push Claude *out of* its default behavior, not repeat the docs.
 
@@ -222,53 +276,49 @@ The `description` is a **trigger** — write it as "use when [condition]", not a
 
 ---
 
-## 🔥 HOT: MCP Server Skill
+## 🔥 Hot: MCP Server Skill
 
 The [`mcp-server`](skills/mcp-server/) skill is the most powerful one here.
 
-It teaches your agent to build production-ready MCP servers using the [official Java SDK](https://github.com/modelcontextprotocol/java-sdk) — the same protocol used by Claude, Cursor, VS Code, and every major AI coding tool.
+It teaches your agent to build production-ready MCP servers on **MCP Java SDK 1.0** and the **Spring AI GA starters** — the same protocol used by Claude, Cursor, VS Code, and every major AI coding tool.
 
 ```java
-// What the agent generates with the skill loaded:
-@Bean
-public McpServer orderMcpServer(OrderService orderService) {
-    return McpServer.sync(McpServerTransports.stdio())
-        .serverInfo("order-service-mcp", "1.0.0")
-        .tool(McpServerFeatures.SyncToolSpecification.builder()
-            .tool(Tool.builder()
-                .name("get_order")
-                .description("Retrieve order by ID with full line items")
-                .inputSchema(SchemaUtils.infer(GetOrderRequest.class))
-                .build())
-            .callHandler((exchange, args) -> {
-                var req = ObjectMappers.map(args, GetOrderRequest.class);
-                return new CallToolResult(orderService.findById(req.orderId()));
-            })
-            .build())
-        .build();
+// What the agent generates with the skill loaded —
+// real GA API: spring-ai-starter-mcp-server + annotation scanning
+@Component
+public class OrderMcpTools {
+
+    private final OrderService orderService;
+
+    @McpTool(name = "get_order",
+             description = "Get a single order by ID including all line items and status history")
+    public OrderResponse getOrder(
+            @McpToolParam(description = "UUID of the order", required = true) String orderId) {
+        return OrderResponse.from(orderService.findById(UUID.fromString(orderId)));
+    }
 }
 ```
 
-Without the skill: the agent guesses the API, uses deprecated methods, or writes Python MCP code instead.
+Without the skill, the agent guesses: dead pre-GA artifact names, SDK `0.9.0` APIs, `System.out` logging that corrupts the stdio transport — or it gives up and writes Python.
 
 ---
 
-## 🗺️ ROADMAP
+## 🗺️ Roadmap
 
 - [ ] Skills for Spring Batch
-- [ ] Skills for Spring Cloud Gateway  
+- [ ] Skills for Spring Cloud Gateway
 - [ ] Skills for Spring WebFlux / reactive patterns
 - [ ] Skills for multi-tenancy
 - [ ] CLAUDE.md template for Spring Boot projects
 - [ ] `/generate-endpoint` command
-- [ ] `/write-test` command  
+- [ ] `/write-test` command
 - [ ] `/db-migrate` command
 - [ ] Integration with [Hatch](https://github.com/rrezartprebreza/hatch) background job library
 - [ ] Integration with [SpringPulse](https://github.com/rrezartprebreza/springpulse) observability
 
 ---
 
-## 🤝 CONTRIBUTING
+## 🤝 Contributing
 
 Skills get better with real-world use. If you find a gap — the agent did something stupid in your Spring Boot project — open a PR and add it to the Gotchas section of the relevant skill.
 
@@ -281,7 +331,7 @@ Skills get better with real-world use. If you find a gap — the agent did somet
 
 ---
 
-## OTHER REPOS
+## 🛠️ More from the same workbench
 
 | Repo | Description |
 |------|-------------|
@@ -291,16 +341,16 @@ Skills get better with real-world use. If you find a gap — the agent did somet
 
 ---
 
-## About
+<div align="center">
 
-Skills for Spring Boot AI coding agents · Java 21 · Spring Boot 3.x · Claude Code · MCP Java SDK
+**If a skill saved your agent from writing `@Autowired` field injection today — ⭐ star the repo.**
 
-**Topics:** `spring-boot` `java` `ai-coding-agent` `claude-code` `mcp` `skills` `spring-ai` `developer-tools` `vibe-coding` `agentic-engineering`
+<br/>
 
-**LinkedIn summary:**
+`spring-boot` · `java` · `claude-code` · `mcp` · `spring-ai` · `skills` · `developer-tools`
 
-Built **spring-boot-skills**, a collection of production-grade Claude Code skills that help AI coding agents work more reliably in real Spring Boot projects, covering REST APIs, architecture, JPA/Hibernate, Flyway, security, testing, Spring AI, and MCP server development.
+<br/>
 
----
+*Built by [@rrezartprebreza](https://github.com/rrezartprebreza) · Pristina, Kosovo*
 
-*Built by [@rrezartprebreza](https://github.com/rrezartprebreza) · Pristina, Kosovo
+</div>

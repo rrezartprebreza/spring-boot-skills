@@ -138,6 +138,7 @@ Clients can request problem details explicitly with `Accept: application/problem
 Choose one approach per project. Don't mix `ApiResponse` for success and `ProblemDetail` for errors — it confuses API consumers who see two different shapes.
 
 ## Gotchas
+- Agent assumes `problemdetails.enabled: true` covers everything — it only converts *Spring's own* MVC exceptions; your domain exceptions still need `@ExceptionHandler` methods
 - Agent returns `Map<String, Object>` for errors — use `ProblemDetail`
 - Agent exposes raw exception messages in 500 errors — log it, return generic message
 - Agent uses custom error envelope alongside ProblemDetail — pick one standard
