@@ -1,6 +1,6 @@
 # spring-boot-skills
 
-**production-grade AI coding agent skills for Spring Boot developers**
+**Production-grade Claude Code skills for Spring Boot developers**
 
 [![skills](https://img.shields.io/badge/skills-18-4A90D9?style=flat&labelColor=1a1a2e)](https://github.com/rrezartprebreza/spring-boot-skills/tree/main/skills)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=flat&labelColor=1a1a2e&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
@@ -10,6 +10,8 @@
 [![GitHub Stars](https://img.shields.io/github/stars/rrezartprebreza/spring-boot-skills?style=flat&label=⭐&labelColor=555&color=white)](https://github.com/rrezartprebreza/spring-boot-skills/stargazers)
 
 > Drop a skill into your project. Your AI coding agent instantly understands your Spring Boot codebase — architecture, patterns, conventions — and codes like a senior engineer who's been on your team for years.
+
+This is a practical collection of Claude Code skills that teach AI coding agents how to work inside real Spring Boot projects: architecture rules, REST conventions, persistence patterns, security, testing, Spring AI, and MCP server development.
 
 ---
 
@@ -22,6 +24,8 @@ They generate `@Autowired` field injection instead of constructor injection. The
 Skills fix this. A skill is a markdown file your agent reads before touching your code. It tells the agent **your** conventions, your stack, your gotchas — not generic Spring Boot from 2020.
 
 This repo is a collection of battle-tested skills. Copy, adapt, drop in.
+
+**GitHub description suggestion:** Production-grade Claude Code skills for Spring Boot, Java, JPA, Flyway, Security, Spring AI, and MCP development.
 
 ---
 
@@ -112,6 +116,54 @@ claude
 ```
 
 That's it. Claude reads the skill before writing a single line.
+
+---
+
+## BEFORE / AFTER
+
+The value of these skills is not generic Spring Boot advice. The value is preventing the small mistakes AI agents make when they do not know your backend conventions.
+
+### Without a skill
+
+```java
+@RestController
+public class OrderController {
+    @Autowired
+    private OrderRepository repository;
+
+    @PostMapping("/orders")
+    public ResponseEntity<?> create(@RequestBody Order order) {
+        return ResponseEntity.ok(repository.save(order));
+    }
+}
+```
+
+Problems:
+
+- Business logic leaks into the controller.
+- No request DTO or validation boundary.
+- Repository is called directly from the web layer.
+- Response shape does not follow project conventions.
+- Errors and status codes are left to framework defaults.
+
+### With `layered-architecture` + `rest-api-conventions`
+
+```java
+@RestController
+@RequestMapping("/api/v1/orders")
+@RequiredArgsConstructor
+class OrderController {
+    private final OrderService orderService;
+
+    @PostMapping
+    ResponseEntity<ApiResponse<OrderResponse>> create(@Valid @RequestBody CreateOrderRequest request) {
+        OrderResponse response = orderService.create(request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(ApiResponse.ok(response));
+    }
+}
+```
+
+The agent now follows the intended design: controller as HTTP adapter, service for business rules, DTO validation at the boundary, and consistent response contracts.
 
 ---
 
@@ -244,6 +296,10 @@ Skills get better with real-world use. If you find a gap — the agent did somet
 Skills for Spring Boot AI coding agents · Java 21 · Spring Boot 3.x · Claude Code · MCP Java SDK
 
 **Topics:** `spring-boot` `java` `ai-coding-agent` `claude-code` `mcp` `skills` `spring-ai` `developer-tools` `vibe-coding` `agentic-engineering`
+
+**LinkedIn summary:**
+
+Built **spring-boot-skills**, a collection of production-grade Claude Code skills that help AI coding agents work more reliably in real Spring Boot projects, covering REST APIs, architecture, JPA/Hibernate, Flyway, security, testing, Spring AI, and MCP server development.
 
 ---
 
