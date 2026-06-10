@@ -141,11 +141,52 @@ public void addItem(OrderItem item) {
 }
 ```
 
+## Deep Pagination — Keyset over OFFSET
+
+`OFFSET` pagination scans and discards every skipped row. On page 5,000 the DB reads 100,000 rows to
+return 20. For large or infinite-scroll datasets, paginate by the last seen key (the "seek" method):
+
+```java
+// ❌ Slow on deep pages — OFFSET grows linearly
+Page<Order> findByStatus(OrderStatus status, Pageable pageable);
+
+// ✅ Keyset — constant time regardless of depth. Pass the last row's createdAt + id.
+@Query("""
+    SELECT o FROM Order o
+    WHERE o.status = :status
+      AND (o.createdAt < :lastCreatedAt
+           OR (o.createdAt = :lastCreatedAt AND o.id < :lastId))
+    ORDER BY o.createdAt DESC, o.id DESC
+    """)
+List<Order> findNextPage(OrderStatus status, Instant lastCreatedAt, UUID lastId, Limit limit);
+```
+
+The `(createdAt, id)` tuple breaks ties so the cursor is stable when timestamps collide. Index `(status, created_at DESC, id DESC)`.
+
+## Batch Inserts
+
+Saving a list one row at a time is N round-trips. Enable JDBC batching so Hibernate groups them:
+
+```yaml
+spring:
+  jpa:
+    properties:
+      hibernate:
+        jdbc.batch_size: 50
+        order_inserts: true
+        order_updates: true
+```
+
+Caveat: `GenerationType.IDENTITY` silently disables insert batching (Hibernate needs the generated key
+per row). `GenerationType.UUID` or a pooled sequence preserves it — another reason to prefer UUIDs.
+
 ## Gotchas
 - Agent uses `FetchType.EAGER` — always use `LAZY` on `@ManyToOne` and `@ManyToMany`
 - Agent uses `@Enumerated(EnumType.ORDINAL)` — always use `STRING`
 - Agent uses `Long` IDs — use `UUID`
 - Agent calls `findAll()` for list endpoints — always use `Pageable`
+- Agent uses `OFFSET` pagination on huge tables — switch to keyset for deep pages
 - Agent adds setters to entities — use behavior methods instead
 - Agent forgets `orphanRemoval = true` on `@OneToMany` — child records become orphans
 - Agent writes N+1 without realizing — check for `items` access in loops
+- Agent batches inserts with `GenerationType.IDENTITY` — batching is silently off; use `UUID`/sequence

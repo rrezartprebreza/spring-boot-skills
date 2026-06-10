@@ -98,19 +98,26 @@ public class OrderApplicationService {
     }
 }
 
-// Listen to events
+// Listen to events — bind to commit, not just publish.
+// @EventListener fires synchronously inside the TX; if the TX later rolls back you've
+// already sent the email. Prefer @TransactionalEventListener(AFTER_COMMIT) — see [[transactional-patterns]].
 @Component
 @RequiredArgsConstructor
 public class OrderPlacedHandler {
     private final EmailService emailService;
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     @Async
     public void onOrderPlaced(OrderPlaced event) {
         emailService.sendOrderConfirmation(event.customerId(), event.orderId());
     }
 }
 ```
+
+> **Let Spring Data publish for you.** Instead of calling `pullDomainEvents()` by hand, expose a
+> `@DomainEvents` method (returns the collected events) and an `@AfterDomainEventPublication` method
+> (clears them) on the aggregate root. Spring Data's repository drains and publishes them automatically
+> on every `save()` — no manual wiring in the service.
 
 ## Specifications (complex queries)
 

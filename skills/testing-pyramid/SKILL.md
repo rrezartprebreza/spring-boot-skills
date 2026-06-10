@@ -67,7 +67,7 @@ class OrderControllerTest {
 
     @Autowired MockMvc mockMvc;
     @Autowired ObjectMapper objectMapper;
-    @MockBean OrderService orderService;
+    @MockitoBean OrderService orderService; // Spring Boot 3.4+: @MockBean is deprecated
 
     @Test
     @WithMockUser(roles = "USER")
@@ -189,6 +189,7 @@ login_withInvalidCredentials_shouldReturn401()
 ## Gotchas
 - Agent uses `@SpringBootTest` for everything — use slices for speed
 - Agent uses `H2` in-memory DB for `@DataJpaTest` — use Testcontainers for accuracy
+- Agent uses `@MockBean` — deprecated since Spring Boot 3.4; use `@MockitoBean` (and `@MockitoSpyBean` for spies)
 - Agent uses `Mockito.mock()` instead of `@Mock` — use annotations with `@ExtendWith(MockitoExtension.class)`
 - Agent forgets `@WithMockUser` on controller tests — security filter blocks all requests
 - Agent uses `assertEquals` from JUnit — use AssertJ (`assertThat(...).isEqualTo(...)`)

@@ -153,8 +153,35 @@ public class OrderSaga {
 }
 ```
 
+## Side Effects After Commit
+
+Never fire an external side effect (email, Kafka publish, webhook, cache warm) inside the transaction —
+if the TX rolls back, you've already sent it. Bind the side effect to the commit instead:
+
+```java
+// Publisher — inside the TX
+@Transactional
+public Order place(UUID id) {
+    Order order = orderRepository.findById(id).orElseThrow();
+    order.place();
+    eventPublisher.publishEvent(new OrderPlaced(order.getId())); // not sent yet
+    return orderRepository.save(order);
+}
+
+// Listener — runs ONLY if the TX commits successfully
+@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+public void onOrderPlaced(OrderPlaced event) {
+    emailService.sendConfirmation(event.orderId()); // safe: data is durable
+}
+```
+
+`AFTER_COMMIT` runs after the DB commits. Note: it runs **outside** the original transaction, so a
+new `@Transactional(REQUIRES_NEW)` is needed if the listener itself writes to the DB. This is the
+clean way to publish the domain events collected in the [[domain-driven-design]] aggregate.
+
 ## Gotchas
 - Agent puts `@Transactional` on controllers — only on service layer
+- Agent sends email / publishes events inside the TX — use `@TransactionalEventListener(AFTER_COMMIT)`
 - Agent forgets `readOnly = true` on read methods — missed DB optimization
 - Agent calls `@Transactional` methods on `this` — self-invocation bypasses proxy
 - Agent expects checked exceptions to rollback — must add `rollbackFor`

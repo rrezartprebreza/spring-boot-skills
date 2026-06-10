@@ -24,24 +24,29 @@ description: >
 </dependencyManagement>
 
 <dependencies>
-    <!-- Choose your model provider -->
+    <!-- Choose your model provider — 1.0 GA renamed every starter to spring-ai-starter-* -->
     <dependency>
         <groupId>org.springframework.ai</groupId>
-        <artifactId>spring-ai-anthropic-spring-boot-starter</artifactId>
+        <artifactId>spring-ai-starter-model-anthropic</artifactId>
     </dependency>
     <!-- OR -->
     <dependency>
         <groupId>org.springframework.ai</groupId>
-        <artifactId>spring-ai-openai-spring-boot-starter</artifactId>
+        <artifactId>spring-ai-starter-model-openai</artifactId>
     </dependency>
 
     <!-- For RAG / vector search -->
     <dependency>
         <groupId>org.springframework.ai</groupId>
-        <artifactId>spring-ai-pgvector-store-spring-boot-starter</artifactId>
+        <artifactId>spring-ai-starter-vector-store-pgvector</artifactId>
     </dependency>
 </dependencies>
 ```
+
+> **Watch the artifact names.** 1.0 GA dropped the old `spring-ai-<x>-spring-boot-starter`
+> coordinates. The pattern is now `spring-ai-starter-model-<provider>` (e.g. `-model-anthropic`,
+> `-model-openai`) and `spring-ai-starter-vector-store-<store>`. Agents trained on pre-GA Spring AI
+> will emit the dead names — they resolve to nothing in Maven Central.
 
 ## ChatClient — Basic Usage
 
@@ -79,11 +84,20 @@ public class DocumentSummaryService {
 public class AiConfig {
 
     @Bean
-    public ChatClient chatClient(ChatClient.Builder builder) {
+    public ChatMemory chatMemory() {
+        // 1.0 GA: InMemoryChatMemory is GONE. Use MessageWindowChatMemory —
+        // it caps history to a sliding window and defaults to an in-memory repository.
+        return MessageWindowChatMemory.builder()
+            .maxMessages(20)
+            .build();
+    }
+
+    @Bean
+    public ChatClient chatClient(ChatClient.Builder builder, ChatMemory chatMemory) {
         return builder
             .defaultSystem("You are a helpful assistant for an e-commerce platform.")
             .defaultAdvisors(
-                new MessageChatMemoryAdvisor(new InMemoryChatMemory()),
+                MessageChatMemoryAdvisor.builder(chatMemory).build(), // GA: builder, not new(...)
                 new SimpleLoggerAdvisor() // logs prompts/responses
             )
             .build();
@@ -148,17 +162,16 @@ public class OrderClassifier {
 @Configuration
 public class RagConfig {
 
-    @Bean
-    public VectorStore vectorStore(EmbeddingModel embeddingModel, JdbcTemplate jdbcTemplate) {
-        return new PgVectorStore(jdbcTemplate, embeddingModel);
-    }
+    // No manual VectorStore bean — the spring-ai-starter-vector-store-pgvector
+    // starter auto-configures one. Just inject it. (The old `new PgVectorStore(...)`
+    // constructor is removed in GA; if you must build one, use PgVectorStore.builder(...).)
 
     @Bean
     public ChatClient ragChatClient(ChatClient.Builder builder, VectorStore vectorStore) {
         return builder
             .defaultAdvisors(
                 QuestionAnswerAdvisor.builder(vectorStore)
-                    .searchRequest(SearchRequest.defaults().withTopK(5))
+                    .searchRequest(SearchRequest.builder().topK(5).build()) // GA: builder, not defaults().withTopK()
                     .build()
             )
             .build();
@@ -227,9 +240,14 @@ spring:
 ```
 
 ## Gotchas
+- Agent uses pre-GA artifact names (`spring-ai-anthropic-spring-boot-starter`) — GA is `spring-ai-starter-model-anthropic`
+- Agent writes `new MessageChatMemoryAdvisor(new InMemoryChatMemory())` — both removed in GA; use `MessageChatMemoryAdvisor.builder(chatMemory)` + `MessageWindowChatMemory`
+- Agent writes `SearchRequest.defaults().withTopK(n)` — GA is `SearchRequest.builder().topK(n).build()`
 - Agent hardcodes API keys — always use environment variables / `${...}`
 - Agent builds prompts with string concatenation — use `.param()` template variables
 - Agent puts prompts inline in code — externalize to `src/main/resources/prompts/`
 - Agent ignores structured output — use `.entity(MyClass.class)` instead of parsing manually
-- Agent skips error handling for API calls — wrap in try/catch, handle `AiException`
+- Agent uses `.entity(List.class)` for a list — generics erase; pass `new ParameterizedTypeReference<List<X>>() {}`
+- Agent skips error handling for API calls — wrap in try/catch, handle `NonTransientAiException` (don't retry) vs `TransientAiException` (retry)
+- Agent forgets a per-user `conversationId` on the memory advisor — all users share one chat history
 - Agent uses wrong model string — verify model names against provider docs

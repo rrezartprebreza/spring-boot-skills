@@ -165,9 +165,27 @@ spring:
     type: redis
 ```
 
+## Cache Stampede
+
+When a hot key expires, every concurrent request misses at once and they all hammer the DB to recompute
+the same value (the "thundering herd"). For expensive, high-traffic loads, let one caller compute while
+the rest wait:
+
+```java
+// sync = true — only one thread computes the value; others block on it
+@Cacheable(value = "products", key = "#id", sync = true)
+public ProductResponse findById(UUID id) { ... }
+```
+
+`sync = true` serializes recomputation per key within a single instance. For a fleet-wide guarantee,
+add a short Redis lock (`SETNX` with a TTL) around the recompute. Pair with jittered TTLs so a batch of
+keys written together doesn't all expire on the same second.
+
 ## Gotchas
 - Agent uses Java serialization for values — always use JSON (`GenericJackson2JsonRedisSerializer`)
 - Agent caches entities with JPA lazy fields — cache DTOs/response objects, not entities
 - Agent uses no TTL — always set expiry, memory is not infinite
 - Agent forgets `@EnableCaching` — `@Cacheable` silently does nothing without it
 - Agent caches `null` values — use `.disableCachingNullValues()` to avoid storing misses
+- Agent leaves hot keys unprotected — use `@Cacheable(sync = true)` to prevent stampede on expiry
+- Agent gives every entry the same TTL — add jitter so keys don't expire in a synchronized wave

@@ -13,19 +13,36 @@ Maintained by Anthropic in collaboration with Spring AI.
 
 ## Dependency
 
+The standalone SDK reached **1.0.0 GA** (`io.modelcontextprotocol.sdk:mcp`). Most Spring Boot
+apps should use the **Spring AI MCP starter** instead — it auto-configures the server, transport,
+and tool scanning. The starter coordinates were renamed at Spring AI 1.0 GA to `spring-ai-starter-mcp-server-*`.
+
 ```xml
+<!-- Recommended for Spring Boot: pick ONE transport starter -->
+<!-- stdio (Claude Desktop / Claude Code launching the jar locally) -->
+<dependency>
+    <groupId>org.springframework.ai</groupId>
+    <artifactId>spring-ai-starter-mcp-server</artifactId>
+</dependency>
+<!-- OR remote HTTP (SSE + Streamable-HTTP) over Spring MVC -->
+<dependency>
+    <groupId>org.springframework.ai</groupId>
+    <artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
+</dependency>
+<!-- OR reactive: spring-ai-starter-mcp-server-webflux -->
+```
+
+```xml
+<!-- Or drive the raw SDK directly (no Spring AI), now at 1.0.0 GA -->
 <dependency>
     <groupId>io.modelcontextprotocol.sdk</groupId>
     <artifactId>mcp</artifactId>
-    <version>0.9.0</version>
-</dependency>
-
-<!-- For Spring Boot integration -->
-<dependency>
-    <groupId>org.springframework.ai</groupId>
-    <artifactId>spring-ai-mcp-server-spring-boot-starter</artifactId>
+    <version>1.0.0</version>
 </dependency>
 ```
+
+> The old `spring-ai-mcp-server-spring-boot-starter` name is dead. GA is `spring-ai-starter-mcp-server`
+> (stdio), `-webmvc` (servlet SSE / Streamable-HTTP), and `-webflux` (reactive).
 
 ## Minimal MCP Server (stdio transport)
 
@@ -136,12 +153,16 @@ spring:
       server:
         name: order-service-mcp
         version: 1.0.0
-        transport: stdio   # stdio for Claude Code, sse for remote clients
-        # transport: sse
-        # sse:
-        #   port: 8080
-        #   path: /mcp/sse
+        type: SYNC          # SYNC (blocking) or ASYNC (reactive / WebFlux)
+        # --- stdio: needs spring-ai-starter-mcp-server + banner/console logging OFF ---
+        stdio: true         # framing is over stdin/stdout — nothing else may write there
+        # --- remote: needs the -webmvc or -webflux starter instead ---
+        # protocol: STREAMABLE   # SSE | STREAMABLE | STATELESS (Streamable-HTTP is the 2025-06-18 default)
 ```
+
+> **stdio servers must keep stdout clean.** Any log line, banner, or `System.out.println` corrupts
+> the JSON-RPC framing and the client silently drops the connection. For stdio, set
+> `spring.main.banner-mode=off` and route logging to a file or stderr.
 
 ## Exposing Resources
 
@@ -212,8 +233,12 @@ private CallToolResult errorResult(String code, String message) {
 
 ## Gotchas
 - Agent generates Python MCP code — always use the Java SDK
+- Agent uses the dead `spring-ai-mcp-server-spring-boot-starter` name — GA is `spring-ai-starter-mcp-server[-webmvc|-webflux]`
+- Agent pins SDK `0.9.0` — the standalone SDK is `1.0.0` GA (or just use the Spring AI starter)
+- Agent logs to stdout on a stdio server — corrupts JSON-RPC framing; banner off, logs to file/stderr
 - Agent forgets `isError = true` in error results — agent can't distinguish errors from data
 - Agent uses `FetchType.EAGER` inside tool handlers — triggers N+1, use projections
 - Agent exposes entities directly — serialize to DTOs before returning
 - Agent ignores `shutdown hooks` — always close the server on JVM shutdown
-- `stdio` transport for local tools (Claude Code, Claude Desktop), `sse` for remote
+- Agent writes vague tool descriptions — the description IS the prompt the model reads; be specific about when to call it and what it returns
+- `stdio` for local tools (Claude Code, Claude Desktop); `-webmvc`/`-webflux` + Streamable-HTTP for remote
