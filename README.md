@@ -9,7 +9,7 @@
 
 <br/>
 
-[![skills](https://img.shields.io/badge/skills-18-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
+[![skills](https://img.shields.io/badge/skills-19-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=for-the-badge&labelColor=0f172a&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-21%2B-ED8B00?style=for-the-badge&labelColor=0f172a&logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/License-MIT-94a3b8?style=for-the-badge&labelColor=0f172a)](LICENSE)
@@ -98,6 +98,12 @@ Drop any skill folder into `.claude/skills/` in your project. Claude Code auto-d
 | [**flyway-migrations**](skills/flyway-migrations/) | Migration naming convention, safe multi-step schema changes, team workflow for concurrent migrations. | `flyway` `migrations` |
 | [**spring-data-redis**](skills/spring-data-redis/) | Cache-aside pattern, key naming, TTL strategy, stampede protection, serialization config. | `redis` `caching` |
 | [**transactional-patterns**](skills/transactional-patterns/) | `@Transactional` propagation rules, self-invocation pitfall, after-commit side effects, saga pattern. | `transactions` |
+
+### ⚙️ Batch & Jobs
+
+| Skill | Description | Tags |
+|-------|-------------|------|
+| [**spring-batch**](skills/spring-batch/) | Spring Batch 5 chunk jobs on Boot 3 — builder API (no `JobBuilderFactory`), restartable & idempotent job parameters, reader sort/thread-safety, fault tolerance, chunk transaction boundaries. | `batch` `etl` |
 
 ### 🔒 Security
 
@@ -305,7 +311,7 @@ Without the skill, the agent guesses: dead pre-GA artifact names, SDK `0.9.0` AP
 
 ## 🗺️ Roadmap
 
-- [ ] Skills for Spring Batch
+- [x] Skills for Spring Batch
 - [ ] Skills for Spring Cloud Gateway
 - [ ] Skills for Spring WebFlux / reactive patterns
 - [ ] Skills for multi-tenancy
