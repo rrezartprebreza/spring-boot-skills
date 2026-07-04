@@ -69,7 +69,7 @@
       <text x="218" y="21" text-anchor="middle" font-size="12" fill="#64748b" font-family="ui-monospace, Menlo, Consolas, monospace">~/my-spring-app</text>
 
       <g font-family="ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace" font-size="13.5">
-        <text x="22" y="62"><tspan fill="#6DB33F">❯</tspan><tspan fill="#e2e8f0" dx="8">codex</tspan></text>
+        <text x="22" y="62"><tspan fill="#6DB33F">❯</tspan><tspan fill="#e2e8f0" dx="8">claude / codex</tspan></text>
         <text x="22" y="88"><tspan fill="#64748b">›</tspan><tspan fill="#cbd5e1" dx="8">add a paginated orders endpoint</tspan></text>
         <text x="22" y="118"><tspan fill="#a7f3d0">✓</tspan><tspan fill="#6DB33F" dx="8">Skill</tspan><tspan fill="#94a3b8" dx="6">rest-api-conventions</tspan></text>
         <text x="22" y="142"><tspan fill="#a7f3d0">✓</tspan><tspan fill="#6DB33F" dx="8">Skill</tspan><tspan fill="#94a3b8" dx="6">spring-data-jpa</tspan></text>
