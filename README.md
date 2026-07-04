@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/banner.svg" alt="spring-boot-skills — production-grade Claude Code skills for Spring Boot" width="100%"/>
+<img src="assets/banner.svg" alt="spring-boot-skills — production-grade Claude Code and Codex skills for Spring Boot" width="100%"/>
 
 <br/>
 <br/>
@@ -15,6 +15,7 @@
 [![License](https://img.shields.io/badge/License-MIT-94a3b8?style=for-the-badge&labelColor=0f172a)](LICENSE)
 
 [![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-d97757?style=flat-square&labelColor=1e293b)](https://code.claude.com)
+[![Codex](https://img.shields.io/badge/Codex-compatible-10a37f?style=flat-square&labelColor=1e293b)](https://chatgpt.com/codex)
 [![Spring AI](https://img.shields.io/badge/Spring_AI-1.x_%7C_2.0-6DB33F?style=flat-square&labelColor=1e293b)](https://spring.io/projects/spring-ai)
 [![MCP Java SDK](https://img.shields.io/badge/MCP_Java_SDK-1.0-e879f9?style=flat-square&labelColor=1e293b)](https://github.com/modelcontextprotocol/java-sdk)
 [![GitHub Stars](https://img.shields.io/github/stars/rrezartprebreza/spring-boot-skills?style=flat-square&label=stars&labelColor=1e293b&color=fbbf24)](https://github.com/rrezartprebreza/spring-boot-skills/stargazers)
@@ -37,7 +38,7 @@ They generate `@Autowired` field injection instead of constructor injection. The
 
 ```mermaid
 flowchart LR
-    A["💬 You ask:<br/>&quot;add an orders endpoint&quot;"] --> B{Claude matches<br/>skill triggers}
+    A["💬 You ask:<br/>&quot;add an orders endpoint&quot;"] --> B{Agent matches<br/>skill triggers}
     B -->|"REST code?"| C["📜 rest-api-conventions"]
     B -->|"persistence?"| D["📜 spring-data-jpa"]
     C --> E["🤖 Agent codes with<br/>YOUR envelope, YOUR<br/>status mapping, YOUR<br/>pagination contract"]
@@ -60,11 +61,11 @@ This repo is a collection of battle-tested skills. Copy, adapt, drop in.
 
 | Concept | Description |
 |---------|-------------|
-| [**Skills**](https://code.claude.com/docs/en/skills) | Markdown files loaded into agent context — tell the agent *how* to work in your codebase |
-| [**Subagents**](https://code.claude.com/docs/en/sub-agents) | Isolated Claude instances for parallel work — use for reviews, test generation, migration tasks |
-| [**CLAUDE.md**](https://code.claude.com/docs/en/memory) | Project-level persistent memory — your agent's onboarding doc |
+| **Skills** | Markdown files loaded into Claude Code or Codex context — tell the agent *how* to work in your codebase |
+| **Subagents** | Isolated agent instances for parallel work — use for reviews, test generation, migration tasks |
+| **CLAUDE.md / AGENTS.md** | Project-level persistent memory — your agent's onboarding doc |
 | [**MCP Java SDK**](https://github.com/modelcontextprotocol/java-sdk) | Official Java SDK for building MCP servers — connect your Spring Boot app to any AI agent |
-| [**Commands**](https://code.claude.com/docs/en/slash-commands) | Slash commands for repeatable workflows — `/generate-endpoint`, `/write-test`, `/db-migrate` |
+| **Commands / workflows** | Repeatable agent workflows — `/generate-endpoint`, `/write-test`, `/db-migrate` |
 
 ---
 
@@ -77,7 +78,7 @@ Every skill ships in **two flavors** — pick the folder that matches your stack
 | [`skills/spring-boot-4/`](skills/spring-boot-4/) | Spring Boot 4.x · Spring Framework 7 · Spring Security 7 · Spring Batch 6 · Jackson 3 · Spring AI 2.0 |
 | [`skills/spring-boot-3/`](skills/spring-boot-3/) | Spring Boot 3.x · Spring Framework 6 · Spring Security 6 · Spring Batch 5 · Jackson 2 · Spring AI 1.x |
 
-Drop any skill folder into `.claude/skills/` in your project. Claude Code auto-discovers them.
+Drop any skill folder into your agent's skills directory. Claude Code users can copy them to `.claude/skills/`; Codex users can adapt the same `SKILL.md` folders for `.codex/skills/`.
 The catalog below links to the **Spring Boot 4** versions — swap `spring-boot-4` for `spring-boot-3` in any path if you're still on Boot 3.
 
 ### 🏗️ Architecture
@@ -138,12 +139,21 @@ The catalog below links to the **Spring Boot 4** versions — swap `spring-boot-
 
 ## ⚡ Quick Start
 
-**1. Install Claude Code** (if not already)
+**1. Prepare your coding agent**
+
+Install Claude Code if needed:
 ```bash
 npm install -g @anthropic-ai/claude-code
 ```
 
+If you use Codex, confirm the CLI or desktop app command is available:
+```bash
+codex --version
+```
+
 **2. Drop a skill into your project**
+
+Claude Code:
 ```bash
 mkdir -p .claude/skills
 # Spring Boot 4 project
@@ -154,13 +164,31 @@ cp -r spring-boot-skills/skills/spring-boot-4/spring-data-jpa .claude/skills/
 cp -r spring-boot-skills/skills/spring-boot-3/rest-api-conventions .claude/skills/
 ```
 
-**3. Tell Claude what you want**
+Codex:
+```bash
+mkdir -p .codex/skills
+# Spring Boot 4 project
+cp -r spring-boot-skills/skills/spring-boot-4/rest-api-conventions .codex/skills/
+cp -r spring-boot-skills/skills/spring-boot-4/spring-data-jpa .codex/skills/
+
+# Spring Boot 3 project — same skills, Boot 3 flavor
+cp -r spring-boot-skills/skills/spring-boot-3/rest-api-conventions .codex/skills/
+```
+
+**3. Tell your agent what you want**
 ```
 claude
 > Generate a CRUD endpoint for the Order entity following our REST conventions
 ```
 
-That's it. Claude reads the skill before writing a single line.
+or:
+
+```
+codex
+> Generate a CRUD endpoint for the Order entity following our REST conventions
+```
+
+That's it. Your agent reads the skill before writing a single line.
 
 ---
 
@@ -276,9 +304,9 @@ The **Gotchas** section at the bottom of each skill is the secret weapon: a runn
 
 **The Gotchas section is the most valuable part** — add to it every time the agent does something wrong. Your future self will thank you.
 
-**Don't describe what Spring Boot already knows.** Skills should push Claude *out of* its default behavior, not repeat the docs.
+**Don't describe what Spring Boot already knows.** Skills should push your agent *out of* its default behavior, not repeat the docs.
 
-**Be opinionated about your project.** Generic Spring Boot best practices belong in a blog post. Skills belong in your `.claude/` folder.
+**Be opinionated about your project.** Generic Spring Boot best practices belong in a blog post. Skills belong in your agent skills folder.
 
 **Fork this repo and customize.** Every team's conventions are different. These are starting points, not gospel.
 
@@ -287,7 +315,7 @@ The **Gotchas** section at the bottom of each skill is the secret weapon: a runn
 | Anti-pattern | Fix |
 |--------------|-----|
 | Giant SKILL.md with everything | Split into focused skills, one concern each |
-| "Always use constructor injection" | Already Claude's default — skip it |
+| "Always use constructor injection" | Already a strong agent default — skip it |
 | No examples | Add a `good.java` and `bad.java` — the contrast is what teaches |
 | Prescriptive step-by-step instructions | Give goals and constraints, let agent decide how |
 | Never updating | Add a Gotchas section, update it when agent fails |
@@ -366,7 +394,7 @@ Skills get better with real-world use. If you find a gap — the agent did somet
 
 <br/>
 
-`spring-boot` · `java` · `claude-code` · `mcp` · `spring-ai` · `skills` · `developer-tools`
+`spring-boot` · `java` · `claude-code` · `codex` · `mcp` · `spring-ai` · `skills` · `developer-tools`
 
 <br/>
 
