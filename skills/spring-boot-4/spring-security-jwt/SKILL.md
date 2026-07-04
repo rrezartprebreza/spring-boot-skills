@@ -1,0 +1,283 @@
+---
+name: spring-security-jwt
+description: >
+  Use when implementing authentication, authorization, JWT tokens, security filters,
+  password encoding, or any Spring Security configuration. Covers stateless JWT auth,
+  token rotation, RBAC, and method-level security.
+---
+
+# Spring Security — JWT
+
+Spring Boot 4.x ships **Spring Security 7**: the lambda DSL is the *only* style — `and()`,
+`authorizeRequests()`, `antMatchers()`, and `WebSecurityConfigurerAdapter` no longer exist, and
+`AntPathRequestMatcher`/`MvcRequestMatcher` are replaced by `PathPatternRequestMatcher`
+(`requestMatchers("/path/**")` uses it under the hood).
+
+## Dependencies
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-security</artifactId>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-api</artifactId>
+    <version>0.12.6</version>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-impl</artifactId>
+    <version>0.12.6</version>
+    <scope>runtime</scope>
+</dependency>
+<dependency>
+    <groupId>io.jsonwebtoken</groupId>
+    <artifactId>jjwt-jackson</artifactId>
+    <version>0.12.6</version>
+    <scope>runtime</scope>
+</dependency>
+```
+
+## Security Configuration
+
+```java
+@Configuration
+@EnableWebSecurity
+@EnableMethodSecurity
+@RequiredArgsConstructor
+public class SecurityConfig {
+
+    private final JwtAuthenticationFilter jwtAuthFilter;
+    private final UserDetailsService userDetailsService;
+
+    @Bean
+    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+        return http
+            .csrf(AbstractHttpConfigurer::disable)
+            .sessionManagement(s -> s.sessionCreationPolicy(STATELESS))
+            .authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/v1/auth/**").permitAll()
+                .requestMatchers("/actuator/health").permitAll()
+                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
+                .anyRequest().authenticated()
+            )
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .build();
+    }
+
+    @Bean
+    public AuthenticationProvider authenticationProvider() {
+        var provider = new DaoAuthenticationProvider(userDetailsService); // Security 7: constructor, not setter
+        provider.setPasswordEncoder(passwordEncoder());
+        return provider;
+    }
+
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+        return config.getAuthenticationManager();
+    }
+
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder(12);
+    }
+}
+```
+
+## JWT Service
+
+```java
+@Service
+public class JwtService {
+
+    @Value("${app.jwt.secret}")
+    private String secretKey;
+
+    @Value("${app.jwt.access-token-expiry:900000}") // 15 min default
+    private long accessTokenExpiry;
+
+    @Value("${app.jwt.refresh-token-expiry:604800000}") // 7 days default
+    private long refreshTokenExpiry;
+
+    public String generateAccessToken(UserDetails user) {
+        return generateToken(Map.of("type", "access"), user, accessTokenExpiry);
+    }
+
+    public String generateRefreshToken(UserDetails user) {
+        return generateToken(Map.of("type", "refresh"), user, refreshTokenExpiry);
+    }
+
+    private String generateToken(Map<String, Object> claims, UserDetails user, long expiry) {
+        return Jwts.builder()
+            .claims(claims)
+            .subject(user.getUsername())
+            .issuedAt(new Date())
+            .expiration(new Date(System.currentTimeMillis() + expiry))
+            .signWith(getSigningKey())
+            .compact();
+    }
+
+    public boolean isTokenValid(String token, UserDetails user) {
+        return extractUsername(token).equals(user.getUsername()) && !isExpired(token);
+    }
+
+    public String extractUsername(String token) {
+        return extractClaim(token, Claims::getSubject);
+    }
+
+    private boolean isExpired(String token) {
+        return extractClaim(token, Claims::getExpiration).before(new Date());
+    }
+
+    private <T> T extractClaim(String token, Function<Claims, T> resolver) {
+        return resolver.apply(Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token).getPayload());
+    }
+
+    private SecretKey getSigningKey() {
+        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
+    }
+}
+```
+
+## JWT Filter
+
+```java
+@Component
+@RequiredArgsConstructor
+public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private final JwtService jwtService;
+    private final UserDetailsService userDetailsService;
+
+    @Override
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain chain) throws ServletException, IOException {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
+        String token = authHeader.substring(7);
+        try {
+            String username = jwtService.extractUsername(token);
+
+            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                UserDetails user = userDetailsService.loadUserByUsername(username);
+                if (jwtService.isTokenValid(token, user)) {
+                    var auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
+                    auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
+                    SecurityContextHolder.getContext().setAuthentication(auth);
+                }
+            }
+        } catch (ExpiredJwtException | MalformedJwtException | SignatureException e) {
+            // Parsing throws on expired/tampered tokens. Without this catch the exception
+            // escapes the filter chain as a 500. Leave the context empty — the entry
+            // point below turns it into a clean 401.
+            SecurityContextHolder.clearContext();
+        }
+        chain.doFilter(request, response);
+    }
+}
+```
+
+## JSON 401/403 — Don't Ship the Defaults
+
+Out of the box, an unauthenticated API request gets an empty 401 (or worse, a redirect to a login
+page) and `AccessDeniedException` becomes an empty 403. REST clients need a body:
+
+```java
+@Bean
+public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    return http
+        // ... as above ...
+        .exceptionHandling(ex -> ex
+            .authenticationEntryPoint((request, response, e) -> {       // 401 — not authenticated
+                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                response.getWriter().write("""
+                    {"success":false,"error":{"code":"UNAUTHORIZED","message":"Authentication required"}}""");
+            })
+            .accessDeniedHandler((request, response, e) -> {            // 403 — authenticated, no permission
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
+                response.getWriter().write("""
+                    {"success":false,"error":{"code":"FORBIDDEN","message":"Insufficient permissions"}}""");
+            })
+        )
+        .build();
+}
+```
+
+`@RestControllerAdvice` cannot catch these — security filters run **before** the dispatcher servlet,
+so exceptions thrown there never reach your exception handler.
+
+## Auth Controller
+
+```java
+@RestController
+@RequestMapping("/api/v1/auth")
+@RequiredArgsConstructor
+public class AuthController {
+
+    private final AuthService authService;
+
+    @PostMapping("/login")
+    public ApiResponse<AuthResponse> login(@Valid @RequestBody LoginRequest request) {
+        return ApiResponse.ok(authService.login(request));
+    }
+
+    @PostMapping("/refresh")
+    public ApiResponse<AuthResponse> refresh(@Valid @RequestBody RefreshRequest request) {
+        return ApiResponse.ok(authService.refresh(request.refreshToken()));
+    }
+
+    @PostMapping("/register")
+    public ResponseEntity<ApiResponse<AuthResponse>> register(@Valid @RequestBody RegisterRequest request) {
+        return ResponseEntity.status(201).body(ApiResponse.ok(authService.register(request)));
+    }
+}
+
+public record AuthResponse(String accessToken, String refreshToken, long expiresIn) {}
+```
+
+## Method-Level Security
+
+```java
+// On service methods
+@PreAuthorize("hasRole('ADMIN')")
+public void deleteUser(UUID userId) { ... }
+
+@PreAuthorize("hasRole('ADMIN') or #userId == authentication.principal.id")
+public UserProfile getProfile(UUID userId) { ... }
+
+@PostAuthorize("returnObject.email == authentication.name")
+public User findById(UUID id) { ... }
+```
+
+## application.yml
+
+```yaml
+app:
+  jwt:
+    secret: ${JWT_SECRET} # min 256-bit base64 encoded key
+    access-token-expiry: 900000   # 15 minutes
+    refresh-token-expiry: 604800000 # 7 days
+```
+
+## Gotchas
+- Agent uses non-lambda chaining (`http.csrf().disable()`, `.and()`, `authorizeRequests()`) — removed in Security 7, won't compile; lambda DSL only: `csrf(AbstractHttpConfigurer::disable)`, `authorizeHttpRequests(...)`
+- Agent writes `antMatchers()`/`mvcMatchers()` or `AntPathRequestMatcher`/`MvcRequestMatcher` — removed in Security 7; use `requestMatchers("/path/**")` (backed by `PathPatternRequestMatcher`) or `PathPatternRequestMatcher.withDefaults().matcher("/path/**")`
+- Agent extends `WebSecurityConfigurerAdapter` — long gone; declare a `SecurityFilterChain` bean
+- Agent calls `provider.setUserDetailsService(...)` — gone in Security 7; pass it to the constructor: `new DaoAuthenticationProvider(userDetailsService)`
+- Agent lets `ExpiredJwtException` escape the filter — expired token becomes a 500 instead of 401; catch in filter
+- Agent skips `exceptionHandling()` — clients get empty 401/403 bodies (or a login-page redirect); `@RestControllerAdvice` can't catch filter-level exceptions
+- Agent stores JWT secret in code — always `${JWT_SECRET}` from environment (HS256 needs a ≥256-bit key or `Keys.hmacShaKeyFor` throws `WeakKeyException`)
+- Agent uses `SessionCreationPolicy.IF_REQUIRED` — must be `STATELESS` for JWT
+- Agent forgets `@EnableMethodSecurity` for `@PreAuthorize` to work
+- Agent uses BCrypt strength < 10 — use 12 for production
+- Agent puts token validation logic in controller — belongs in filter
+- Agent puts refresh tokens in localStorage examples — recommend httpOnly cookies or secure storage; refresh tokens are long-lived credentials
+- Agent tests security with `@MockBean`/`@SpyBean` — removed in Boot 4; use `@MockitoBean`/`@MockitoSpyBean`, and add `@AutoConfigureMockMvc` — `@SpringBootTest` no longer provides `MockMvc` on its own

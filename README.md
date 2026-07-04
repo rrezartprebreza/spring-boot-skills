@@ -9,13 +9,13 @@
 
 <br/>
 
-[![skills](https://img.shields.io/badge/skills-19-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
-[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x-6DB33F?style=for-the-badge&labelColor=0f172a&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![skills](https://img.shields.io/badge/skills-19_%C3%97_2-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
+[![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x_%7C_4.x-6DB33F?style=for-the-badge&labelColor=0f172a&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-21%2B-ED8B00?style=for-the-badge&labelColor=0f172a&logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/License-MIT-94a3b8?style=for-the-badge&labelColor=0f172a)](LICENSE)
 
 [![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-d97757?style=flat-square&labelColor=1e293b)](https://code.claude.com)
-[![Spring AI](https://img.shields.io/badge/Spring_AI-1.0_GA-6DB33F?style=flat-square&labelColor=1e293b)](https://spring.io/projects/spring-ai)
+[![Spring AI](https://img.shields.io/badge/Spring_AI-1.x_%7C_2.0-6DB33F?style=flat-square&labelColor=1e293b)](https://spring.io/projects/spring-ai)
 [![MCP Java SDK](https://img.shields.io/badge/MCP_Java_SDK-1.0-e879f9?style=flat-square&labelColor=1e293b)](https://github.com/modelcontextprotocol/java-sdk)
 [![GitHub Stars](https://img.shields.io/github/stars/rrezartprebreza/spring-boot-skills?style=flat-square&label=stars&labelColor=1e293b&color=fbbf24)](https://github.com/rrezartprebreza/spring-boot-skills/stargazers)
 
@@ -70,61 +70,69 @@ This repo is a collection of battle-tested skills. Copy, adapt, drop in.
 
 ## 📦 Skills
 
+Every skill ships in **two flavors** — pick the folder that matches your stack:
+
+| Folder | Target stack |
+|--------|--------------|
+| [`skills/spring-boot-4/`](skills/spring-boot-4/) | Spring Boot 4.x · Spring Framework 7 · Spring Security 7 · Spring Batch 6 · Jackson 3 · Spring AI 2.0 |
+| [`skills/spring-boot-3/`](skills/spring-boot-3/) | Spring Boot 3.x · Spring Framework 6 · Spring Security 6 · Spring Batch 5 · Jackson 2 · Spring AI 1.x |
+
 Drop any skill folder into `.claude/skills/` in your project. Claude Code auto-discovers them.
+The catalog below links to the **Spring Boot 4** versions — swap `spring-boot-4` for `spring-boot-3` in any path if you're still on Boot 3.
 
 ### 🏗️ Architecture
 
 | Skill | Description | Tags |
 |-------|-------------|------|
-| [**layered-architecture**](skills/layered-architecture/) | Enforces Controller → Service → Repository separation. Prevents business logic leaking into controllers or repositories. | `architecture` |
-| [**hexagonal-architecture**](skills/hexagonal-architecture/) | Ports and adapters pattern for Spring Boot. Keeps domain clean of framework dependencies. | `architecture` `ddd` |
-| [**domain-driven-design**](skills/domain-driven-design/) | Aggregates, value objects, domain events with commit-safe publication. Includes JPA mapping conventions. | `ddd` `jpa` |
-| [**multi-module-maven**](skills/multi-module-maven/) | Parent POM conventions, shared BOM, inter-module dependency rules. Prevents circular deps. | `maven` `architecture` |
+| [**layered-architecture**](skills/spring-boot-4/layered-architecture/) | Enforces Controller → Service → Repository separation. Prevents business logic leaking into controllers or repositories. | `architecture` |
+| [**hexagonal-architecture**](skills/spring-boot-4/hexagonal-architecture/) | Ports and adapters pattern for Spring Boot. Keeps domain clean of framework dependencies. | `architecture` `ddd` |
+| [**domain-driven-design**](skills/spring-boot-4/domain-driven-design/) | Aggregates, value objects, domain events with commit-safe publication. Includes JPA mapping conventions. | `ddd` `jpa` |
+| [**multi-module-maven**](skills/spring-boot-4/multi-module-maven/) | Parent POM conventions, shared BOM, inter-module dependency rules. Prevents circular deps. | `maven` `architecture` |
 
 ### 🔌 API Design
 
 | Skill | Description | Tags |
 |-------|-------------|------|
-| [**rest-api-conventions**](skills/rest-api-conventions/) | Your project's response envelope, error codes, pagination contract, versioning strategy. Fill in the template. | `rest` `api` |
-| [**openapi-first**](skills/openapi-first/) | Generate controllers and DTOs from OpenAPI spec. Uses `openapi-generator-maven-plugin`. | `openapi` `codegen` |
-| [**problem-details-rfc9457**](skills/problem-details-rfc9457/) | RFC 9457 compliant error responses with Spring's `ProblemDetail`. Replaces ad-hoc error envelopes. | `error-handling` `rest` |
-| [**hateoas**](skills/hateoas/) | Spring HATEOAS link building conventions. Teaches agent when and how to add hypermedia links. | `hateoas` `rest` |
+| [**rest-api-conventions**](skills/spring-boot-4/rest-api-conventions/) | Your project's response envelope, error codes, pagination contract, versioning strategy. Fill in the template. | `rest` `api` |
+| [**openapi-first**](skills/spring-boot-4/openapi-first/) | Generate controllers and DTOs from OpenAPI spec. Uses `openapi-generator-maven-plugin`. | `openapi` `codegen` |
+| [**problem-details-rfc9457**](skills/spring-boot-4/problem-details-rfc9457/) | RFC 9457 compliant error responses with Spring's `ProblemDetail`. Replaces ad-hoc error envelopes. | `error-handling` `rest` |
+| [**hateoas**](skills/spring-boot-4/hateoas/) | Spring HATEOAS link building conventions. Teaches agent when and how to add hypermedia links. | `hateoas` `rest` |
 
 ### 🗄️ Data & Persistence
 
 | Skill | Description | Tags |
 |-------|-------------|------|
-| [**spring-data-jpa**](skills/spring-data-jpa/) | Entity conventions, N+1 prevention, projections, keyset pagination, batch inserts. | `jpa` `hibernate` |
-| [**flyway-migrations**](skills/flyway-migrations/) | Migration naming convention, safe multi-step schema changes, team workflow for concurrent migrations. | `flyway` `migrations` |
-| [**spring-data-redis**](skills/spring-data-redis/) | Cache-aside pattern, key naming, TTL strategy, stampede protection, serialization config. | `redis` `caching` |
-| [**transactional-patterns**](skills/transactional-patterns/) | `@Transactional` propagation rules, self-invocation pitfall, after-commit side effects, saga pattern. | `transactions` |
+| [**spring-data-jpa**](skills/spring-boot-4/spring-data-jpa/) | Entity conventions, N+1 prevention, projections, keyset pagination, batch inserts. | `jpa` `hibernate` |
+| [**flyway-migrations**](skills/spring-boot-4/flyway-migrations/) | Migration naming convention, safe multi-step schema changes, team workflow for concurrent migrations. | `flyway` `migrations` |
+| [**spring-data-redis**](skills/spring-boot-4/spring-data-redis/) | Cache-aside pattern, key naming, TTL strategy, stampede protection, serialization config. | `redis` `caching` |
+| [**transactional-patterns**](skills/spring-boot-4/transactional-patterns/) | `@Transactional` propagation rules, self-invocation pitfall, after-commit side effects, saga pattern. | `transactions` |
 
 ### ⚙️ Batch & Jobs
 
 | Skill | Description | Tags |
 |-------|-------------|------|
-| [**spring-batch**](skills/spring-batch/) | Spring Batch 5 chunk jobs on Boot 3 — builder API (no `JobBuilderFactory`), restartable & idempotent job parameters, reader sort/thread-safety, fault tolerance, chunk transaction boundaries. | `batch` `etl` |
+| [**spring-batch**](skills/spring-boot-4/spring-batch/) | Spring Batch chunk jobs — builder API (no `JobBuilderFactory`), restartable & idempotent job parameters, reader sort/thread-safety, fault tolerance, chunk transaction boundaries. | `batch` `etl` |
 
 ### 🔒 Security
 
 | Skill | Description | Tags |
 |-------|-------------|------|
-| [**spring-security-jwt**](skills/spring-security-jwt/) | JWT auth filter chain, token rotation, RBAC with method security. Opinionated, production-ready. | `security` `jwt` |
-| [**oauth2-resource-server**](skills/oauth2-resource-server/) | OAuth2 resource server config, JWT claim extraction, scope-based authorization. | `security` `oauth2` |
+| [**spring-security-jwt**](skills/spring-boot-4/spring-security-jwt/) | JWT auth filter chain, token rotation, RBAC with method security. Opinionated, production-ready. | `security` `jwt` |
+| [**oauth2-resource-server**](skills/spring-boot-4/oauth2-resource-server/) | OAuth2 resource server config, JWT claim extraction, scope-based authorization. | `security` `oauth2` |
 
 ### 🤖 AI & MCP
 
 | Skill | Description | Tags |
 |-------|-------------|------|
-| [**spring-ai-integration**](skills/spring-ai-integration/) | Spring AI 1.0 GA ChatClient, chat memory, RAG pipeline, structured output. GA artifact names — no dead pre-1.0 coordinates. | `spring-ai` `llm` |
-| [**mcp-server**](skills/mcp-server/) | Build MCP servers with the official Java SDK 1.0 + Spring AI starters. Tool registration, transports, stdio pitfalls. | `mcp` `ai-agents` |
-| [**ai-observability**](skills/ai-observability/) | Token usage tracking, latency monitoring, prompt/response logging for Spring AI apps. | `observability` `spring-ai` |
+| [**spring-ai-integration**](skills/spring-boot-4/spring-ai-integration/) | Spring AI ChatClient, chat memory, RAG pipeline, structured output. Real GA artifact names — no dead pre-GA coordinates. | `spring-ai` `llm` |
+| [**mcp-server**](skills/spring-boot-4/mcp-server/) | Build MCP servers with the official Java SDK 1.0 + Spring AI starters. Tool registration, transports, stdio pitfalls. | `mcp` `ai-agents` |
+| [**ai-observability**](skills/spring-boot-4/ai-observability/) | Token usage tracking, latency monitoring, prompt/response logging for Spring AI apps. | `observability` `spring-ai` |
 
 ### 🧪 Testing
 
 | Skill | Description | Tags |
 |-------|-------------|------|
-| [**testing-pyramid**](skills/testing-pyramid/) | Unit → Slice → Integration conventions. `@WebMvcTest`, `@DataJpaTest`, `@MockitoBean`, Testcontainers. | `testing` |
+| [**testing-pyramid**](skills/spring-boot-4/testing-pyramid/) | Unit → Slice → Integration conventions. `@WebMvcTest`, `@DataJpaTest`, `@MockitoBean`, Testcontainers. | `testing` |
 
 ---
 
@@ -138,8 +146,12 @@ npm install -g @anthropic-ai/claude-code
 **2. Drop a skill into your project**
 ```bash
 mkdir -p .claude/skills
-cp -r spring-boot-skills/skills/rest-api-conventions .claude/skills/
-cp -r spring-boot-skills/skills/spring-data-jpa .claude/skills/
+# Spring Boot 4 project
+cp -r spring-boot-skills/skills/spring-boot-4/rest-api-conventions .claude/skills/
+cp -r spring-boot-skills/skills/spring-boot-4/spring-data-jpa .claude/skills/
+
+# Spring Boot 3 project — same skills, Boot 3 flavor
+cp -r spring-boot-skills/skills/spring-boot-3/rest-api-conventions .claude/skills/
 ```
 
 **3. Tell Claude what you want**
@@ -230,7 +242,7 @@ class OrderController {
 Every skill in this repo follows the same structure:
 
 ```
-skills/rest-api-conventions/
+skills/spring-boot-4/rest-api-conventions/
 ├── SKILL.md          ← the skill: trigger description + conventions + gotchas
 ├── examples/         ← good and bad examples, side by side
 │   ├── good-controller.java
@@ -284,7 +296,7 @@ The **Gotchas** section at the bottom of each skill is the secret weapon: a runn
 
 ## 🔥 Hot: MCP Server Skill
 
-The [`mcp-server`](skills/mcp-server/) skill is the most powerful one here.
+The [`mcp-server`](skills/spring-boot-4/mcp-server/) skill is the most powerful one here.
 
 It teaches your agent to build production-ready MCP servers on **MCP Java SDK 1.0** and the **Spring AI GA starters** — the same protocol used by Claude, Cursor, VS Code, and every major AI coding tool.
 
@@ -312,6 +324,7 @@ Without the skill, the agent guesses: dead pre-GA artifact names, SDK `0.9.0` AP
 ## 🗺️ Roadmap
 
 - [x] Skills for Spring Batch
+- [x] Spring Boot 4 versions of all 19 skills (`skills/spring-boot-4/`)
 - [ ] Skills for Spring Cloud Gateway
 - [ ] Skills for Spring WebFlux / reactive patterns
 - [ ] Skills for multi-tenancy
