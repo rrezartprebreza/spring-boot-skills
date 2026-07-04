@@ -45,14 +45,16 @@
 
       <!-- chips -->
       <g font-size="12.5" font-weight="600">
-        <rect x="64" y="240" width="92" height="26" rx="13" fill="#6DB33F" fill-opacity="0.12" stroke="#6DB33F" stroke-opacity="0.45"/>
-        <text x="110" y="257" text-anchor="middle" fill="#a7f3d0">Java 21+</text>
-        <rect x="166" y="240" width="132" height="26" rx="13" fill="#6DB33F" fill-opacity="0.12" stroke="#6DB33F" stroke-opacity="0.45"/>
-        <text x="232" y="257" text-anchor="middle" fill="#a7f3d0">Spring Boot 3.x</text>
-        <rect x="308" y="240" width="118" height="26" rx="13" fill="#38bdf8" fill-opacity="0.10" stroke="#38bdf8" stroke-opacity="0.40"/>
-        <text x="367" y="257" text-anchor="middle" fill="#bae6fd">Spring AI 1.0</text>
-        <rect x="436" y="240" width="124" height="26" rx="13" fill="#e879f9" fill-opacity="0.08" stroke="#e879f9" stroke-opacity="0.35"/>
-        <text x="498" y="257" text-anchor="middle" fill="#f5d0fe">MCP Java SDK</text>
+        <rect x="64" y="240" width="82" height="26" rx="13" fill="#6DB33F" fill-opacity="0.12" stroke="#6DB33F" stroke-opacity="0.45"/>
+        <text x="105" y="257" text-anchor="middle" fill="#a7f3d0">Java 21+</text>
+        <rect x="154" y="240" width="138" height="26" rx="13" fill="#6DB33F" fill-opacity="0.12" stroke="#6DB33F" stroke-opacity="0.45"/>
+        <text x="223" y="257" text-anchor="middle" fill="#a7f3d0">Spring Boot 3/4</text>
+        <rect x="300" y="240" width="108" height="26" rx="13" fill="#d97757" fill-opacity="0.10" stroke="#d97757" stroke-opacity="0.40"/>
+        <text x="354" y="257" text-anchor="middle" fill="#fed7aa">Claude Code</text>
+        <rect x="416" y="240" width="74" height="26" rx="13" fill="#10a37f" fill-opacity="0.10" stroke="#10a37f" stroke-opacity="0.40"/>
+        <text x="453" y="257" text-anchor="middle" fill="#a7f3d0">Codex</text>
+        <rect x="498" y="240" width="92" height="26" rx="13" fill="#e879f9" fill-opacity="0.08" stroke="#e879f9" stroke-opacity="0.35"/>
+        <text x="544" y="257" text-anchor="middle" fill="#f5d0fe">MCP SDK</text>
       </g>
     </g>
 

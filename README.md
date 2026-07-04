@@ -5,7 +5,7 @@
 <br/>
 <br/>
 
-**Drop a skill into your project. Your AI coding agent instantly understands your Spring Boot codebase — architecture, patterns, conventions — and codes like a senior engineer who's been on your team for years.**
+**Production-grade Spring Boot skills for Claude Code and Codex. Drop a skill into your project and your AI coding agent instantly understands your architecture, patterns, and conventions.**
 
 <br/>
 
