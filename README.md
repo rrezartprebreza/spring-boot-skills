@@ -372,4 +372,8 @@ Skills get better with real-world use. If you find a gap — the agent did somet
 
 *Built by [@rrezartprebreza](https://github.com/rrezartprebreza) · Pristina, Kosovo*
 
+<br/>
+
+[LinkedIn](https://www.linkedin.com/in/rrezartprebreza/)
+
 </div>
