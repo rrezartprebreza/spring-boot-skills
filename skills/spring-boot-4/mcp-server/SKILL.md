@@ -104,46 +104,48 @@ private static McpServerFeatures.SyncToolSpecification getOrderTool() {
 
 ## Spring Boot Integration (recommended)
 
+Spring AI 2.0 provides native MCP annotations. Use `@McpTool` for MCP server tools; `@Tool` is a
+different Spring AI model tool-calling API and should only be used when intentionally registering
+`ToolCallback` objects with the MCP tool-callback converter.
+
 ```java
-@Configuration
-public class McpToolsConfig {
-
-    @Bean
-    public ToolCallbackProvider orderTools(OrderService orderService, ObjectMapper objectMapper) {
-        return MethodToolCallbackProvider.builder()
-            .toolObjects(new OrderMcpTools(orderService, objectMapper))
-            .build();
-    }
-}
-
 @Component
 public class OrderMcpTools {
-    private final OrderService orderService;
-    private final ObjectMapper objectMapper;
 
-    // Spring AI annotation-based tool registration
-    @Tool(description = "Get order by ID with full line items and status history")
-    public String getOrder(@ToolParam(description = "UUID of the order") String orderId) {
-        try {
-            Order order = orderService.findById(UUID.fromString(orderId));
-            return objectMapper.writeValueAsString(OrderResponse.from(order));
-        } catch (Exception e) {
-            return "Error: " + e.getMessage();
-        }
+    private final OrderService orderService;
+
+    public OrderMcpTools(OrderService orderService) {
+        this.orderService = orderService;
     }
 
-    @Tool(description = "List orders for a customer, optionally filtered by status")
-    public String listOrders(
-        @ToolParam(description = "Customer email address") String email,
-        @ToolParam(description = "Filter by status: PENDING, PROCESSING, SHIPPED, DELIVERED", required = false) String status
-    ) {
+    @McpTool(
+        name = "get_order",
+        description = "Get an order by ID with line items and status history",
+        generateOutputSchema = true)
+    public OrderResponse getOrder(
+            @McpToolParam(description = "UUID of the order", required = true) String orderId) {
+        return OrderResponse.from(orderService.findById(UUID.fromString(orderId)));
+    }
+
+    @McpTool(
+        name = "list_orders",
+        description = "List orders for a customer, optionally filtered by status",
+        generateOutputSchema = true)
+    public List<OrderResponse> listOrders(
+            @McpToolParam(description = "Customer email address", required = true) String email,
+            @McpToolParam(description = "PENDING, PROCESSING, SHIPPED, or DELIVERED", required = false)
+            String status) {
         List<Order> orders = status != null
             ? orderService.findByEmailAndStatus(email, OrderStatus.valueOf(status))
             : orderService.findByEmail(email);
-        return objectMapper.writeValueAsString(orders.stream().map(OrderResponse::from).toList());
+        return orders.stream().map(OrderResponse::from).toList();
     }
 }
 ```
+
+With the Spring AI MCP starter, annotated `@Component` methods are discovered automatically. Do not
+also create a `MethodToolCallbackProvider` for the same methods unless you intentionally choose the
+alternative Spring AI tool-callback integration.
 
 ## application.yml for MCP Server
 
@@ -235,6 +237,7 @@ private CallToolResult errorResult(String code, String message) {
 ## Gotchas
 - Agent generates Python MCP code — always use the Java SDK
 - Agent uses the dead `spring-ai-mcp-server-spring-boot-starter` name — Spring AI 2.0 uses `spring-ai-starter-mcp-server[-webmvc|-webflux]`
+- Agent uses `@Tool` when it needs native MCP server annotations — use `@McpTool` and `@McpToolParam`; `@Tool` belongs to Spring AI model tool calling
 - Agent enables remote HTTP with `spring.ai.mcp.server.transport` — use `spring.ai.mcp.server.protocol=STREAMABLE` / `STATELESS`
 - Agent pins SDK `0.9.0` — the standalone SDK is `1.0.0` GA (or just use the Spring AI starter)
 - Agent logs to stdout on a stdio server — corrupts JSON-RPC framing; banner off, logs to file/stderr

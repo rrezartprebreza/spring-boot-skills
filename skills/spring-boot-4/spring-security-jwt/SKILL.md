@@ -3,7 +3,7 @@ name: spring-security-jwt
 description: >
   Use when implementing authentication, authorization, JWT tokens, security filters,
   password encoding, or any Spring Security configuration. Covers stateless JWT auth,
-  token rotation, RBAC, and method-level security.
+  access and refresh token validation, RBAC, and method-level security.
 ---
 
 # Spring Security — JWT
@@ -118,20 +118,20 @@ public class JwtService {
             .compact();
     }
 
-    public boolean isTokenValid(String token, UserDetails user) {
-        return extractUsername(token).equals(user.getUsername()) && !isExpired(token);
+    public boolean isAccessTokenValid(String token, UserDetails user) {
+        Claims claims = extractClaims(token);
+        return "access".equals(claims.get("type", String.class))
+            && user.getUsername().equals(claims.getSubject())
+            && !claims.getExpiration().before(new Date());
     }
 
     public String extractUsername(String token) {
-        return extractClaim(token, Claims::getSubject);
+        return extractClaims(token).getSubject();
     }
 
-    private boolean isExpired(String token) {
-        return extractClaim(token, Claims::getExpiration).before(new Date());
-    }
-
-    private <T> T extractClaim(String token, Function<Claims, T> resolver) {
-        return resolver.apply(Jwts.parser().verifyWith(getSigningKey()).build().parseSignedClaims(token).getPayload());
+    private Claims extractClaims(String token) {
+        return Jwts.parser().verifyWith(getSigningKey()).build()
+            .parseSignedClaims(token).getPayload();
     }
 
     private SecretKey getSigningKey() {
@@ -166,7 +166,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails user = userDetailsService.loadUserByUsername(username);
-                if (jwtService.isTokenValid(token, user)) {
+                if (jwtService.isAccessTokenValid(token, user)) {
                     var auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
                     auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
                     SecurityContextHolder.getContext().setAuthentication(auth);
@@ -267,6 +267,10 @@ app:
     refresh-token-expiry: 604800000 # 7 days
 ```
 
+The example creates refresh tokens but does not implement a refresh endpoint. A production refresh
+flow must accept only `type=refresh`, rotate the refresh token on every use, and revoke the previous
+token (for example, with a hashed token-family record in a database or Redis).
+
 ## Gotchas
 - Agent uses non-lambda chaining (`http.csrf().disable()`, `.and()`, `authorizeRequests()`) — removed in Security 7, won't compile; lambda DSL only: `csrf(AbstractHttpConfigurer::disable)`, `authorizeHttpRequests(...)`
 - Agent writes `antMatchers()`/`mvcMatchers()` or `AntPathRequestMatcher`/`MvcRequestMatcher` — removed in Security 7; use `requestMatchers("/path/**")` (backed by `PathPatternRequestMatcher`) or `PathPatternRequestMatcher.withDefaults().matcher("/path/**")`
@@ -276,6 +280,7 @@ app:
 - Agent skips `exceptionHandling()` — clients get empty 401/403 bodies (or a login-page redirect); `@RestControllerAdvice` can't catch filter-level exceptions
 - Agent stores JWT secret in code — always `${JWT_SECRET}` from environment (HS256 needs a ≥256-bit key or `Keys.hmacShaKeyFor` throws `WeakKeyException`)
 - Agent uses `SessionCreationPolicy.IF_REQUIRED` — must be `STATELESS` for JWT
+- Agent validates only signature and expiry — the bearer filter must accept `type=access` tokens only; refresh tokens belong to a separate refresh endpoint
 - Agent forgets `@EnableMethodSecurity` for `@PreAuthorize` to work
 - Agent uses BCrypt strength < 10 — use 12 for production
 - Agent puts token validation logic in controller — belongs in filter

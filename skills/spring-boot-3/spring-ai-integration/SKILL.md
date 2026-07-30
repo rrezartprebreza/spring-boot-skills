@@ -57,8 +57,9 @@ public class DocumentSummaryService {
 
     private final ChatClient chatClient;
 
-    public String summarize(String content) {
+    public String summarize(String conversationId, String content) {
         return chatClient.prompt()
+            .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
             .user(u -> u.text("Summarize the following document in 3 bullet points:\n\n{content}")
                 .param("content", content))
             .call()
@@ -66,8 +67,9 @@ public class DocumentSummaryService {
     }
 
     // With system prompt
-    public String analyzeFinancial(String document, String language) {
+    public String analyzeFinancial(String conversationId, String document, String language) {
         return chatClient.prompt()
+            .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
             .system("You are a financial analyst. Respond in {language}.")
             .system(s -> s.param("language", language))
             .user(document)
@@ -76,6 +78,9 @@ public class DocumentSummaryService {
     }
 }
 ```
+
+Every call using the configured memory advisor must provide a user- or session-scoped
+`ChatMemory.CONVERSATION_ID`. Never use one shared conversation ID for all users.
 
 ## ChatClient Bean Configuration
 
@@ -121,8 +126,9 @@ public class OrderAnalysisService {
     @Value("classpath:prompts/analyze-order.st")
     private Resource promptTemplate;
 
-    public String analyzeOrder(Order order) {
+    public String analyzeOrder(String conversationId, Order order) {
         return chatClient.prompt()
+            .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
             .user(u -> u.text(promptTemplate)
                 .param("customer", order.getCustomerEmail())
                 .param("items", order.getItems().toString())

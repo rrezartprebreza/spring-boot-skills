@@ -103,6 +103,10 @@ private static McpServerFeatures.SyncToolSpecification getOrderTool() {
 
 ## Spring Boot Integration (recommended)
 
+This Boot 3 example uses Spring AI's `@Tool` plus `MethodToolCallbackProvider` integration. That is
+different from the native MCP annotation path used by the Boot 4 / Spring AI 2.0 version, where
+`@McpTool` and `@McpToolParam` are preferred. Do not mix the two registration styles in one server.
+
 ```java
 @Configuration
 public class McpToolsConfig {

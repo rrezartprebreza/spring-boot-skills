@@ -62,10 +62,9 @@ This repo is a collection of battle-tested skills. Copy, adapt, drop in.
 | Concept | Description |
 |---------|-------------|
 | **Skills** | Markdown files loaded into Claude Code or Codex context — tell the agent *how* to work in your codebase |
-| **Subagents** | Isolated agent instances for parallel work — use for reviews, test generation, migration tasks |
 | **CLAUDE.md / AGENTS.md** | Project-level persistent memory — your agent's onboarding doc |
 | [**MCP Java SDK**](https://github.com/modelcontextprotocol/java-sdk) | Official Java SDK for building MCP servers — connect your Spring Boot app to any AI agent |
-| **Commands / workflows** | Repeatable agent workflows — `/generate-endpoint`, `/write-test`, `/db-migrate` |
+| **Planned workflows** | Repeatable commands such as `/generate-endpoint`, `/write-test`, and `/db-migrate` are listed in the roadmap |
 
 ---
 
@@ -73,13 +72,15 @@ This repo is a collection of battle-tested skills. Copy, adapt, drop in.
 
 Every skill ships in **two flavors** — pick the folder that matches your stack:
 
-| Folder | Target stack |
-|--------|--------------|
-| [`skills/spring-boot-4/`](skills/spring-boot-4/) | Spring Boot 4.x · Spring Framework 7 · Spring Security 7 · Spring Batch 6 · Jackson 3 · Spring AI 2.0 |
-| [`skills/spring-boot-3/`](skills/spring-boot-3/) | Spring Boot 3.x · Spring Framework 6 · Spring Security 6 · Spring Batch 5 · Jackson 2 · Spring AI 1.x |
+| Folder | Target stack | Compatibility baseline |
+|--------|--------------|-----------------------|
+| [`skills/spring-boot-4/`](skills/spring-boot-4/) | Spring Boot 4.x · Spring Framework 7 · Spring Security 7 · Spring Batch 6 · Jackson 3 · Spring AI 2.0 | Java 17+; examples use Java 21; Boot 4.0.x and 4.1.x |
+| [`skills/spring-boot-3/`](skills/spring-boot-3/) | Spring Boot 3.x · Spring Framework 6 · Spring Security 6 · Spring Batch 5 · Jackson 2 · Spring AI 1.x | Java 17+; examples use Java 21 |
 
 Drop any skill folder into your agent's skills directory. Claude Code users can copy them to `.claude/skills/`; Codex users can adapt the same `SKILL.md` folders for `.codex/skills/`.
 The catalog below links to the **Spring Boot 4** versions — swap `spring-boot-4` for `spring-boot-3` in any path if you're still on Boot 3.
+
+The version guidance follows the [Spring Boot 4 system requirements](https://docs.spring.io/spring-boot/system-requirements.html), the [Spring Boot 4 migration guide](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide), and [Spring AI's compatibility guidance](https://docs.spring.io/spring-ai/reference/getting-started.html). Check the official release notes before upgrading a project.
 
 ### 🏗️ Architecture
 
@@ -118,7 +119,7 @@ The catalog below links to the **Spring Boot 4** versions — swap `spring-boot-
 
 | Skill | Description | Tags |
 |-------|-------------|------|
-| [**spring-security-jwt**](skills/spring-boot-4/spring-security-jwt/) | JWT auth filter chain, token rotation, RBAC with method security. Opinionated, production-ready. | `security` `jwt` |
+| [**spring-security-jwt**](skills/spring-boot-4/spring-security-jwt/) | JWT auth filter chain, access and refresh token validation, RBAC with method security. Opinionated starting point. | `security` `jwt` |
 | [**oauth2-resource-server**](skills/spring-boot-4/oauth2-resource-server/) | OAuth2 resource server config, JWT claim extraction, scope-based authorization. | `security` `oauth2` |
 
 ### 🤖 AI & MCP
@@ -155,25 +156,30 @@ codex --version
 
 Claude Code:
 ```bash
-mkdir -p .claude/skills
+PROJECT_DIR=/path/to/my-spring-app
+mkdir -p "$PROJECT_DIR/.claude/skills"
 # Spring Boot 4 project
-cp -r spring-boot-skills/skills/spring-boot-4/rest-api-conventions .claude/skills/
-cp -r spring-boot-skills/skills/spring-boot-4/spring-data-jpa .claude/skills/
+cp -r skills/spring-boot-4/rest-api-conventions "$PROJECT_DIR/.claude/skills/"
+cp -r skills/spring-boot-4/spring-data-jpa "$PROJECT_DIR/.claude/skills/"
 
 # Spring Boot 3 project — same skills, Boot 3 flavor
-cp -r spring-boot-skills/skills/spring-boot-3/rest-api-conventions .claude/skills/
+cp -r skills/spring-boot-3/rest-api-conventions "$PROJECT_DIR/.claude/skills/"
 ```
 
 Codex:
 ```bash
-mkdir -p .codex/skills
+PROJECT_DIR=/path/to/my-spring-app
+mkdir -p "$PROJECT_DIR/.codex/skills"
 # Spring Boot 4 project
-cp -r spring-boot-skills/skills/spring-boot-4/rest-api-conventions .codex/skills/
-cp -r spring-boot-skills/skills/spring-boot-4/spring-data-jpa .codex/skills/
+cp -r skills/spring-boot-4/rest-api-conventions "$PROJECT_DIR/.codex/skills/"
+cp -r skills/spring-boot-4/spring-data-jpa "$PROJECT_DIR/.codex/skills/"
 
 # Spring Boot 3 project — same skills, Boot 3 flavor
-cp -r spring-boot-skills/skills/spring-boot-3/rest-api-conventions .codex/skills/
+cp -r skills/spring-boot-3/rest-api-conventions "$PROJECT_DIR/.codex/skills/"
 ```
+
+Run these commands from the root of this repository, or replace `skills/` with the path to your
+local clone.
 
 **3. Tell your agent what you want**
 ```
@@ -328,6 +334,9 @@ The [`mcp-server`](skills/spring-boot-4/mcp-server/) skill is the most powerful 
 
 It teaches your agent to build production-ready MCP servers on **MCP Java SDK 1.0** and the **Spring AI GA starters** — the same protocol used by Claude, Cursor, VS Code, and every major AI coding tool.
 
+The MCP skill distinguishes native MCP annotations such as `@McpTool` from Spring AI model
+tool-calling annotations such as `@Tool`. Use the native MCP path when exposing server tools.
+
 ```java
 // What the agent generates with the skill loaded —
 // real GA API: spring-ai-starter-mcp-server + annotation scanning
@@ -368,6 +377,15 @@ Without the skill, the agent guesses: dead pre-GA artifact names, SDK `0.9.0` AP
 ## 🤝 Contributing
 
 Skills get better with real-world use. If you find a gap — the agent did something stupid in your Spring Boot project — open a PR and add it to the Gotchas section of the relevant skill.
+
+Before opening a PR, run:
+
+```bash
+bash scripts/validate-skills.sh
+```
+
+The validation script checks both version trees, front matter, README catalog paths, and required
+skill sections.
 
 ```
 1. Fork the repo
