@@ -208,6 +208,22 @@ Validate it locally with `claude plugin validate .`. The repository can be submi
 separate review step. GitHub Marketplace is intended for GitHub Apps and Actions, so this skills
 repository should use GitHub releases and the Claude marketplace instead.
 
+### Install as a Codex plugin
+
+Codex uses its own plugin manifest and marketplace catalog. Add this repository and install the
+version that matches your application:
+
+```bash
+codex plugin marketplace add rrezartprebreza/spring-boot-skills
+codex plugin add spring-boot-4-skills@spring-boot-skills
+# or for a Boot 3 project:
+codex plugin add spring-boot-3-skills@spring-boot-skills
+```
+
+The Codex package metadata lives in [`.agents/plugins/marketplace.json`](.agents/plugins/marketplace.json)
+and the two plugin manifests under [`plugins/`](plugins/). Direct copying into `.codex/skills/`
+remains supported for projects that do not use plugins.
+
 **3. Tell your agent what you want**
 ```
 claude

@@ -97,6 +97,35 @@ for local_path in LICENSE CONTRIBUTING.md assets/banner.svg skills/spring-boot-3
     }
 done
 
+codex_marketplace_file=".agents/plugins/marketplace.json"
+[[ -f "$codex_marketplace_file" ]] || {
+    echo "Missing $codex_marketplace_file" >&2
+    exit 1
+}
+for version in 3 4; do
+    codex_plugin="plugins/spring-boot-$version-skills"
+    [[ -f "$codex_plugin/.codex-plugin/plugin.json" ]] || {
+        echo "Missing $codex_plugin/.codex-plugin/plugin.json" >&2
+        exit 1
+    }
+    [[ -f "$codex_plugin/skills/spring-security-jwt/SKILL.md" ]] || {
+        echo "Codex plugin is missing linked Boot $version skills" >&2
+        exit 1
+    }
+    grep -Fq '"skills": "./skills/"' "$codex_plugin/.codex-plugin/plugin.json" || {
+        echo "$codex_plugin plugin manifest is missing its skills path" >&2
+        exit 1
+    }
+done
+grep -Fq '"spring-boot-3-skills"' "$codex_marketplace_file" || {
+    echo "Codex marketplace is missing the Boot 3 plugin" >&2
+    exit 1
+}
+grep -Fq '"spring-boot-4-skills"' "$codex_marketplace_file" || {
+    echo "Codex marketplace is missing the Boot 4 plugin" >&2
+    exit 1
+}
+
 marketplace_file=".claude-plugin/marketplace.json"
 [[ -f "$marketplace_file" ]] || {
     echo "Missing $marketplace_file" >&2

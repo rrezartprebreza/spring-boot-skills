@@ -1,0 +1,24 @@
+{
+  "name": "spring-boot-4-skills",
+  "version": "1.0.0",
+  "description": "Production-oriented Spring Boot 4 and Spring Framework 7 skills for Java coding agents.",
+  "author": {
+    "name": "Rrezart Prebreza",
+    "url": "https://github.com/rrezartprebreza"
+  },
+  "homepage": "https://github.com/rrezartprebreza/spring-boot-skills",
+  "repository": "https://github.com/rrezartprebreza/spring-boot-skills",
+  "license": "MIT",
+  "keywords": ["java", "spring-boot", "spring-framework", "spring-ai", "mcp"],
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Spring Boot 4 Skills",
+    "shortDescription": "Spring Boot 4 guidance for Java coding agents.",
+    "longDescription": "Architecture, API, persistence, security, testing, Spring AI, MCP, and Framework 7 skills for Spring Boot 4 projects.",
+    "developerName": "Rrezart Prebreza",
+    "category": "Development",
+    "capabilities": ["Read", "Write"],
+    "websiteURL": "https://github.com/rrezartprebreza/spring-boot-skills",
+    "defaultPrompt": "Use the Spring Boot 4 skills to implement and review Java backend changes."
+  }
+}

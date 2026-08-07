@@ -22,5 +22,8 @@ jobs:
       - name: Validate Claude marketplace manifest
         run: python3 -m json.tool .claude-plugin/marketplace.json > /dev/null
 
+      - name: Validate Codex marketplace manifest
+        run: python3 -m json.tool .agents/plugins/marketplace.json > /dev/null
+
       - name: Check whitespace errors
         run: git diff --check
