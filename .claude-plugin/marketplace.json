@@ -1,0 +1,27 @@
+{
+  "name": "spring-boot-skills",
+  "owner": {
+    "name": "Rrezart Prebreza",
+    "url": "https://github.com/rrezartprebreza"
+  },
+  "plugins": [
+    {
+      "name": "spring-boot-4-skills",
+      "description": "Spring Boot 4, Spring Framework 7, Spring Security 7, Spring AI 2, and MCP skills.",
+      "source": "./",
+      "strict": false,
+      "skills": ["./skills/spring-boot-4/"],
+      "category": "development",
+      "tags": ["java", "spring-boot", "spring-framework", "spring-ai", "mcp"]
+    },
+    {
+      "name": "spring-boot-3-skills",
+      "description": "Spring Boot 3, Spring Framework 6, Spring Security 6, Spring AI 1, and MCP skills.",
+      "source": "./",
+      "strict": false,
+      "skills": ["./skills/spring-boot-3/"],
+      "category": "development",
+      "tags": ["java", "spring-boot", "spring-framework", "spring-ai", "mcp"]
+    }
+  ]
+}

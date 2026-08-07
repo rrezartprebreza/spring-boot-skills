@@ -1,171 +1,313 @@
 ---
 name: spring-data-jpa
 description: >
-  Use when generating JPA entities, repositories, queries, or anything touching the persistence
-  layer. Covers entity conventions, N+1 prevention, projections, and query patterns.
+  Use when generating or refactoring Spring Boot 4 JPA entities, repositories, queries, projections,
+  persistence tests, entity relationships, embeddables, IDs, or Hibernate mappings. Covers Jakarta
+  Persistence 3.2 imports, Hibernate 7 entity modeling, new-state detection, N+1 prevention,
+  projections, keyset pagination, batch writes, and common agent mistakes.
 ---
 
-# Spring Data JPA
+# Spring Data JPA (Boot 4 / Hibernate 7)
 
-## Entity Conventions
+Spring Boot 4 manages Jakarta Persistence 3.2, Jakarta Validation 3.1, and Hibernate ORM 7.x. Use
+Boot dependency management and import `jakarta.persistence.*` / `jakarta.validation.*`. Do not add
+explicit Hibernate, JPA, or Validator versions unless the project has a deliberate override policy.
+
+## Entity Model Rules
+
+Use an `@Entity` only for persistent state with identity and lifecycle. Use records for DTOs,
+commands, and read models. Use `@Embeddable` for values stored inside an entity table.
 
 ```java
 @Entity
-@Table(name = "orders")
+@Table(name = "orders", indexes = {
+    @Index(name = "idx_orders_customer_id", columnList = "customer_id"),
+    @Index(name = "idx_orders_status_created", columnList = "status, created_at")
+})
 @Getter
-@NoArgsConstructor(access = AccessLevel.PROTECTED) // JPA requires no-arg, hide from callers
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Order {
 
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
-    @Column(updatable = false, nullable = false)
+    @Column(nullable = false, updatable = false)
     private UUID id;
 
-    @Column(nullable = false)
-    private String customerEmail;
+    @Version
+    private Long version;
 
-    @Enumerated(EnumType.STRING) // always STRING, never ORDINAL
-    @Column(nullable = false)
+    @Column(name = "customer_id", nullable = false, updatable = false)
+    private UUID customerId;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 32)
     private OrderStatus status;
+
+    @Embedded
+    private Money total;
 
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> items = new ArrayList<>();
 
     @CreationTimestamp
-    @Column(updatable = false)
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
     @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
     private Instant updatedAt;
 
-    // Static factory, not public constructor
-    public static Order create(String customerEmail) {
+    public static Order create(UUID customerId) {
         Order order = new Order();
-        order.customerEmail = customerEmail;
-        order.status = OrderStatus.PENDING;
+        order.customerId = Objects.requireNonNull(customerId);
+        order.status = OrderStatus.DRAFT;
+        order.total = Money.zero("EUR");
         return order;
     }
 
-    // Behavior on entity, not in service
-    public void addItem(Product product, int quantity) {
-        items.add(OrderItem.create(this, product, quantity));
+    public void addItem(UUID productId, int quantity, Money unitPrice) {
+        if (status != OrderStatus.DRAFT) {
+            throw new IllegalStateException("Cannot edit submitted order");
+        }
+        items.add(OrderItem.create(this, productId, quantity, unitPrice));
+        recalculateTotal();
+    }
+
+    private void recalculateTotal() {
+        total = items.stream()
+            .map(OrderItem::subtotal)
+            .reduce(Money.zero("EUR"), Money::add);
     }
 }
 ```
 
-## Rules
-- `@Enumerated(EnumType.STRING)` always — `ORDINAL` breaks on enum reordering
-- `GenerationType.UUID` for IDs — never expose auto-increment integers
-- `@NoArgsConstructor(access = PROTECTED)` — required by JPA, hidden from app code
-- `@Getter` from Lombok — no `@Setter` on entities (use behavior methods)
-- Collections initialized inline (`= new ArrayList<>()`) — never null
+Rules:
 
-## N+1 Prevention
+- Use `jakarta.persistence.*`, never `javax.persistence.*`.
+- Keep entities non-final with a protected no-arg constructor so Hibernate can instantiate/proxy them.
+- Do not use Java records for ordinary entities. Records are good DTOs and sometimes embeddables.
+- Use targeted Lombok (`@Getter`, protected `@NoArgsConstructor`), not `@Data` or broad `@Setter`.
+- Prefer behavior methods and static factories over public setters/constructors.
+- Initialize collections inline. JPA collection fields should not be null.
+- Use `@Enumerated(EnumType.STRING)` with explicit column length. Never use `ORDINAL`.
+- Add `@Version Long version` for user-editable aggregates. Use wrapper `Long`, not primitive `long`.
+- Prefer `UUID` or pooled sequence IDs. Avoid `GenerationType.IDENTITY` on high-write tables because
+  it disables insert batching.
+- Validate request DTOs at the boundary; enforce entity invariants inside behavior methods.
 
-**Identify:** One query for orders + N queries for each order's items = N+1.
+## Embeddables and DTOs
 
-**Fix with JOIN FETCH:**
 ```java
-@Query("SELECT o FROM Order o JOIN FETCH o.items WHERE o.id = :id")
-Optional<Order> findByIdWithItems(@Param("id") UUID id);
+@Embeddable
+public record Money(
+    @Column(name = "amount", nullable = false, precision = 19, scale = 2)
+    BigDecimal amount,
 
-// For lists — use @EntityGraph to avoid duplicates
-@EntityGraph(attributePaths = {"items", "items.product"})
-List<Order> findByStatus(OrderStatus status);
+    @Column(name = "currency", nullable = false, length = 3)
+    String currency
+) {
+    public Money {
+        Objects.requireNonNull(amount);
+        Objects.requireNonNull(currency);
+        if (amount.signum() < 0) {
+            throw new IllegalArgumentException("Amount cannot be negative");
+        }
+    }
+
+    public static Money zero(String currency) {
+        return new Money(BigDecimal.ZERO, currency);
+    }
+
+    public Money add(Money other) {
+        if (!currency.equals(other.currency)) {
+            throw new IllegalArgumentException("Currency mismatch");
+        }
+        return new Money(amount.add(other.amount), currency);
+    }
+
+    public Money multiply(int quantity) {
+        if (quantity < 1) {
+            throw new IllegalArgumentException("Quantity must be positive");
+        }
+        return new Money(amount.multiply(BigDecimal.valueOf(quantity)), currency);
+    }
+}
 ```
 
-**Fix with Projections for read-only views:**
+Never expose entities from controllers. Map entities to response records:
+
 ```java
-// Interface projection — no entity loaded
-public interface OrderSummary {
-    UUID getId();
-    String getCustomerEmail();
-    OrderStatus getStatus();
-    Instant getCreatedAt();
+public record OrderResponse(UUID id, String status, BigDecimal total, Instant createdAt) {
+    static OrderResponse from(Order order) {
+        return new OrderResponse(
+            order.getId(),
+            order.getStatus().name(),
+            order.getTotal().amount(),
+            order.getCreatedAt());
+    }
+}
+```
+
+## Relationships
+
+Map the database shape first. Prefer normal foreign keys: `@ManyToOne` on the owning side and
+`@OneToMany(mappedBy = ...)` only when parent-to-child navigation is actually needed.
+
+```java
+@Entity
+@Getter
+@NoArgsConstructor(access = AccessLevel.PROTECTED)
+class OrderItem {
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "order_id", nullable = false, foreignKey = @ForeignKey(name = "fk_order_item_order"))
+    private Order order;
+
+    @Column(name = "product_id", nullable = false, updatable = false)
+    private UUID productId;
+
+    private int quantity;
+    private Money unitPrice;
+
+    static OrderItem create(Order order, UUID productId, int quantity, Money unitPrice) {
+        OrderItem item = new OrderItem();
+        item.order = Objects.requireNonNull(order);
+        item.productId = Objects.requireNonNull(productId);
+        item.quantity = quantity;
+        item.unitPrice = Objects.requireNonNull(unitPrice);
+        return item;
+    }
+
+    Money subtotal() {
+        return unitPrice.multiply(quantity);
+    }
+}
+```
+
+- Put `fetch = FetchType.LAZY` on `@ManyToOne` and `@OneToOne`; to-one mappings are eager by default.
+- Avoid unbounded bidirectional graphs. Add back-references only when required.
+- Use `orphanRemoval = true` only when the parent truly owns the child's lifecycle.
+- Avoid `@ManyToMany` for business relationships with attributes; model the join row as an entity.
+- Do not serialize lazy relationships to JSON. Map to DTOs inside a transaction.
+
+## equals and hashCode
+
+Do not generate entity equality with Lombok `@Data`. It includes mutable fields and associations,
+which can trigger lazy loading, recursion, and hash changes.
+
+Preferred options:
+
+- If the entity has a stable natural key, base equality on that key and enforce a unique database
+  constraint.
+- If it only has a generated ID, keep default object identity unless the project already has a
+  proxy-safe generated-ID pattern.
+- Never include collections, mutable fields, or associations in `equals`, `hashCode`, or `toString`.
+- Use `instanceof`, not `getClass()`, when equality must work with Hibernate proxies.
+
+```java
+@Override
+public boolean equals(Object other) {
+    return other instanceof Customer that
+        && email != null
+        && email.equals(that.getEmail());
 }
 
-List<OrderSummary> findByStatus(OrderStatus status); // fast, no lazy loading issues
+@Override
+public int hashCode() {
+    return email == null ? 0 : email.hashCode();
+}
 ```
 
-## Query Patterns
+## Repositories and Query Patterns
 
 ```java
 public interface OrderRepository extends JpaRepository<Order, UUID> {
 
-    // Derived query — simple conditions
-    List<Order> findByStatusAndCustomerEmail(OrderStatus status, String email);
+    boolean existsByCustomerIdAndStatus(UUID customerId, OrderStatus status);
 
-    // JPQL — for joins and complex conditions
-    @Query("SELECT o FROM Order o JOIN FETCH o.items WHERE o.status = :status")
-    List<Order> findActiveOrdersWithItems(@Param("status") OrderStatus status);
+    Optional<Order> findByIdAndCustomerId(UUID id, UUID customerId);
 
-    // Native SQL — only when JPQL can't do it
-    @Query(value = "SELECT * FROM orders WHERE created_at > NOW() - INTERVAL '7 days'",
-           nativeQuery = true)
-    List<Order> findRecentOrders();
+    @EntityGraph(attributePaths = {"items"})
+    Optional<Order> findById(UUID id);
 
-    // Exists check — faster than findById + isPresent
-    boolean existsByCustomerEmailAndStatus(String email, OrderStatus status);
-
-    // Projection
-    List<OrderSummary> findByCustomerEmail(String email);
+    @Query("""
+        select o
+        from Order o
+        where o.status = :status
+        order by o.createdAt desc, o.id desc
+        """)
+    List<Order> findRecentByStatus(OrderStatus status, Limit limit);
 }
 ```
+
+Use:
+
+- Derived queries for simple filters.
+- `@Query` for explicit joins, keyset pagination, and complex predicates.
+- `@EntityGraph` for bounded graph loading.
+- Projections for read-only API views.
+- `exists...` queries instead of `find...().isPresent()` checks.
+
+Avoid:
+
+- `findAll()` in endpoints.
+- Native SQL unless JPQL cannot express the query or the database-specific feature is intentional.
+- Returning entities for read-only list views when a projection is enough.
+
+## N+1 Prevention
+
+Identify N+1 by looking for lazy association access inside loops or JSON serialization of entities.
+
+```java
+@EntityGraph(attributePaths = {"items", "items.product"})
+Optional<Order> findWithItemsAndProductsById(UUID id);
+
+public interface OrderSummary {
+    UUID getId();
+    UUID getCustomerId();
+    OrderStatus getStatus();
+    Instant getCreatedAt();
+}
+
+List<OrderSummary> findByStatus(OrderStatus status);
+```
+
+Use fetch joins and entity graphs only for bounded relationships. For list endpoints, prefer
+projections to avoid loading entire aggregate graphs.
 
 ## Pagination
 
-```java
-// Always use Pageable for list endpoints
-Page<Order> findByStatus(OrderStatus status, Pageable pageable);
+Use `Pageable` for normal list screens:
 
-// In service
-Page<Order> orders = orderRepository.findByStatus(status, PageRequest.of(page, size, Sort.by("createdAt").descending()));
+```java
+Page<Order> findByStatus(OrderStatus status, Pageable pageable);
 ```
 
-## Bidirectional Relationships
+Use keyset pagination for deep or infinite-scroll lists. `OFFSET` pagination scans and discards
+skipped rows.
 
 ```java
-// Parent side (Order)
-@OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
-private List<OrderItem> items = new ArrayList<>();
-
-// Child side (OrderItem) — owns the FK
-@ManyToOne(fetch = FetchType.LAZY) // LAZY always on @ManyToOne
-@JoinColumn(name = "order_id", nullable = false)
-private Order order;
-
-// Helper on parent to keep both sides in sync
-public void addItem(OrderItem item) {
-    items.add(item);
-    item.setOrder(this);
-}
-```
-
-## Deep Pagination — Keyset over OFFSET
-
-`OFFSET` pagination scans and discards every skipped row. On page 5,000 the DB reads 100,000 rows to
-return 20. For large or infinite-scroll datasets, paginate by the last seen key (the "seek" method):
-
-```java
-// ❌ Slow on deep pages — OFFSET grows linearly
-Page<Order> findByStatus(OrderStatus status, Pageable pageable);
-
-// ✅ Keyset — constant time regardless of depth. Pass the last row's createdAt + id.
 @Query("""
-    SELECT o FROM Order o
-    WHERE o.status = :status
-      AND (o.createdAt < :lastCreatedAt
-           OR (o.createdAt = :lastCreatedAt AND o.id < :lastId))
-    ORDER BY o.createdAt DESC, o.id DESC
+    select o
+    from Order o
+    where o.status = :status
+      and (o.createdAt < :lastCreatedAt
+           or (o.createdAt = :lastCreatedAt and o.id < :lastId))
+    order by o.createdAt desc, o.id desc
     """)
 List<Order> findNextPage(OrderStatus status, Instant lastCreatedAt, UUID lastId, Limit limit);
 ```
 
-The `(createdAt, id)` tuple breaks ties so the cursor is stable when timestamps collide. Index `(status, created_at DESC, id DESC)`.
+The `(createdAt, id)` tuple keeps the cursor stable when timestamps collide. Back it with an index
+like `(status, created_at desc, id desc)`.
 
-## Batch Inserts
+## Batch Writes
 
-Saving a list one row at a time is N round-trips. Enable JDBC batching so Hibernate groups them:
+Enable JDBC batching for write-heavy workloads:
 
 ```yaml
 spring:
@@ -177,20 +319,32 @@ spring:
         order_updates: true
 ```
 
-Caveat: `GenerationType.IDENTITY` silently disables insert batching (Hibernate needs the generated key
-per row). `GenerationType.UUID` or a pooled sequence preserves it — another reason to prefer UUIDs.
+`GenerationType.IDENTITY` disables insert batching because Hibernate needs the generated key after
+each row. Use UUIDs or pooled sequences when batch insert throughput matters.
+
+## New-State Detection
+
+Spring Data JPA detects new entities by nullable wrapper `@Version` first, then nullable ID. A
+primitive version cannot be used because JPA treats `0` as the first persisted version.
+
+For manually assigned IDs, add `@Version Long version` or implement `Persistable` with an `isNew`
+flag cleared by `@PostPersist` and `@PostLoad`. Use the template in
+`templates/BaseAssignedIdEntity.java`.
 
 ## Gotchas
-- Agent uses `FetchType.EAGER` — always use `LAZY` on `@ManyToOne` and `@ManyToMany`
-- Agent uses `@Enumerated(EnumType.ORDINAL)` — always use `STRING`
-- Agent uses `Long` IDs — use `UUID`
-- Agent calls `findAll()` for list endpoints — always use `Pageable`
-- Agent uses `OFFSET` pagination on huge tables — switch to keyset for deep pages
-- Agent adds setters to entities — use behavior methods instead
-- Agent forgets `orphanRemoval = true` on `@OneToMany` — child records become orphans
-- Agent writes N+1 without realizing — check for `items` access in loops
-- Agent batches inserts with `GenerationType.IDENTITY` — batching is silently off; use `UUID`/sequence
-- Agent assumes Flyway comes transitively with `spring-boot-starter-data-jpa` — Boot's modular starters don't pull it in; add `spring-boot-starter-flyway` explicitly or migrations never run
-- Agent imports `@EntityScan` from `org.springframework.boot.autoconfigure.domain` — it lives in `org.springframework.boot.persistence.autoconfigure`
-- Agent uses `@MockBean`/`@SpyBean` in slice tests — removed; use `@MockitoBean`/`@MockitoSpyBean`, and add `spring-boot-starter-data-jpa-test` for `@DataJpaTest`
-- Migrating from Boot 3: `spring.dao.exceptiontranslation.enabled` is now `spring.persistence.exceptiontranslation.enabled`
+
+- Agent imports `javax.persistence.*` - Boot 4 uses `jakarta.persistence.*`.
+- Agent creates entity records - use records for DTOs/embeddables, not ordinary entities.
+- Agent puts `@Data` on entities - generates setters and unsafe equality; use targeted `@Getter`.
+- Agent makes entities `final` or constructors private - breaks Hibernate proxy/instantiation.
+- Agent uses `FetchType.EAGER` - use `LAZY` on to-one and many-to-many relationships.
+- Agent uses `@Enumerated(EnumType.ORDINAL)` - use `STRING`.
+- Agent uses primitive `long version` - use nullable wrapper `Long`.
+- Agent omits `@Version` on editable aggregates - lost updates are not detected.
+- Agent returns entities from controllers - map to DTO records.
+- Agent calls `findAll()` for list endpoints - require `Pageable`, `Limit`, or a projection query.
+- Agent uses `OFFSET` pagination on huge tables - switch to keyset for deep pages.
+- Agent includes lazy associations in equality or `toString` - causes lazy loads and recursion.
+- Agent maps every relationship bidirectionally - add back-references only when required.
+- Agent uses `@ManyToMany` for business links with attributes - model the join row as an entity.
+- Agent batches inserts with `GenerationType.IDENTITY` - batching is silently off; use UUID/sequence.

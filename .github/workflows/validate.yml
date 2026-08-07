@@ -19,5 +19,8 @@ jobs:
       - name: Validate skill structure and documentation
         run: bash scripts/validate-skills.sh
 
+      - name: Validate Claude marketplace manifest
+        run: python3 -m json.tool .claude-plugin/marketplace.json > /dev/null
+
       - name: Check whitespace errors
         run: git diff --check

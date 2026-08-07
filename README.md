@@ -9,7 +9,7 @@
 
 <br/>
 
-[![skills](https://img.shields.io/badge/skills-19_%C3%97_2-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
+[![skills](https://img.shields.io/badge/skills-23_%C3%97_2-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x_%7C_4.x-6DB33F?style=for-the-badge&labelColor=0f172a&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-21%2B-ED8B00?style=for-the-badge&labelColor=0f172a&logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/License-MIT-94a3b8?style=for-the-badge&labelColor=0f172a)](LICENSE)
@@ -64,6 +64,7 @@ This repo is a collection of battle-tested skills. Copy, adapt, drop in.
 | **Skills** | Markdown files loaded into Claude Code or Codex context — tell the agent *how* to work in your codebase |
 | **CLAUDE.md / AGENTS.md** | Project-level persistent memory — your agent's onboarding doc |
 | [**MCP Java SDK**](https://github.com/modelcontextprotocol/java-sdk) | Official Java SDK for building MCP servers — connect your Spring Boot app to any AI agent |
+| **Marketplace plugins** | Versioned Claude Code packages for all Boot 3 or Boot 4 skills, installed from this repository |
 | **Planned workflows** | Repeatable commands such as `/generate-endpoint`, `/write-test`, and `/db-migrate` are listed in the roadmap |
 
 ---
@@ -104,7 +105,7 @@ The version guidance follows the [Spring Boot 4 system requirements](https://doc
 
 | Skill | Description | Tags |
 |-------|-------------|------|
-| [**spring-data-jpa**](skills/spring-boot-4/spring-data-jpa/) | Entity conventions, N+1 prevention, projections, keyset pagination, batch inserts. | `jpa` `hibernate` |
+| [**spring-data-jpa**](skills/spring-boot-4/spring-data-jpa/) | Boot 4 JPA with Hibernate 7: entity modeling, Jakarta imports, relationships, projections, N+1 prevention, keyset pagination, and batch writes. | `jpa` `hibernate` |
 | [**flyway-migrations**](skills/spring-boot-4/flyway-migrations/) | Migration naming convention, safe multi-step schema changes, team workflow for concurrent migrations. | `flyway` `migrations` |
 | [**spring-data-redis**](skills/spring-boot-4/spring-data-redis/) | Cache-aside pattern, key naming, TTL strategy, stampede protection, serialization config. | `redis` `caching` |
 | [**transactional-patterns**](skills/spring-boot-4/transactional-patterns/) | `@Transactional` propagation rules, self-invocation pitfall, after-commit side effects, saga pattern. | `transactions` |
@@ -113,7 +114,16 @@ The version guidance follows the [Spring Boot 4 system requirements](https://doc
 
 | Skill | Description | Tags |
 |-------|-------------|------|
-| [**spring-batch**](skills/spring-boot-4/spring-batch/) | Spring Batch chunk jobs — builder API (no `JobBuilderFactory`), restartable & idempotent job parameters, reader sort/thread-safety, fault tolerance, chunk transaction boundaries. | `batch` `etl` |
+| [**spring-batch**](skills/spring-boot-4/spring-batch/) | Spring Batch 6 chunk jobs, JDBC versus resourceless repositories, `JobOperator`, restartability, reader sort/thread-safety, and transaction boundaries. | `batch` `etl` |
+
+### 🧰 Framework 7 Core
+
+| Skill | Description | Tags |
+|-------|-------------|------|
+| [**api-versioning**](skills/spring-boot-4/api-versioning/) | Spring Framework 7 built-in API versioning: mapping versions, central request resolution, defaults, supported versions, and deprecation headers. | `rest` `api` `versioning` |
+| [**http-interface-clients**](skills/spring-boot-4/http-interface-clients/) | Boot 4 declarative HTTP clients with `@ImportHttpServices`, grouped base URLs/timeouts, and RestClient versus WebClient selection. | `http` `clients` |
+| [**null-safety**](skills/spring-boot-4/null-safety/) | JSpecify nullability for Framework 7: `@NullMarked`, `@Nullable`, generic and array positions, Kotlin interop, and NullAway. | `null-safety` `jspecify` |
+| [**resilience-retry**](skills/spring-boot-4/resilience-retry/) | Framework 7 core `@Retryable` and `@ConcurrencyLimit`: enablement, backoff, no `@Recover`, proxy, and transaction pitfalls. | `resilience` `retry` |
 
 ### 🔒 Security
 
@@ -180,6 +190,23 @@ cp -r skills/spring-boot-3/rest-api-conventions "$PROJECT_DIR/.codex/skills/"
 
 Run these commands from the root of this repository, or replace `skills/` with the path to your
 local clone.
+
+### Install from the Claude Code marketplace
+
+This repository also exposes two marketplace plugins without duplicating the skill files:
+
+```bash
+claude plugin marketplace add rrezartprebreza/spring-boot-skills
+claude plugin install spring-boot-4-skills@spring-boot-skills
+# or for a Boot 3 project:
+claude plugin install spring-boot-3-skills@spring-boot-skills
+```
+
+The marketplace manifest is [`.claude-plugin/marketplace.json`](.claude-plugin/marketplace.json).
+Validate it locally with `claude plugin validate .`. The repository can be submitted to Anthropic's
+[Claude Code community marketplace](https://platform.claude.com/plugins/submit); approval is a
+separate review step. GitHub Marketplace is intended for GitHub Apps and Actions, so this skills
+repository should use GitHub releases and the Claude marketplace instead.
 
 **3. Tell your agent what you want**
 ```
@@ -361,7 +388,7 @@ Without the skill, the agent guesses: dead pre-GA artifact names, SDK `0.9.0` AP
 ## 🗺️ Roadmap
 
 - [x] Skills for Spring Batch
-- [x] Spring Boot 4 versions of all 19 skills (`skills/spring-boot-4/`)
+- [x] Spring Boot 4 versions of all 23 skills (`skills/spring-boot-4/`)
 - [ ] Skills for Spring Cloud Gateway
 - [ ] Skills for Spring WebFlux / reactive patterns
 - [ ] Skills for multi-tenancy

@@ -1,26 +1,31 @@
-// ❌ BAD — every common JPA mistake
+// BAD - common Boot 4 JPA mistakes.
+
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
 
 @Entity
-@Data                                   // @Data generates setters — bad for entities
-public class Order {
+@Data
+public final class Order {
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)  // exposes auto-increment Long
-    private Long id;                    // Long ID, not UUID
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
-    private String customerEmail;       // missing @Column constraints
+    private long version;
 
-    @Enumerated(EnumType.ORDINAL)       // ORDINAL breaks if enum is reordered
+    private String customerEmail;
+
+    @Enumerated(EnumType.ORDINAL)
     private OrderStatus status;
 
-    @OneToMany                          // missing cascade, orphanRemoval
-    private List<OrderItem> items;      // not initialized — NPE waiting to happen
+    @OneToMany
+    private List<OrderItem> items;
 
-    @ManyToOne                          // missing fetch = LAZY — EAGER by default = N+1
+    @ManyToOne
     private User user;
 
-    // No @CreationTimestamp / @UpdateTimestamp
-    // No @Version for optimistic locking
-    // No factory method — public constructor allows invalid state
-    // No behavior methods — service has to know internal rules
+    public Order() {
+    }
 }

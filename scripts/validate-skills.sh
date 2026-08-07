@@ -97,4 +97,26 @@ for local_path in LICENSE CONTRIBUTING.md assets/banner.svg skills/spring-boot-3
     }
 done
 
+marketplace_file=".claude-plugin/marketplace.json"
+[[ -f "$marketplace_file" ]] || {
+    echo "Missing $marketplace_file" >&2
+    exit 1
+}
+grep -Fq '"spring-boot-3-skills"' "$marketplace_file" || {
+    echo "Marketplace is missing the Boot 3 plugin" >&2
+    exit 1
+}
+grep -Fq '"spring-boot-4-skills"' "$marketplace_file" || {
+    echo "Marketplace is missing the Boot 4 plugin" >&2
+    exit 1
+}
+grep -Fq '"./skills/spring-boot-3/"' "$marketplace_file" || {
+    echo "Marketplace is missing the Boot 3 skill path" >&2
+    exit 1
+}
+grep -Fq '"./skills/spring-boot-4/"' "$marketplace_file" || {
+    echo "Marketplace is missing the Boot 4 skill path" >&2
+    exit 1
+}
+
 echo "Validated $skill_count skills across Spring Boot 3 and Spring Boot 4."
