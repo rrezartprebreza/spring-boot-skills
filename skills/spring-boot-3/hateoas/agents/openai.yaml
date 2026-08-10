@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring HATEOAS"
+  short_description: "Build discoverable APIs with Spring HATEOAS"
+  default_prompt: "Use $hateoas to implement this Spring Boot change."

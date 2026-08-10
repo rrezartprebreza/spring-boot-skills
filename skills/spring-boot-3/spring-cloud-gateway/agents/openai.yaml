@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring Cloud Gateway"
+  short_description: "Build secure and resilient edge gateway routes"
+  default_prompt: "Use $spring-cloud-gateway to implement this Spring Boot change."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Transactional Patterns"
+  short_description: "Control Spring transaction boundaries and retries"
+  default_prompt: "Use $transactional-patterns to implement this Spring Boot change."

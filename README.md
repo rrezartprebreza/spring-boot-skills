@@ -9,7 +9,7 @@
 
 <br/>
 
-[![skills](https://img.shields.io/badge/skills-23_%C3%97_2-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
+[![skills](https://img.shields.io/badge/skills-30_%C3%97_2-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x_%7C_4.x-6DB33F?style=for-the-badge&labelColor=0f172a&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-21%2B-ED8B00?style=for-the-badge&labelColor=0f172a&logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/License-MIT-94a3b8?style=for-the-badge&labelColor=0f172a)](LICENSE)
@@ -64,14 +64,16 @@ This repo is a collection of battle-tested skills. Copy, adapt, drop in.
 | **Skills** | Markdown files loaded into Claude Code or Codex context — tell the agent *how* to work in your codebase |
 | **CLAUDE.md / AGENTS.md** | Project-level persistent memory — your agent's onboarding doc |
 | [**MCP Java SDK**](https://github.com/modelcontextprotocol/java-sdk) | Official Java SDK for building MCP servers — connect your Spring Boot app to any AI agent |
-| **Marketplace plugins** | Versioned Claude Code packages for all Boot 3 or Boot 4 skills, installed from this repository |
+| **Marketplace plugins** | Versioned Claude Code and Codex packages for all Boot 3 or Boot 4 skills |
+| **Project templates** | Ready-to-adapt `CLAUDE.md` and `AGENTS.md` guidance for Boot 3 and Boot 4 projects |
 | **Planned workflows** | Repeatable commands such as `/generate-endpoint`, `/write-test`, and `/db-migrate` are listed in the roadmap |
 
 ---
 
 ## 📦 Skills
 
-Every skill ships in **two flavors** — pick the folder that matches your stack:
+The catalog ships in **two version trees** — pick the folder that matches your stack. Shared topics
+normally have both flavors; genuinely version-specific topics may live only in the relevant tree.
 
 | Folder | Target stack | Compatibility baseline |
 |--------|--------------|-----------------------|
@@ -91,6 +93,7 @@ The version guidance follows the [Spring Boot 4 system requirements](https://doc
 | [**hexagonal-architecture**](skills/spring-boot-4/hexagonal-architecture/) | Ports and adapters pattern for Spring Boot. Keeps domain clean of framework dependencies. | `architecture` `ddd` |
 | [**domain-driven-design**](skills/spring-boot-4/domain-driven-design/) | Aggregates, value objects, domain events with commit-safe publication. Includes JPA mapping conventions. | `ddd` `jpa` |
 | [**multi-module-maven**](skills/spring-boot-4/multi-module-maven/) | Parent POM conventions, shared BOM, inter-module dependency rules. Prevents circular deps. | `maven` `architecture` |
+| [**multi-tenancy**](skills/spring-boot-4/multi-tenancy/) | Tenant resolution, database/schema isolation, tenant-aware persistence, caches, jobs, and migrations. | `architecture` `security` `data` |
 
 ### 🔌 API Design
 
@@ -101,6 +104,13 @@ The version guidance follows the [Spring Boot 4 system requirements](https://doc
 | [**problem-details-rfc9457**](skills/spring-boot-4/problem-details-rfc9457/) | RFC 9457 compliant error responses with Spring's `ProblemDetail`. Replaces ad-hoc error envelopes. | `error-handling` `rest` |
 | [**hateoas**](skills/spring-boot-4/hateoas/) | Spring HATEOAS link building conventions. Teaches agent when and how to add hypermedia links. | `hateoas` `rest` |
 
+### 🌐 Edge & Reactive
+
+| Skill | Description | Tags |
+|-------|-------------|------|
+| [**spring-cloud-gateway**](skills/spring-boot-4/spring-cloud-gateway/) | Secure route design, header hygiene, timeouts, rate limits, retries, and release-train compatibility. | `gateway` `spring-cloud` `security` |
+| [**webflux-reactive-patterns**](skills/spring-boot-4/webflux-reactive-patterns/) | Non-blocking WebFlux, Reactor context, R2DBC, backpressure, cancellation, and reactive tests. | `webflux` `reactor` `r2dbc` |
+
 ### 🗄️ Data & Persistence
 
 | Skill | Description | Tags |
@@ -110,11 +120,24 @@ The version guidance follows the [Spring Boot 4 system requirements](https://doc
 | [**spring-data-redis**](skills/spring-boot-4/spring-data-redis/) | Cache-aside pattern, key naming, TTL strategy, stampede protection, serialization config. | `redis` `caching` |
 | [**transactional-patterns**](skills/spring-boot-4/transactional-patterns/) | `@Transactional` propagation rules, self-invocation pitfall, after-commit side effects, saga pattern. | `transactions` |
 
+### 📨 Messaging
+
+| Skill | Description | Tags |
+|-------|-------------|------|
+| [**event-driven-messaging**](skills/spring-boot-4/event-driven-messaging/) | Kafka/RabbitMQ/Pulsar/JMS contracts, idempotent consumers, outbox delivery, retries, and dead letters. | `messaging` `kafka` `rabbitmq` |
+
 ### ⚙️ Batch & Jobs
 
 | Skill | Description | Tags |
 |-------|-------------|------|
 | [**spring-batch**](skills/spring-boot-4/spring-batch/) | Spring Batch 6 chunk jobs, JDBC versus resourceless repositories, `JobOperator`, restartability, reader sort/thread-safety, and transaction boundaries. | `batch` `etl` |
+
+### 🚀 Migration & Deployment
+
+| Skill | Description | Tags |
+|-------|-------------|------|
+| [**spring-boot-migration**](skills/spring-boot-4/spring-boot-migration/) | Staged Boot 3.5 → 4 migration covering modular starters, Jackson 3, tests, servers, and verification. | `migration` `spring-boot-4` |
+| [**container-native-deployment**](skills/spring-boot-4/container-native-deployment/) | Buildpacks, layered OCI images, JVM containers, GraalVM native images, AOT hints, and probes. | `containers` `graalvm` `aot` |
 
 ### 🧰 Framework 7 Core
 
@@ -139,6 +162,12 @@ The version guidance follows the [Spring Boot 4 system requirements](https://doc
 | [**spring-ai-integration**](skills/spring-boot-4/spring-ai-integration/) | Spring AI ChatClient, chat memory, RAG pipeline, structured output. Real GA artifact names — no dead pre-GA coordinates. | `spring-ai` `llm` |
 | [**mcp-server**](skills/spring-boot-4/mcp-server/) | Build MCP servers with the official Java SDK 1.0 + Spring AI starters. Tool registration, transports, stdio pitfalls. | `mcp` `ai-agents` |
 | [**ai-observability**](skills/spring-boot-4/ai-observability/) | Token usage tracking, latency monitoring, prompt/response logging for Spring AI apps. | `observability` `spring-ai` |
+
+### 📊 Operations
+
+| Skill | Description | Tags |
+|-------|-------------|------|
+| [**production-observability**](skills/spring-boot-4/production-observability/) | Actuator, Micrometer, OpenTelemetry/OTLP, health probes, structured logging, and actionable alerts. | `actuator` `micrometer` `opentelemetry` |
 
 ### 🧪 Testing
 
@@ -190,6 +219,19 @@ cp -r skills/spring-boot-3/rest-api-conventions "$PROJECT_DIR/.codex/skills/"
 
 Run these commands from the root of this repository, or replace `skills/` with the path to your
 local clone.
+
+For persistent project guidance, start from the matching templates:
+
+```bash
+# Codex, Spring Boot 4
+cp templates/spring-boot-4/AGENTS.md "$PROJECT_DIR/AGENTS.md"
+
+# Claude Code, Spring Boot 4
+cp templates/spring-boot-4/CLAUDE.md "$PROJECT_DIR/CLAUDE.md"
+```
+
+Boot 3 equivalents live under `templates/spring-boot-3/`. Adapt commands and conventions to the
+project rather than using the templates unchanged.
 
 ### Install from the Claude Code marketplace
 
@@ -321,6 +363,8 @@ Every skill in this repo follows the same structure:
 ```
 skills/spring-boot-4/rest-api-conventions/
 ├── SKILL.md          ← the skill: trigger description + conventions + gotchas
+├── agents/
+│   └── openai.yaml   ← Codex skill-list metadata and default prompt
 ├── examples/         ← good and bad examples, side by side
 │   ├── good-controller.java
 │   └── bad-controller.java
@@ -359,7 +403,7 @@ The **Gotchas** section at the bottom of each skill is the secret weapon: a runn
 
 **Fork this repo and customize.** Every team's conventions are different. These are starting points, not gospel.
 
-**Combine with CLAUDE.md.** CLAUDE.md is for project-level memory (build commands, test runner, key architecture decisions). Skills are for domain-specific coding patterns.
+**Combine with CLAUDE.md or AGENTS.md.** Project guidance stores build commands, verification, and architecture decisions. Skills provide reusable domain-specific workflows.
 
 | Anti-pattern | Fix |
 |--------------|-----|
@@ -404,11 +448,15 @@ Without the skill, the agent guesses: dead pre-GA artifact names, SDK `0.9.0` AP
 ## 🗺️ Roadmap
 
 - [x] Skills for Spring Batch
-- [x] Spring Boot 4 versions of all 23 skills (`skills/spring-boot-4/`)
-- [ ] Skills for Spring Cloud Gateway
-- [ ] Skills for Spring WebFlux / reactive patterns
-- [ ] Skills for multi-tenancy
-- [ ] CLAUDE.md template for Spring Boot projects
+- [x] Spring Boot 4 versions of all 30 skills (`skills/spring-boot-4/`)
+- [x] Skills for Spring Cloud Gateway
+- [x] Skills for Spring WebFlux / reactive patterns
+- [x] Skills for multi-tenancy
+- [x] Spring Boot 3 → 4 migration skill
+- [x] Production observability skill
+- [x] Event-driven messaging skill
+- [x] Container and native deployment skill
+- [x] CLAUDE.md and AGENTS.md templates for Boot 3 and Boot 4
 - [ ] `/generate-endpoint` command
 - [ ] `/write-test` command
 - [ ] `/db-migrate` command

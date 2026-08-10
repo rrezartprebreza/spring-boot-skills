@@ -1,0 +1,4 @@
+interface:
+  display_name: "MCP Server"
+  short_description: "Expose safe Java tools and resources through MCP"
+  default_prompt: "Use $mcp-server to implement this Spring Boot change."

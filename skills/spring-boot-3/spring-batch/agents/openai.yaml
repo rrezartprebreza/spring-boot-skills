@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring Batch"
+  short_description: "Build restartable and idempotent batch jobs"
+  default_prompt: "Use $spring-batch to implement this Spring Boot change."

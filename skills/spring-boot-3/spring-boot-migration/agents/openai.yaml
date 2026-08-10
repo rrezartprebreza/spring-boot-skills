@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring Boot Migration"
+  short_description: "Upgrade safely from Spring Boot 3.5 to Boot 4"
+  default_prompt: "Use $spring-boot-migration to implement this Spring Boot change."

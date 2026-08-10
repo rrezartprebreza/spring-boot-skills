@@ -1,0 +1,4 @@
+interface:
+  display_name: "WebFlux Reactive Patterns"
+  short_description: "Build non-blocking WebFlux and Reactor pipelines"
+  default_prompt: "Use $webflux-reactive-patterns to implement this Spring Boot change."

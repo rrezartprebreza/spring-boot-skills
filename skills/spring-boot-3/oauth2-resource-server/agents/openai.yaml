@@ -1,0 +1,4 @@
+interface:
+  display_name: "OAuth2 Resource Server"
+  short_description: "Validate OAuth2 JWTs and authorize API scopes"
+  default_prompt: "Use $oauth2-resource-server to implement this Spring Boot change."

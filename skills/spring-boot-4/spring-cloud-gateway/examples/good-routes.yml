@@ -1,0 +1,13 @@
+spring:
+  cloud:
+    gateway:
+      httpclient:
+        connect-timeout: 2000
+        response-timeout: 5s
+      routes:
+        - id: orders-api
+          uri: http://orders.internal
+          predicates:
+            - Path=/api/orders/**
+          filters:
+            - RemoveRequestHeader=X-User-Id

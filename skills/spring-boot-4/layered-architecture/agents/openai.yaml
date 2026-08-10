@@ -1,0 +1,4 @@
+interface:
+  display_name: "Layered Architecture"
+  short_description: "Keep Spring web, service, and data layers clean"
+  default_prompt: "Use $layered-architecture to implement this Spring Boot change."

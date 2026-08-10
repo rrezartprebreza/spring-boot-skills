@@ -1,0 +1,4 @@
+interface:
+  display_name: "Multi-Module Maven"
+  short_description: "Structure maintainable multi-module Maven builds"
+  default_prompt: "Use $multi-module-maven to implement this Spring Boot change."

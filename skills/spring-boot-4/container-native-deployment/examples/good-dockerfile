@@ -1,0 +1,6 @@
+FROM eclipse-temurin:21-jre
+WORKDIR /application
+COPY --chown=1001:1001 target/dependencies/ ./
+COPY --chown=1001:1001 target/application/ ./
+USER 1001
+ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]

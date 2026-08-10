@@ -1,0 +1,4 @@
+interface:
+  display_name: "API Versioning"
+  short_description: "Version Spring MVC and WebFlux APIs safely"
+  default_prompt: "Use $api-versioning to implement this Spring Boot change."

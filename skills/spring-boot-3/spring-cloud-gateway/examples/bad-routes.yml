@@ -1,0 +1,10 @@
+spring:
+  cloud:
+    gateway:
+      routes:
+        - id: everything
+          uri: http://orders.internal
+          predicates:
+            - Path=/**
+          filters:
+            - Retry=10

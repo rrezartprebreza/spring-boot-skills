@@ -25,8 +25,9 @@ Keep it concrete. "Agent uses field injection" is good. "Agent sometimes makes m
    - Front matter with `name` and `description` (the trigger — "Use when...")
    - Conventions with code examples
    - Gotchas section (most important)
-5. Optionally add `examples/good.java` and `examples/bad.java`
-6. Optionally add `templates/` with copy-paste starting points
+5. Add `examples/good-*` and `examples/bad-*` files
+6. Generate `agents/openai.yaml` with Codex's skill metadata generator
+7. Optionally add `templates/` with copy-paste starting points
 
 ## Skill Description = Trigger
 
@@ -50,6 +51,8 @@ Not as a summary of what's inside. The agent decides whether to load the skill b
 - [ ] Skill has `name` and `description` in front matter
 - [ ] Description is a trigger ("Use when..."), not a summary
 - [ ] Has a Gotchas section with at least 3 entries
+- [ ] Has paired good/bad examples
+- [ ] Has `agents/openai.yaml` with a default prompt that names the skill
 - [ ] Code examples compile (or are clearly illustrative)
 - [ ] Doesn't duplicate what Spring Boot already does by default
 - [ ] Both Boot 3 and Boot 4 versions are updated, or the version-specific scope is documented

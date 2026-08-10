@@ -1,0 +1,4 @@
+interface:
+  display_name: "Null Safety"
+  short_description: "Apply explicit Java and Kotlin null contracts"
+  default_prompt: "Use $null-safety to implement this Spring Boot change."

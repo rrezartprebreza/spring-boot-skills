@@ -1,6 +1,6 @@
 {
   "name": "spring-boot-4-skills",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Production-oriented Spring Boot 4 and Spring Framework 7 skills for Java coding agents.",
   "author": {
     "name": "Rrezart Prebreza",
@@ -14,7 +14,7 @@
   "interface": {
     "displayName": "Spring Boot 4 Skills",
     "shortDescription": "Spring Boot 4 guidance for Java coding agents.",
-    "longDescription": "Architecture, API, persistence, security, testing, Spring AI, MCP, and Framework 7 skills for Spring Boot 4 projects.",
+    "longDescription": "Architecture, migration, API, persistence, messaging, security, observability, deployment, testing, Spring AI, MCP, and Framework 7 skills for Spring Boot 4 projects.",
     "developerName": "Rrezart Prebreza",
     "category": "Development",
     "capabilities": ["Read", "Write"],

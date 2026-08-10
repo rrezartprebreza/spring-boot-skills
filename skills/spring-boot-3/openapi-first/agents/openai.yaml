@@ -1,0 +1,4 @@
+interface:
+  display_name: "OpenAPI First"
+  short_description: "Generate Spring endpoints from OpenAPI contracts"
+  default_prompt: "Use $openapi-first to implement this Spring Boot change."

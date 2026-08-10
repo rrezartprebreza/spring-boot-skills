@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring Data JPA"
+  short_description: "Model efficient JPA entities, queries, and writes"
+  default_prompt: "Use $spring-data-jpa to implement this Spring Boot change."

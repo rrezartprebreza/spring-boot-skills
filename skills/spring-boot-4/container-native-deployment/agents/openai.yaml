@@ -1,0 +1,4 @@
+interface:
+  display_name: "Container and Native Deployment"
+  short_description: "Build secure JVM containers and native images"
+  default_prompt: "Use $container-native-deployment to implement this Spring Boot change."

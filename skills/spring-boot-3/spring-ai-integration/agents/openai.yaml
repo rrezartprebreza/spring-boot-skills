@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring AI Integration"
+  short_description: "Build Spring AI chat, RAG, and streaming flows"
+  default_prompt: "Use $spring-ai-integration to implement this Spring Boot change."

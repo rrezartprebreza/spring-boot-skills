@@ -1,0 +1,4 @@
+interface:
+  display_name: "Testing Pyramid"
+  short_description: "Choose focused unit, slice, and integration tests"
+  default_prompt: "Use $testing-pyramid to implement this Spring Boot change."

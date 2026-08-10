@@ -1,0 +1,4 @@
+interface:
+  display_name: "Domain-Driven Design"
+  short_description: "Model Spring domains with DDD tactical patterns"
+  default_prompt: "Use $domain-driven-design to implement this Spring Boot change."

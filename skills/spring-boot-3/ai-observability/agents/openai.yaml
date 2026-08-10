@@ -1,0 +1,4 @@
+interface:
+  display_name: "AI Observability"
+  short_description: "Observe Spring AI calls, tokens, cost, and latency"
+  default_prompt: "Use $ai-observability to implement this Spring Boot change."

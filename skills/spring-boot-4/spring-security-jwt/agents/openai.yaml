@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring Security JWT"
+  short_description: "Build JWT authentication and authorization safely"
+  default_prompt: "Use $spring-security-jwt to implement this Spring Boot change."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring Data Redis"
+  short_description: "Design safe Redis caches and rate limits"
+  default_prompt: "Use $spring-data-redis to implement this Spring Boot change."

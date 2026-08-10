@@ -19,6 +19,9 @@ jobs:
       - name: Validate skill structure and documentation
         run: bash scripts/validate-skills.sh
 
+      - name: Compile repository validator
+        run: python3 -m py_compile scripts/validate_repository.py
+
       - name: Validate Claude marketplace manifest
         run: python3 -m json.tool .claude-plugin/marketplace.json > /dev/null
 

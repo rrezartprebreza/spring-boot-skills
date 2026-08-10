@@ -1,0 +1,4 @@
+interface:
+  display_name: "Multi-Tenancy"
+  short_description: "Enforce tenant identity and data isolation"
+  default_prompt: "Use $multi-tenancy to implement this Spring Boot change."

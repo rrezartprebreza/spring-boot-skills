@@ -1,0 +1,4 @@
+interface:
+  display_name: "Production Observability"
+  short_description: "Add metrics, traces, logs, health, and alerts"
+  default_prompt: "Use $production-observability to implement this Spring Boot change."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "REST API Conventions"
+  short_description: "Apply consistent Spring REST API conventions"
+  default_prompt: "Use $rest-api-conventions to implement this Spring Boot change."

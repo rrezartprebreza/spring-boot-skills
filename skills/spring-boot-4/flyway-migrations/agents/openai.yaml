@@ -1,0 +1,4 @@
+interface:
+  display_name: "Flyway Migrations"
+  short_description: "Create safe, repeatable Flyway schema migrations"
+  default_prompt: "Use $flyway-migrations to implement this Spring Boot change."

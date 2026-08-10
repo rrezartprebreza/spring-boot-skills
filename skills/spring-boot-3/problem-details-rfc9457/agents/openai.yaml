@@ -1,0 +1,4 @@
+interface:
+  display_name: "Problem Details RFC 9457"
+  short_description: "Return consistent RFC 9457 API error responses"
+  default_prompt: "Use $problem-details-rfc9457 to implement this Spring Boot change."

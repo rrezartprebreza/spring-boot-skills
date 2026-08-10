@@ -1,0 +1,4 @@
+interface:
+  display_name: "HTTP Interface Clients"
+  short_description: "Create configured declarative HTTP clients"
+  default_prompt: "Use $http-interface-clients to implement this Spring Boot change."

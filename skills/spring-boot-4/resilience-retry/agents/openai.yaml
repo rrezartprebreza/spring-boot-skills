@@ -1,0 +1,4 @@
+interface:
+  display_name: "Resilience and Retry"
+  short_description: "Retry transient failures with bounded resilience"
+  default_prompt: "Use $resilience-retry to implement this Spring Boot change."
