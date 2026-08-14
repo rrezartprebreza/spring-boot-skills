@@ -48,8 +48,7 @@ my-app/
     <!-- Shared versions — all modules inherit -->
     <properties>
         <java.version>21</java.version>
-        <mapstruct.version>1.6.0</mapstruct.version>
-        <testcontainers.version>1.19.8</testcontainers.version>
+        <mapstruct.version>1.6.3</mapstruct.version>
     </properties>
 
     <!-- Dependency management — centralizes versions, NOT adding to classpath -->
@@ -176,3 +175,4 @@ my-app/
 - Agent creates circular dependencies between modules — enforce the dependency direction above
 - Agent imports Spring in `domain` module — domain must be framework-free
 - Agent uses `${project.version}` for inter-module versions — correct, but update parent version to update all
+- Agent overrides Boot-managed dependency versions without a compatibility reason - prefer the Boot BOM defaults

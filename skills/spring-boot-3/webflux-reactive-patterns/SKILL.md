@@ -1,8 +1,9 @@
 ---
 name: webflux-reactive-patterns
 description: >
-  Use when building Spring Boot 3 WebFlux controllers, reactive services, WebClient integrations,
-  R2DBC persistence, streaming endpoints, or Reactor pipelines. Covers non-blocking boundaries.
+  Use when the complete Spring Boot 3 request path is reactive: WebFlux controllers, Reactor
+  pipelines, R2DBC persistence, streaming, backpressure, or cancellation. For defining and
+  registering declarative outbound API interfaces, use http-interface-clients.
 ---
 
 # WebFlux Reactive Patterns

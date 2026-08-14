@@ -1,8 +1,9 @@
 ---
 name: rest-api-conventions
 description: >
-  Use when generating REST controllers, response wrappers, DTOs, error handlers, or any
-  HTTP-facing code. Defines response envelope, HTTP status mapping, pagination, and versioning.
+  Use when generating REST controllers, DTOs, success response contracts, pagination, HTTP status
+  mapping, or API versioning. For RFC 9457 exception and error response formatting, use
+  problem-details-rfc9457 unless the project explicitly requires a legacy error envelope.
 ---
 
 # REST API Conventions

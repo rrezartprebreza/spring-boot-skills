@@ -49,8 +49,7 @@ my-app/
     <!-- Shared versions — all modules inherit -->
     <properties>
         <java.version>21</java.version>
-        <mapstruct.version>1.6.0</mapstruct.version>
-        <testcontainers.version>1.19.8</testcontainers.version>
+        <mapstruct.version>1.6.3</mapstruct.version>
     </properties>
 
     <!-- Dependency management — centralizes versions, NOT adding to classpath -->
@@ -201,3 +200,4 @@ package `org.springframework.boot.<technology>`). Pick one starter per technolog
 - Agent adds bare `flyway-core`/`liquibase-core` expecting Boot to configure them — use `spring-boot-starter-flyway` / `spring-boot-starter-liquibase`
 - Agent adds `spring-boot-starter-test` next to `spring-boot-starter-webmvc-test` — the `-test` starters are self-contained in Boot 4
 - Agent reaches into auto-configuration classes from shared modules — their members are no longer public API in Boot 4
+- Agent overrides Boot-managed dependency versions without a compatibility reason - prefer the Boot BOM defaults

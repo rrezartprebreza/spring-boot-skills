@@ -1,6 +1,14 @@
+FROM eclipse-temurin:21-jre AS builder
+WORKDIR /builder
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} application.jar
+RUN java -Djarmode=tools -jar application.jar extract --layers --destination extracted
+
 FROM eclipse-temurin:21-jre
 WORKDIR /application
-COPY --chown=1001:1001 target/dependencies/ ./
-COPY --chown=1001:1001 target/application/ ./
+COPY --from=builder --chown=1001:1001 /builder/extracted/dependencies/ ./
+COPY --from=builder --chown=1001:1001 /builder/extracted/spring-boot-loader/ ./
+COPY --from=builder --chown=1001:1001 /builder/extracted/snapshot-dependencies/ ./
+COPY --from=builder --chown=1001:1001 /builder/extracted/application/ ./
 USER 1001
-ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
+ENTRYPOINT ["java", "-jar", "application.jar"]

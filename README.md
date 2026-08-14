@@ -11,13 +11,13 @@
 
 [![skills](https://img.shields.io/badge/skills-30_%C3%97_2-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x_%7C_4.x-6DB33F?style=for-the-badge&labelColor=0f172a&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![Java](https://img.shields.io/badge/Java-21%2B-ED8B00?style=for-the-badge&labelColor=0f172a&logo=openjdk&logoColor=white)](https://openjdk.org/)
+[![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&labelColor=0f172a&logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/License-MIT-94a3b8?style=for-the-badge&labelColor=0f172a)](LICENSE)
 
 [![Claude Code](https://img.shields.io/badge/Claude_Code-compatible-d97757?style=flat-square&labelColor=1e293b)](https://code.claude.com)
 [![Codex](https://img.shields.io/badge/Codex-compatible-10a37f?style=flat-square&labelColor=1e293b)](https://chatgpt.com/codex)
 [![Spring AI](https://img.shields.io/badge/Spring_AI-1.x_%7C_2.0-6DB33F?style=flat-square&labelColor=1e293b)](https://spring.io/projects/spring-ai)
-[![MCP Java SDK](https://img.shields.io/badge/MCP_Java_SDK-1.0-e879f9?style=flat-square&labelColor=1e293b)](https://github.com/modelcontextprotocol/java-sdk)
+[![MCP Java SDK](https://img.shields.io/badge/MCP_Java_SDK-2.0-e879f9?style=flat-square&labelColor=1e293b)](https://github.com/modelcontextprotocol/java-sdk)
 [![GitHub Stars](https://img.shields.io/github/stars/rrezartprebreza/spring-boot-skills?style=flat-square&label=stars&labelColor=1e293b&color=fbbf24)](https://github.com/rrezartprebreza/spring-boot-skills/stargazers)
 
 <br/>
@@ -84,6 +84,10 @@ Drop any skill folder into your agent's skills directory. Claude Code users can 
 The catalog below links to the **Spring Boot 4** versions — swap `spring-boot-4` for `spring-boot-3` in any path if you're still on Boot 3.
 
 The version guidance follows the [Spring Boot 4 system requirements](https://docs.spring.io/spring-boot/system-requirements.html), the [Spring Boot 4 migration guide](https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide), and [Spring AI's compatibility guidance](https://docs.spring.io/spring-ai/reference/getting-started.html). Check the official release notes before upgrading a project.
+
+Fast-moving integrations were last verified in August 2026 against Spring Boot 4.1, Spring AI 2.0,
+MCP Java SDK 2.0, Spring Cloud 2025.1, and Spring Cloud Gateway 5.0. Keep BOM-managed dependency
+versions together and recheck the linked official sources before adopting a newer release line.
 
 ### 🏗️ Architecture
 
@@ -160,7 +164,7 @@ The version guidance follows the [Spring Boot 4 system requirements](https://doc
 | Skill | Description | Tags |
 |-------|-------------|------|
 | [**spring-ai-integration**](skills/spring-boot-4/spring-ai-integration/) | Spring AI ChatClient, chat memory, RAG pipeline, structured output. Real GA artifact names — no dead pre-GA coordinates. | `spring-ai` `llm` |
-| [**mcp-server**](skills/spring-boot-4/mcp-server/) | Build MCP servers with the official Java SDK 1.0 + Spring AI starters. Tool registration, transports, stdio pitfalls. | `mcp` `ai-agents` |
+| [**mcp-server**](skills/spring-boot-4/mcp-server/) | Build MCP servers with the Java SDK 2.x and Spring AI 2.0 native annotations. Tool registration, Streamable HTTP, and stdio safety. | `mcp` `ai-agents` |
 | [**ai-observability**](skills/spring-boot-4/ai-observability/) | Token usage tracking, latency monitoring, prompt/response logging for Spring AI apps. | `observability` `spring-ai` |
 
 ### 📊 Operations
@@ -419,7 +423,9 @@ The **Gotchas** section at the bottom of each skill is the secret weapon: a runn
 
 The [`mcp-server`](skills/spring-boot-4/mcp-server/) skill is the most powerful one here.
 
-It teaches your agent to build production-ready MCP servers on **MCP Java SDK 1.0** and the **Spring AI GA starters** — the same protocol used by Claude, Cursor, VS Code, and every major AI coding tool.
+It teaches your agent to build production-ready MCP servers on **MCP Java SDK 2.x** and the
+**Spring AI 2.0 starters** - the same protocol used by Claude, Codex, Cursor, VS Code, and other
+major AI coding tools.
 
 The MCP skill distinguishes native MCP annotations such as `@McpTool` from Spring AI model
 tool-calling annotations such as `@Tool`. Use the native MCP path when exposing server tools.
@@ -441,7 +447,8 @@ public class OrderMcpTools {
 }
 ```
 
-Without the skill, the agent guesses: dead pre-GA artifact names, SDK `0.9.0` APIs, `System.out` logging that corrupts the stdio transport — or it gives up and writes Python.
+Without the skill, the agent guesses: dead pre-GA artifact names, removed SDK constructors,
+`@Tool` instead of native `@McpTool`, or `System.out` logging that corrupts stdio transport.
 
 ---
 

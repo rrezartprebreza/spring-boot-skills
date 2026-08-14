@@ -1,7 +1,17 @@
+import io.micrometer.observation.Observation;
+import io.micrometer.observation.ObservationRegistry;
+
 final class OrderObservation {
-    void record(ObservationRegistry registry, String outcome, Runnable operation) {
+
+    private final ObservationRegistry registry;
+
+    OrderObservation(ObservationRegistry registry) {
+        this.registry = registry;
+    }
+
+    void createOrder(String channel, Runnable operation) {
         Observation.createNotStarted("orders.create", registry)
-            .lowCardinalityKeyValue("outcome", outcome)
+            .lowCardinalityKeyValue("channel", channel)
             .observe(operation);
     }
 }

@@ -230,7 +230,7 @@ spring:
       api-key: ${ANTHROPIC_API_KEY}
       chat:
         options:
-          model: claude-sonnet-4-20250514
+          model: ${ANTHROPIC_MODEL}
           max-tokens: 2048
           temperature: 0.7
     # OR for OpenAI:
@@ -238,7 +238,7 @@ spring:
       api-key: ${OPENAI_API_KEY}
       chat:
         options:
-          model: gpt-4o
+          model: ${OPENAI_MODEL}
     vectorstore:
       pgvector:
         initialize-schema: true
@@ -250,6 +250,7 @@ spring:
 - Agent writes `new MessageChatMemoryAdvisor(new InMemoryChatMemory())` — both removed in GA; use `MessageChatMemoryAdvisor.builder(chatMemory)` + `MessageWindowChatMemory`
 - Agent writes `SearchRequest.defaults().withTopK(n)` — GA is `SearchRequest.builder().topK(n).build()`
 - Agent hardcodes API keys — always use environment variables / `${...}`
+- Agent hardcodes provider model IDs - configure them externally because model catalogs change
 - Agent builds prompts with string concatenation — use `.param()` template variables
 - Agent puts prompts inline in code — externalize to `src/main/resources/prompts/`
 - Agent ignores structured output — use `.entity(MyClass.class)` instead of parsing manually

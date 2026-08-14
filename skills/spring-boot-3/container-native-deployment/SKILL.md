@@ -41,6 +41,16 @@ Choose JVM or native from measured startup, memory, throughput, and build constr
 
 - See `examples/good-dockerfile` and `examples/bad-dockerfile`.
 
+The good example targets Boot 3.3+ and uses `jarmode=tools` extraction in a builder stage. For Boot
+3.0-3.2, use the older `-Djarmode=layertools ... extract` command. A normal Maven package does not
+create `target/dependencies/` or `target/application/` directories by itself.
+
+## Official sources
+
+- Container images: https://docs.spring.io/spring-boot/reference/packaging/container-images/
+- Dockerfiles and layer extraction: https://docs.spring.io/spring-boot/reference/packaging/container-images/dockerfiles.html
+- Boot 3.3 tools jarmode: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-3.3-Release-Notes#cds-support
+
 ## Gotchas
 
 - Agent copies one fat jar into a mutable root container - use layers and a non-root runtime.
@@ -48,3 +58,5 @@ Choose JVM or native from measured startup, memory, throughput, and build constr
 - Agent adds broad reflection configuration to make native builds pass - register narrow runtime hints.
 - Agent uses liveness to test every dependency - use readiness for traffic-affecting dependencies.
 - Agent chooses native without measuring throughput and build cost - benchmark both deployment modes.
+- Agent copies nonexistent `target/dependencies` directories - extract the packaged jar in a builder stage.
+- Agent uses `jarmode=tools` on Boot 3.0-3.2 - use `layertools` until the project reaches Boot 3.3.

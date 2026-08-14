@@ -249,14 +249,14 @@ spring:
       api-key: ${ANTHROPIC_API_KEY}
       chat:
         # 2.0 flattened the properties — the old chat.options.* nesting is dead
-        model: claude-sonnet-4-5-20250929
+        model: ${ANTHROPIC_MODEL}
         max-tokens: 2048
         temperature: 0.7   # 2.0 removed the 0.7 default — set it explicitly if you rely on it
     # OR for OpenAI:
     openai:
       api-key: ${OPENAI_API_KEY}
       chat:
-        model: gpt-4o
+        model: ${OPENAI_MODEL}
     vectorstore:
       pgvector:
         initialize-schema: true
@@ -274,6 +274,7 @@ spring:
 - Agent adds `spring-ai-advisors-vector-store` for `QuestionAnswerAdvisor` — renamed to `spring-ai-vector-store-advisor` in 2.0
 - Agent writes `SearchRequest.defaults().withTopK(n)` — use `SearchRequest.builder().topK(n).build()`
 - Agent hardcodes API keys — always use environment variables / `${...}`
+- Agent hardcodes provider model IDs - configure them externally because model catalogs change
 - Agent builds prompts with string concatenation — use `.param()` template variables
 - Agent puts prompts inline in code — externalize to `src/main/resources/prompts/`
 - Agent ignores structured output — use `.entity(MyClass.class)` instead of parsing manually

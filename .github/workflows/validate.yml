@@ -22,6 +22,9 @@ jobs:
       - name: Compile repository validator
         run: python3 -m py_compile scripts/validate_repository.py
 
+      - name: Compile Spring Boot 4 MCP example
+        run: mvn --batch-mode --no-transfer-progress -f verification/spring-boot-4-mcp/pom.xml package
+
       - name: Validate Claude marketplace manifest
         run: python3 -m json.tool .claude-plugin/marketplace.json > /dev/null
 

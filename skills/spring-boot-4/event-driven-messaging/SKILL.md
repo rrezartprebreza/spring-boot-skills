@@ -40,7 +40,13 @@ Design for at-least-once delivery unless the complete system proves stronger sem
 
 ## Examples
 
-- See `examples/good-consumer.java` and `examples/bad-consumer.java`.
+- See `examples/good-consumer.java`, `examples/good-kafka.yml`, and `examples/bad-consumer.java`.
+
+## Official sources
+
+- Boot 4 messaging starters: https://github.com/spring-projects/spring-boot/wiki/Spring-Boot-4.0-Migration-Guide#starters
+- Spring Kafka reference: https://docs.spring.io/spring-kafka/reference/
+- Spring AMQP reference: https://docs.spring.io/spring-amqp/reference/
 
 ## Gotchas
 

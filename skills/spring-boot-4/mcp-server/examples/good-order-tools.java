@@ -1,5 +1,5 @@
 @Component
-final class OrderMcpTools {
+final class ReadOnlyOrderMcpTools {
     @McpTool(name = "get_order", description = "Get an order by UUID", generateOutputSchema = true)
     OrderResponse getOrder(
             @McpToolParam(description = "Order UUID", required = true) String orderId) {

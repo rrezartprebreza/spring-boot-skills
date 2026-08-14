@@ -1,6 +1,7 @@
 spring:
   cloud:
     gateway:
+      # Stale Gateway 4 namespace; Gateway 5 requires server.webflux or server.webmvc.
       routes:
         - id: everything
           uri: http://orders.internal

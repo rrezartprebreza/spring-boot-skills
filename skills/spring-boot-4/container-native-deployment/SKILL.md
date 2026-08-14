@@ -42,6 +42,15 @@ Choose JVM, AOT cache, checkpoint/restore, or native from measured requirements.
 
 - See `examples/good-dockerfile` and `examples/bad-dockerfile`.
 
+The good example uses Boot's `jarmode=tools` extraction in a builder stage. A normal Maven package
+does not create `target/dependencies/` or `target/application/` directories by itself.
+
+## Official sources
+
+- Container images: https://docs.spring.io/spring-boot/reference/packaging/container-images/
+- Dockerfiles and layer extraction: https://docs.spring.io/spring-boot/reference/packaging/container-images/dockerfiles.html
+- Native images: https://docs.spring.io/spring-boot/reference/packaging/native-image/
+
 ## Gotchas
 
 - Agent assumes a passing JVM suite proves native compatibility - run the actual native executable.
@@ -49,3 +58,4 @@ Choose JVM, AOT cache, checkpoint/restore, or native from measured requirements.
 - Agent bakes secrets into layers - inject them only at runtime.
 - Agent makes liveness depend on remote systems - use readiness for traffic dependencies.
 - Agent selects native only for fashion - benchmark startup, memory, throughput, and build time.
+- Agent copies nonexistent `target/dependencies` directories - extract the packaged jar in a builder stage.

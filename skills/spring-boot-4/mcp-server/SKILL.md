@@ -1,249 +1,128 @@
 ---
 name: mcp-server
 description: >
-  Use when building MCP (Model Context Protocol) servers in Java/Spring Boot. Covers tool
-  registration, resource exposure, prompt templates, and production deployment using the
-  official MCP Java SDK. Use when user mentions MCP, AI agent integration, or tool calling.
+  Use when exposing Spring Boot 4 application capabilities through Model Context Protocol tools,
+  resources, or prompts. Covers Spring AI 2.0 MCP annotations, transport selection, schemas,
+  errors, security, and the standalone MCP Java SDK 2.x.
 ---
 
-# MCP Server — Java SDK
+# MCP Server - Spring AI 2.0 and Java SDK 2.x
 
-Official Java SDK: https://github.com/modelcontextprotocol/java-sdk  
-Maintained by Anthropic in collaboration with Spring AI.
+Prefer Spring AI's MCP server starters and native annotations in Spring Boot applications. Use the
+standalone SDK only when Spring integration is intentionally not required.
 
-## Dependency
+## Dependencies
 
-The standalone SDK reached **1.0.0 GA** (`io.modelcontextprotocol.sdk:mcp`). Most Spring Boot
-apps should use the **Spring AI MCP starter** instead — it auto-configures the server, transport,
-and annotation-based tool scanning. In Spring AI 2.0, use `spring-ai-starter-mcp-server-*`
-with `spring.ai.mcp.server.protocol=STREAMABLE` for remote HTTP.
+Let the Spring AI BOM manage every Spring AI and MCP transitive dependency. Do not override its MCP
+SDK version independently.
 
 ```xml
-<!-- Recommended for Spring Boot: pick ONE transport starter -->
-<!-- stdio (Claude Desktop / Claude Code launching the jar locally) -->
+<!-- Pick exactly one transport starter. -->
 <dependency>
     <groupId>org.springframework.ai</groupId>
     <artifactId>spring-ai-starter-mcp-server</artifactId>
 </dependency>
-<!-- OR remote HTTP (SSE + Streamable-HTTP) over Spring MVC -->
-<dependency>
-    <groupId>org.springframework.ai</groupId>
-    <artifactId>spring-ai-starter-mcp-server-webmvc</artifactId>
-</dependency>
-<!-- OR reactive: spring-ai-starter-mcp-server-webflux -->
+<!-- Remote MVC: spring-ai-starter-mcp-server-webmvc -->
+<!-- Remote reactive: spring-ai-starter-mcp-server-webflux -->
 ```
 
+For an application that uses the raw SDK without Spring AI, use the current 2.x release and follow
+its 2.0 migration guide. MCP Java SDK 2.0 tracks the 2025-11-25 protocol and prefers Streamable HTTP;
+SSE transports are deprecated.
+
 ```xml
-<!-- Or drive the raw SDK directly (no Spring AI), now at 1.0.0 GA -->
 <dependency>
     <groupId>io.modelcontextprotocol.sdk</groupId>
     <artifactId>mcp</artifactId>
-    <version>1.0.0</version>
+    <version>2.0.0</version>
 </dependency>
 ```
 
-> The old `spring-ai-mcp-server-spring-boot-starter` name is dead. GA is `spring-ai-starter-mcp-server`
-> (stdio), `-webmvc` (servlet SSE / Streamable-HTTP), and `-webflux` (reactive).
+## Native Spring AI MCP tools
 
-## Minimal MCP Server (stdio transport)
-
-```java
-@SpringBootApplication
-public class OrderMcpServer {
-    public static void main(String[] args) {
-        var transport = new StdioServerTransportProvider();
-
-        var server = McpServer.sync(transport)
-            .serverInfo("order-service-mcp", "1.0.0")
-            .capabilities(ServerCapabilities.builder().tools(true).resources(true).build())
-            .tools(getOrderTool(), listOrdersTool())
-            .build();
-
-        Runtime.getRuntime().addShutdownHook(new Thread(server::close));
-    }
-}
-```
-
-## Defining Tools
-
-```java
-// Tool with typed input/output
-private static McpServerFeatures.SyncToolSpecification getOrderTool() {
-    var schema = """
-        {
-          "type": "object",
-          "properties": {
-            "orderId": { "type": "string", "description": "UUID of the order" }
-          },
-          "required": ["orderId"]
-        }
-        """;
-
-    return McpServerFeatures.SyncToolSpecification.builder()
-        .tool(Tool.builder()
-            .name("get_order")
-            .description("Get a single order by ID including all line items and status history")
-            .inputSchema(schema)
-            .build())
-        .callHandler((exchange, args) -> {
-            String orderId = (String) args.get("orderId");
-            try {
-                Order order = orderService.findById(UUID.fromString(orderId));
-                return new CallToolResult(List.of(
-                    new TextContent(objectMapper.writeValueAsString(order))
-                ), false);
-            } catch (EntityNotFoundException e) {
-                return new CallToolResult(List.of(
-                    new TextContent("Order not found: " + orderId)
-                ), true); // isError = true
-            }
-        })
-        .build();
-}
-```
-
-## Spring Boot Integration (recommended)
-
-Spring AI 2.0 provides native MCP annotations. Use `@McpTool` for MCP server tools; `@Tool` is a
-different Spring AI model tool-calling API and should only be used when intentionally registering
-`ToolCallback` objects with the MCP tool-callback converter.
+Use `@McpTool` and `@McpToolParam` for server capabilities. `@Tool` is Spring AI's model
+tool-calling API; it is not the native MCP server annotation.
 
 ```java
 @Component
-public class OrderMcpTools {
-
+final class OrderMcpTools {
     private final OrderService orderService;
 
-    public OrderMcpTools(OrderService orderService) {
+    OrderMcpTools(OrderService orderService) {
         this.orderService = orderService;
     }
 
     @McpTool(
         name = "get_order",
-        description = "Get an order by ID with line items and status history",
-        generateOutputSchema = true)
-    public OrderResponse getOrder(
-            @McpToolParam(description = "UUID of the order", required = true) String orderId) {
+        description = "Get an order by UUID with line items and status history",
+        generateOutputSchema = true,
+        annotations = @McpTool.McpAnnotations(
+            readOnlyHint = true,
+            destructiveHint = false,
+            idempotentHint = true))
+    OrderResponse getOrder(
+            @McpToolParam(description = "Order UUID", required = true) String orderId) {
         return OrderResponse.from(orderService.findById(UUID.fromString(orderId)));
-    }
-
-    @McpTool(
-        name = "list_orders",
-        description = "List orders for a customer, optionally filtered by status",
-        generateOutputSchema = true)
-    public List<OrderResponse> listOrders(
-            @McpToolParam(description = "Customer email address", required = true) String email,
-            @McpToolParam(description = "PENDING, PROCESSING, SHIPPED, or DELIVERED", required = false)
-            String status) {
-        List<Order> orders = status != null
-            ? orderService.findByEmailAndStatus(email, OrderStatus.valueOf(status))
-            : orderService.findByEmail(email);
-        return orders.stream().map(OrderResponse::from).toList();
     }
 }
 ```
 
-With the Spring AI MCP starter, annotated `@Component` methods are discovered automatically. Do not
-also create a `MethodToolCallbackProvider` for the same methods unless you intentionally choose the
-alternative Spring AI tool-callback integration.
+- Return DTOs or records, not persistence entities.
+- Set tool hints accurately; clients must still treat them as untrusted metadata.
+- Use stable, specific descriptions because the model uses them to select tools.
+- Align return types with server mode: synchronous methods for `SYNC`, reactive types for `ASYNC`.
+- For expected failures, return a stable structured result. Do not expose stack traces or secrets.
+- Use MCP SDK builders such as `CallToolResult.builder()`; legacy result constructors were removed.
 
-## application.yml for MCP Server
+## Transport configuration
 
 ```yaml
 spring:
+  main:
+    banner-mode: "off"
   ai:
     mcp:
       server:
         name: order-service-mcp
         version: 1.0.0
-        type: SYNC          # SYNC (blocking) or ASYNC (reactive / WebFlux)
-        # --- stdio: needs spring-ai-starter-mcp-server + banner/console logging OFF ---
-        stdio: true         # framing is over stdin/stdout — nothing else may write there
-        # --- remote: needs the -webmvc or -webflux starter instead ---
-        # protocol: STREAMABLE   # SSE | STREAMABLE | STATELESS (Streamable-HTTP preferred)
+        type: SYNC
+        stdio: true
+        annotation-scanner:
+          enabled: true
 ```
 
-> **stdio servers must keep stdout clean.** Any log line, banner, or `System.out.println` corrupts
-> the JSON-RPC framing and the client silently drops the connection. For stdio, set
-> `spring.main.banner-mode=off` and route logging to a file or stderr.
+For a remote server, select the MVC or WebFlux starter and set
+`spring.ai.mcp.server.protocol=STREAMABLE` or `STATELESS`. Use SSE only for compatibility with an
+older client. A stdio server must keep stdout free of banners, logs, and `System.out` output because
+stdout carries JSON-RPC frames.
 
-## Exposing Resources
+## Security and operations
 
-```java
-@Bean
-public List<McpServerFeatures.SyncResourceSpecification> mcpResources(OrderRepository repo) {
-    return List.of(
-        McpServerFeatures.SyncResourceSpecification.builder()
-            .resource(Resource.builder()
-                .uri("orders://recent")
-                .name("Recent Orders")
-                .description("Last 50 orders across all customers")
-                .mimeType("application/json")
-                .build())
-            .readHandler((exchange, request) -> {
-                List<Order> recent = repo.findTop50ByOrderByCreatedAtDesc();
-                return new ReadResourceResult(List.of(
-                    new TextResourceContents(request.uri(),
-                        objectMapper.writeValueAsString(recent), "application/json")
-                ));
-            })
-            .build()
-    );
-}
-```
+- Authenticate and authorize remote MCP endpoints like any other privileged application API.
+- Validate tool arguments and apply domain authorization inside every capability.
+- Keep destructive tools narrow and require explicit business preconditions.
+- Bound execution time, result size, pagination, and downstream fan-out.
+- Log tool name, outcome, duration, and authenticated actor without recording secrets or full data.
+- Test initialization, discovery, invalid arguments, authorization, cancellation, and shutdown with a real MCP client.
 
-## claude_desktop_config.json / .mcp.json
+## Examples
 
-```json
-{
-  "mcpServers": {
-    "order-service": {
-      "command": "java",
-      "args": ["-jar", "/path/to/order-mcp-server.jar"],
-      "env": {
-        "SPRING_DATASOURCE_URL": "jdbc:postgresql://localhost:5432/orders"
-      }
-    }
-  }
-}
-```
+- See `examples/OrderMcpTools.java`, `examples/good-order-tools.java`, and `examples/bad-order-tools.java`.
 
-## Error Handling Pattern
+## Official sources
 
-```java
-// Always return structured errors — never throw from tool handlers
-private CallToolResult safeExecute(Supplier<Object> action) {
-    try {
-        return new CallToolResult(
-            List.of(new TextContent(objectMapper.writeValueAsString(action.get()))),
-            false
-        );
-    } catch (EntityNotFoundException e) {
-        return errorResult("NOT_FOUND", e.getMessage());
-    } catch (Exception e) {
-        log.error("Tool execution failed", e);
-        return errorResult("INTERNAL_ERROR", "Unexpected error occurred");
-    }
-}
-
-private CallToolResult errorResult(String code, String message) {
-    return new CallToolResult(
-        List.of(new TextContent(String.format("{\"error\":\"%s\",\"message\":\"%s\"}", code, message))),
-        true // isError flag — agent knows this is an error
-    );
-}
-```
+- Spring AI MCP overview: https://docs.spring.io/spring-ai/reference/api/mcp/mcp-overview.html
+- Spring AI server annotations: https://docs.spring.io/spring-ai/reference/api/mcp/mcp-annotations-server.html
+- MCP Java SDK releases: https://github.com/modelcontextprotocol/java-sdk/releases
+- MCP Java SDK 2.0 migration: https://github.com/modelcontextprotocol/java-sdk/blob/main/MIGRATION-2.0.md
 
 ## Gotchas
-- Agent generates Python MCP code — always use the Java SDK
-- Agent uses the dead `spring-ai-mcp-server-spring-boot-starter` name — Spring AI 2.0 uses `spring-ai-starter-mcp-server[-webmvc|-webflux]`
-- Agent uses `@Tool` when it needs native MCP server annotations — use `@McpTool` and `@McpToolParam`; `@Tool` belongs to Spring AI model tool calling
-- Agent enables remote HTTP with `spring.ai.mcp.server.transport` — use `spring.ai.mcp.server.protocol=STREAMABLE` / `STATELESS`
-- Agent pins SDK `0.9.0` — the standalone SDK is `1.0.0` GA (or just use the Spring AI starter)
-- Agent logs to stdout on a stdio server — corrupts JSON-RPC framing; banner off, logs to file/stderr
-- Agent forgets `isError = true` in error results — agent can't distinguish errors from data
-- Agent uses `FetchType.EAGER` inside tool handlers — triggers N+1, use projections
-- Agent exposes entities directly — serialize to DTOs before returning
-- Agent ignores `shutdown hooks` — always close the server on JVM shutdown
-- Agent writes vague tool descriptions — the description IS the prompt the model reads; be specific about when to call it and what it returns
-- `stdio` for local tools (Claude Code, Claude Desktop); `-webmvc`/`-webflux` + Streamable-HTTP for remote
+
+- Agent uses `@Tool` for native server registration - use `@McpTool` and `@McpToolParam`.
+- Agent overrides the MCP SDK under a Spring AI starter - let the Spring AI BOM manage it.
+- Agent uses removed `new CallToolResult(...)` constructors - use `CallToolResult.builder()`.
+- Agent configures SSE for a new remote server - prefer Streamable HTTP.
+- Agent logs to stdout in stdio mode - route logs to stderr or a file and disable the banner.
+- Agent mixes synchronous methods with an asynchronous server - the annotation scanner filters mismatched methods.
+- Agent exposes entities or unbounded collections - return bounded DTO contracts.
+- Agent trusts tool hints as authorization - enforce authorization in application code.

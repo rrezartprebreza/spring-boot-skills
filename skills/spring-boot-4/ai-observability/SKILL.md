@@ -1,9 +1,9 @@
 ---
 name: ai-observability
 description: >
-  Use when adding monitoring, metrics, logging, or tracing to Spring AI or LLM integration
-  code. Covers token tracking, latency measurement, cost estimation, and prompt/response
-  logging. Use when user mentions AI monitoring, token costs, or LLM observability.
+  Use when adding Spring AI-specific model observations, token usage, latency, externally
+  configured cost attribution, advisor telemetry, or protected prompt and completion logging.
+  Use production-observability for general service metrics, health, logs, and OTLP setup.
 ---
 
 # AI Observability
@@ -140,26 +140,13 @@ public class AiAuditAdvisor implements CallAdvisor {
 }
 ```
 
-## Cost Estimation
+## Cost attribution
 
-```java
-@Service
-public class AiCostEstimator {
-
-    // Prices per million tokens — update when pricing changes
-    private static final Map<String, double[]> PRICING = Map.of(
-        "claude-sonnet-4-20250514", new double[]{3.0, 15.0},  // [input, output] per 1M tokens
-        "claude-haiku-4-5-20251001", new double[]{0.8, 4.0},
-        "gpt-4o", new double[]{5.0, 15.0},
-        "gpt-4o-mini", new double[]{0.15, 0.6}
-    );
-
-    public double estimateCost(String model, int inputTokens, int outputTokens) {
-        double[] prices = PRICING.getOrDefault(model, new double[]{5.0, 15.0});
-        return (inputTokens * prices[0] + outputTokens * prices[1]) / 1_000_000;
-    }
-}
-```
+- Keep provider prices in externally managed configuration with an effective date and currency.
+- Key prices by the exact provider model identifier returned in usage metadata.
+- Reject an unknown model instead of silently applying a default price.
+- Preserve the raw token usage so historical costs can be recalculated after pricing changes.
+- Prefer provider billing exports for invoices; application estimates are operational signals only.
 
 ## Structured AI Audit Log (DB)
 

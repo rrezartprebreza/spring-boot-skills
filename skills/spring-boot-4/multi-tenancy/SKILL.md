@@ -41,6 +41,11 @@ Treat tenant identity as an authorization boundary, not a query convenience.
 
 - See `examples/good-tenant-filter.java` and `examples/bad-tenant-filter.java`.
 
+## Official sources
+
+- Hibernate multitenancy: https://docs.jboss.org/hibernate/orm/7.0/introduction/html_single/Hibernate_Introduction.html#multitenancy
+- Reactor context: https://projectreactor.io/docs/core/release/reference/advancedFeatures/context.html
+
 ## Gotchas
 
 - Agent trusts caller-supplied tenant headers - derive tenant from authentication.

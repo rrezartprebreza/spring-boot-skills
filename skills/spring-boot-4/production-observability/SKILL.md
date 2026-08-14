@@ -1,8 +1,9 @@
 ---
 name: production-observability
 description: >
-  Use when adding Spring Boot 4 Actuator, Micrometer Observation and Tracing, OpenTelemetry or
-  OTLP export, structured logging, health probes, dashboards, or production alerting.
+  Use when adding service-wide Spring Boot 4 Actuator, Micrometer Observation and Tracing,
+  OpenTelemetry or OTLP export, structured logging, health probes, dashboards, or alerts. Combine
+  with ai-observability only for Spring AI-specific token, prompt, and model telemetry.
 ---
 
 # Production Observability
@@ -12,6 +13,8 @@ Instrument user-visible operations and operational boundaries, not every method.
 ## Baseline
 
 - Add the Boot 4 Actuator starter and one metrics registry selected by the platform.
+- For OpenTelemetry tracing over OTLP, use `spring-boot-starter-opentelemetry` and Boot's
+  `management.opentelemetry.tracing.export.otlp.*` properties.
 - Use Micrometer Observation for application metrics and traces.
 - Prefer Micrometer APIs over direct OpenTelemetry APIs in application code.
 - Export metrics and traces through OTLP when an OpenTelemetry collector is the platform boundary.
@@ -42,7 +45,14 @@ Instrument user-visible operations and operational boundaries, not every method.
 
 ## Examples
 
-- See `examples/good-observation.java` and `examples/bad-observation.java`.
+- See `examples/good-observation.java`, `examples/good-observability.yml`, and
+  `examples/bad-observation.java`.
+
+## Official sources
+
+- Boot observability: https://docs.spring.io/spring-boot/reference/actuator/observability.html
+- Boot tracing: https://docs.spring.io/spring-boot/reference/actuator/tracing.html
+- Boot structured logging: https://docs.spring.io/spring-boot/reference/features/logging.html#features.logging.structured
 
 ## Gotchas
 

@@ -23,7 +23,7 @@
 
     <properties>
         <java.version>21</java.version>
-        <mapstruct.version>1.5.5.Final</mapstruct.version>
+        <mapstruct.version>1.6.3</mapstruct.version>
     </properties>
 
     <!-- dependencyManagement — declares versions, does NOT add to classpath -->

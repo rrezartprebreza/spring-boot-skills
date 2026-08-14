@@ -1,9 +1,9 @@
 ---
 name: spring-security-jwt
 description: >
-  Use when implementing authentication, authorization, JWT tokens, security filters,
-  password encoding, or any Spring Security configuration. Covers stateless JWT auth,
-  access and refresh token validation, RBAC, and method-level security.
+  Use when an application issues and validates its own first-party JWT access and refresh tokens,
+  including authentication filters, password encoding, RBAC, and method security. For JWTs issued
+  by Keycloak, Auth0, Okta, Cognito, or another authorization server, use oauth2-resource-server.
 ---
 
 # Spring Security — JWT

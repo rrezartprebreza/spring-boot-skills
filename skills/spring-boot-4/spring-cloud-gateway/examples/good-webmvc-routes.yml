@@ -2,10 +2,7 @@ spring:
   cloud:
     gateway:
       server:
-        webflux:
-          httpclient:
-            connect-timeout: 2000
-            response-timeout: 5s
+        webmvc:
           routes:
             - id: orders-api
               uri: http://orders.internal

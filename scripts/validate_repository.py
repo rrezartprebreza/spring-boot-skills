@@ -142,6 +142,83 @@ def validate_packaging(skill_counts: dict[int, int]) -> None:
                 fail(f"missing {path.relative_to(ROOT)}")
 
 
+def validate_version_sensitive_examples() -> None:
+    mcp_dir = BOOT_ROOTS[4] / "mcp-server"
+    mcp_skill = (mcp_dir / "SKILL.md").read_text(encoding="utf-8")
+    mcp_example = (mcp_dir / "examples" / "OrderMcpTools.java").read_text(encoding="utf-8")
+    if "MCP Java SDK 2" not in mcp_skill or "<version>2.0.0</version>" not in mcp_skill:
+        fail("Boot 4 MCP skill must document the verified standalone SDK 2.0 baseline")
+    if "org.springframework.ai.tool.annotation.Tool" in mcp_example or "@Tool(" in mcp_example:
+        fail("Boot 4 MCP example must use native @McpTool registration")
+    if "com.fasterxml.jackson.databind" in mcp_example:
+        fail("Boot 4 MCP example must not depend on Jackson 2 databind")
+    if "@McpTool(" not in mcp_example or "@McpToolParam(" not in mcp_example:
+        fail("Boot 4 MCP example is missing native MCP annotations")
+
+    gateway_dir = BOOT_ROOTS[4] / "spring-cloud-gateway"
+    gateway_skill = (gateway_dir / "SKILL.md").read_text(encoding="utf-8")
+    webflux_routes = (gateway_dir / "examples" / "good-routes.yml").read_text(encoding="utf-8")
+    webmvc_routes = (gateway_dir / "examples" / "good-webmvc-routes.yml").read_text(encoding="utf-8")
+    if "spring-cloud-starter-gateway-server-webflux" not in gateway_skill:
+        fail("Boot 4 Gateway skill is missing the Gateway 5 WebFlux starter")
+    if "server:\n        webflux:" not in webflux_routes:
+        fail("Boot 4 WebFlux Gateway example must use the Gateway 5 server namespace")
+    if "server:\n        webmvc:" not in webmvc_routes:
+        fail("Boot 4 Web MVC Gateway example must use the Gateway 5 server namespace")
+
+    for version in (3, 4):
+        dockerfile = (
+            BOOT_ROOTS[version]
+            / "container-native-deployment"
+            / "examples"
+            / "good-dockerfile"
+        ).read_text(encoding="utf-8")
+        required = (
+            "FROM eclipse-temurin:21-jre AS builder",
+            "-Djarmode=tools",
+            "extracted/spring-boot-loader/",
+            "extracted/snapshot-dependencies/",
+            'ENTRYPOINT ["java", "-jar", "application.jar"]',
+        )
+        if any(marker not in dockerfile for marker in required):
+            fail(f"Boot {version} good Dockerfile must use complete layered-jar extraction")
+
+        maven_dir = BOOT_ROOTS[version] / "multi-module-maven"
+        maven_files = (
+            maven_dir / "SKILL.md",
+            maven_dir / "examples" / "good-parent-pom.xml",
+            maven_dir / "templates" / "parent-pom.xml",
+        )
+        for path in maven_files:
+            if "<mapstruct.version>1.6.3</mapstruct.version>" not in path.read_text(encoding="utf-8"):
+                fail(f"{path.relative_to(ROOT)} must use the shared verified MapStruct version")
+
+    rapidly_changing = {
+        "container-native-deployment",
+        "event-driven-messaging",
+        "mcp-server",
+        "multi-tenancy",
+        "production-observability",
+        "spring-cloud-gateway",
+        "webflux-reactive-patterns",
+    }
+    for skill_name in rapidly_changing:
+        skill_file = BOOT_ROOTS[4] / skill_name / "SKILL.md"
+        if "## Official sources" not in skill_file.read_text(encoding="utf-8"):
+            fail(f"{skill_file.relative_to(ROOT)} must link its version-sensitive official sources")
+
+    readme = (ROOT / "README.md").read_text(encoding="utf-8")
+    if "MCP_Java_SDK-2.0" not in readme or "Java-17%2B" not in readme:
+        fail("README compatibility badges are out of sync with the verified baselines")
+
+    verification_pom = ROOT / "verification" / "spring-boot-4-mcp" / "pom.xml"
+    workflow = ROOT / ".github" / "workflows" / "validate.yml"
+    if not verification_pom.is_file():
+        fail("missing the Spring Boot 4 MCP compilation fixture")
+    if "verification/spring-boot-4-mcp/pom.xml" not in workflow.read_text(encoding="utf-8"):
+        fail("CI does not compile the Spring Boot 4 MCP example")
+
+
 def main() -> None:
     skill_sets = {
         version: {path.name for path in root.iterdir() if path.is_dir()}
@@ -158,6 +235,7 @@ def main() -> None:
 
     validate_markdown_links()
     validate_packaging({version: len(skills) for version, skills in skill_sets.items()})
+    validate_version_sensitive_examples()
 
     for version in (3, 4):
         jwt_templates = BOOT_ROOTS[version] / "spring-security-jwt" / "templates"

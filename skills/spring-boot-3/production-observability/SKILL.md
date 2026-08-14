@@ -1,8 +1,9 @@
 ---
 name: production-observability
 description: >
-  Use when adding Spring Boot Actuator, Micrometer metrics, distributed tracing, OpenTelemetry
-  export, structured logging, health probes, dashboards, or production alerting to a Boot 3 service.
+  Use when adding service-wide Spring Boot 3 Actuator, Micrometer metrics, distributed tracing,
+  OpenTelemetry export, structured logging, health probes, dashboards, or alerts. Combine with
+  ai-observability only for Spring AI-specific token, prompt, and model telemetry.
 ---
 
 # Production Observability
