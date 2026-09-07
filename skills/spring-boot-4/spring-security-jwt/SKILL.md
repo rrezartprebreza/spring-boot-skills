@@ -39,180 +39,46 @@ Spring Boot 4.x ships **Spring Security 7**: the lambda DSL is the *only* style 
 </dependency>
 ```
 
-## Security Configuration
+## Security configuration
 
-```java
-@Configuration
-@EnableWebSecurity
-@EnableMethodSecurity
-@RequiredArgsConstructor
-public class SecurityConfig {
+Use the compiled [SecurityConfig](templates/SecurityConfig.java) with the filter and service below.
+It uses the lambda DSL, stateless bearer authentication, role rules, JSON 401/403 handlers and
+disabled servlet registration for the security-chain filter. Bean method injection avoids
+constructor cycles between the configuration and its own AuthenticationProvider bean.
+Adapt the routes and roles to the project. CSRF disabling applies to header-only bearer APIs;
+keep CSRF protection when browsers send authentication cookies automatically.
 
-    private final JwtAuthenticationFilter jwtAuthFilter;
-    private final UserDetailsService userDetailsService;
+## JWT implementation
 
-    @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        return http
-            .csrf(AbstractHttpConfigurer::disable)
-            .sessionManagement(s -> s.sessionCreationPolicy(STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**").permitAll()
-                .requestMatchers("/actuator/health").permitAll()
-                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
-                .anyRequest().authenticated()
-            )
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
-            .build();
-    }
+Use the tested [JwtService](templates/JwtService.java) and
+[JwtAuthenticationFilter](templates/JwtAuthenticationFilter.java) templates together.
+The configuration keys are `app.jwt.secret`, `app.jwt.access-token-expiration`, and
+`app.jwt.refresh-token-expiration` (durations in milliseconds).
 
-    @Bean
-    public AuthenticationProvider authenticationProvider() {
-        var provider = new DaoAuthenticationProvider(userDetailsService); // Security 7: constructor, not setter
-        provider.setPasswordEncoder(passwordEncoder());
-        return provider;
-    }
+The filter rejects expired, malformed, tampered, missing-expiration and refresh tokens with
+401 and a Bearer challenge. It checks the current user's enabled, locked, account-expired and
+credentials-expired flags before authentication. Deleted users also receive 401.
+Database outages and downstream application failures must remain server failures, not be
+masked as invalid credentials. Invalid supplied tokens are rejected even on public endpoints.
 
-    @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
-        return config.getAuthenticationManager();
-    }
+The filter's example error body uses Problem Details. For an existing legacy API, adapt this
+response and the entry point below to the established error contract. Never log bearer tokens.
+Register a filter bean only in the security chain: disable servlet-container registration
+with a `FilterRegistrationBean<JwtAuthenticationFilter>` whose `enabled` flag is false.
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(12);
-    }
-}
-```
+These templates illustrate a single-service first-party token contract. Before sharing signing
+keys or accepting tokens across services, define and validate issuer and audience, key rotation,
+and revocation. Spring Security's resource-server support can also validate custom JWTs; preserve
+it when it already fits the application. Token generation is not a complete refresh flow:
+retain the rotation/reuse-detection requirements below.
 
-## JWT Service
+## JSON 401/403
 
-```java
-@Service
-public class JwtService {
-
-    @Value("${app.jwt.secret}")
-    private String secretKey;
-
-    @Value("${app.jwt.access-token-expiry:900000}") // 15 min default
-    private long accessTokenExpiry;
-
-    @Value("${app.jwt.refresh-token-expiry:604800000}") // 7 days default
-    private long refreshTokenExpiry;
-
-    public String generateAccessToken(UserDetails user) {
-        return generateToken(Map.of("type", "access"), user, accessTokenExpiry);
-    }
-
-    public String generateRefreshToken(UserDetails user) {
-        return generateToken(Map.of("type", "refresh"), user, refreshTokenExpiry);
-    }
-
-    private String generateToken(Map<String, Object> claims, UserDetails user, long expiry) {
-        return Jwts.builder()
-            .claims(claims)
-            .subject(user.getUsername())
-            .issuedAt(new Date())
-            .expiration(new Date(System.currentTimeMillis() + expiry))
-            .signWith(getSigningKey())
-            .compact();
-    }
-
-    public boolean isAccessTokenValid(String token, UserDetails user) {
-        Claims claims = extractClaims(token);
-        return "access".equals(claims.get("type", String.class))
-            && user.getUsername().equals(claims.getSubject())
-            && !claims.getExpiration().before(new Date());
-    }
-
-    public String extractUsername(String token) {
-        return extractClaims(token).getSubject();
-    }
-
-    private Claims extractClaims(String token) {
-        return Jwts.parser().verifyWith(getSigningKey()).build()
-            .parseSignedClaims(token).getPayload();
-    }
-
-    private SecretKey getSigningKey() {
-        return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
-    }
-}
-```
-
-## JWT Filter
-
-```java
-@Component
-@RequiredArgsConstructor
-public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
-    private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
-
-    @Override
-    protected void doFilterInternal(HttpServletRequest request,
-                                    HttpServletResponse response,
-                                    FilterChain chain) throws ServletException, IOException {
-        String authHeader = request.getHeader("Authorization");
-        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            chain.doFilter(request, response);
-            return;
-        }
-
-        String token = authHeader.substring(7);
-        try {
-            String username = jwtService.extractUsername(token);
-
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserDetails user = userDetailsService.loadUserByUsername(username);
-                if (jwtService.isAccessTokenValid(token, user)) {
-                    var auth = new UsernamePasswordAuthenticationToken(user, null, user.getAuthorities());
-                    auth.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
-                    SecurityContextHolder.getContext().setAuthentication(auth);
-                }
-            }
-        } catch (ExpiredJwtException | MalformedJwtException | SignatureException e) {
-            // Parsing throws on expired/tampered tokens. Without this catch the exception
-            // escapes the filter chain as a 500. Leave the context empty — the entry
-            // point below turns it into a clean 401.
-            SecurityContextHolder.clearContext();
-        }
-        chain.doFilter(request, response);
-    }
-}
-```
-
-## JSON 401/403 — Don't Ship the Defaults
-
-Out of the box, an unauthenticated API request gets an empty 401 (or worse, a redirect to a login
-page) and `AccessDeniedException` becomes an empty 403. REST clients need a body:
-
-```java
-@Bean
-public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-    return http
-        // ... as above ...
-        .exceptionHandling(ex -> ex
-            .authenticationEntryPoint((request, response, e) -> {       // 401 — not authenticated
-                response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                response.getWriter().write("""
-                    {"success":false,"error":{"code":"UNAUTHORIZED","message":"Authentication required"}}""");
-            })
-            .accessDeniedHandler((request, response, e) -> {            // 403 — authenticated, no permission
-                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
-                response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-                response.getWriter().write("""
-                    {"success":false,"error":{"code":"FORBIDDEN","message":"Insufficient permissions"}}""");
-            })
-        )
-        .build();
-}
-```
-
-`@RestControllerAdvice` cannot catch these — security filters run **before** the dispatcher servlet,
-so exceptions thrown there never reach your exception handler.
+The configuration and filter templates use Problem Details for authentication and authorization
+errors. Adapt both together for a legacy error contract. Missing credentials on a protected route
+return 401; an authenticated caller without the required role returns 403. An invalid supplied
+token returns 401 even when the route permits anonymous access.
+Controller advice cannot handle exceptions thrown before the dispatcher servlet.
 
 ## Auth Controller
 
@@ -263,8 +129,8 @@ public User findById(UUID id) { ... }
 app:
   jwt:
     secret: ${JWT_SECRET} # min 256-bit base64 encoded key
-    access-token-expiry: 900000   # 15 minutes
-    refresh-token-expiry: 604800000 # 7 days
+    access-token-expiration: 900000   # 15 minutes
+    refresh-token-expiration: 604800000 # 7 days
 ```
 
 The example creates refresh tokens but does not implement a refresh endpoint. A production refresh
@@ -272,6 +138,8 @@ flow must accept only `type=refresh`, rotate the refresh token on every use, and
 token (for example, with a hashed token-family record in a database or Redis).
 
 ## Gotchas
+- Agent catches AuthenticationException broadly around user lookup - preserve AuthenticationServiceException as a server failure.
+- Agent logs in disabled or locked users from valid JWTs - validate current account status as well as claims.
 - Agent uses non-lambda chaining (`http.csrf().disable()`, `.and()`, `authorizeRequests()`) — removed in Security 7, won't compile; lambda DSL only: `csrf(AbstractHttpConfigurer::disable)`, `authorizeHttpRequests(...)`
 - Agent writes `antMatchers()`/`mvcMatchers()` or `AntPathRequestMatcher`/`MvcRequestMatcher` — removed in Security 7; use `requestMatchers("/path/**")` (backed by `PathPatternRequestMatcher`) or `PathPatternRequestMatcher.withDefaults().matcher("/path/**")`
 - Agent extends `WebSecurityConfigurerAdapter` — long gone; declare a `SecurityFilterChain` bean

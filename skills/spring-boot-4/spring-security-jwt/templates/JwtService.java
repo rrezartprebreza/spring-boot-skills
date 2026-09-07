@@ -1,6 +1,7 @@
 package com.example.auth.service;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
@@ -38,11 +39,23 @@ public class JwtService {
         return extractClaims(token).getSubject();
     }
 
+    public String validateAccessTokenAndGetSubject(String token) {
+        Claims claims = extractClaims(token);
+        if (!"access".equals(claims.get("type", String.class))
+                || claims.getExpiration() == null
+                || !claims.getExpiration().after(new Date())
+                || claims.getSubject() == null || claims.getSubject().isBlank()) {
+            throw new JwtException("Invalid access token claims");
+        }
+        return claims.getSubject();
+    }
+
     public boolean isAccessTokenValid(String token, UserDetails userDetails) {
         Claims claims = extractClaims(token);
         return "access".equals(claims.get("type", String.class))
             && userDetails.getUsername().equals(claims.getSubject())
-            && !claims.getExpiration().before(new Date());
+            && claims.getExpiration() != null
+            && claims.getExpiration().after(new Date());
     }
 
     private String buildToken(Map<String, Object> extraClaims, UserDetails userDetails, long expiration) {

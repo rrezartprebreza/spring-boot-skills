@@ -1,0 +1,5 @@
+app:
+  client:
+    base-url: https://orders.example.com
+    timeout: 2s
+    max-attempts: 3

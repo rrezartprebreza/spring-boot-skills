@@ -1,147 +1,86 @@
 ---
 name: problem-details-rfc9457
 description: >
-  Use when implementing error handling, exception mappers, or error response formatting.
-  Enforces RFC 9457 (Problem Details for HTTP APIs) using Spring's built-in ProblemDetail.
+  Use when implementing exception mapping or RFC 9457 error responses in Spring Boot 3.
+  Preserve an existing legacy error contract unless migration is requested.
 ---
 
-# Problem Details — RFC 9457
+# Problem Details - RFC 9457
 
-Spring Boot 3.x includes native RFC 9457 support via `ProblemDetail`.
+## Choose the error contract
 
-## Enable in application.yml
+Inspect existing advice, security entry points and API tests first. Keep one error policy
+per API. Success DTOs or success envelopes can coexist with Problem Details errors:
+RFC 9457 specifies errors, not success representations.
+
+For an API using Problem Details, enable Spring's built-in MVC exception handling:
 
 ```yaml
 spring:
   mvc:
     problemdetails:
-      enabled: true  # enables Spring's built-in RFC 9457 handler
+      enabled: true
 ```
 
-## ProblemDetail Response Shape
+For WebFlux use `spring.webflux.problemdetails.enabled` and reactive exception handling;
+the servlet templates below are not WebFlux handlers.
+
+## Domain errors
+
+Use the compiled [DomainException](templates/DomainException.java) together with
+[ProblemDetailExceptionHandler](templates/ProblemDetailExceptionHandler.java).
+The handler maps all subclasses using their declared status and stable error code:
+
+- [OrderNotFoundException](templates/OrderNotFoundException.java): 404.
+- [InsufficientInventoryException](templates/InsufficientInventoryException.java): 422.
+- [BusinessRuleViolationException](templates/BusinessRuleViolationException.java): 422.
+
+Each public class has its own file. These are API-facing exceptions with HTTP status metadata;
+for a framework-free domain, keep domain exceptions independent and map them in the web adapter.
+Do not expose arbitrary persistence or infrastructure exception messages.
+
+The advice extends `ResponseEntityExceptionHandler` to preserve Spring's handling of framework
+exceptions. Validation returns 400 with field violations; unexpected failures return a generic
+500 while retaining the full exception only in server logs. Keep nullable validation messages safe.
+Filter-level authentication failures need an `AuthenticationEntryPoint`; authorization failures
+need an `AccessDeniedHandler`. Controller advice does not cover the security filter chain.
+
+## Response fields
 
 ```json
 {
-  "type": "https://api.example.com/errors/order-not-found",
-  "title": "Order Not Found",
+  "type": "https://api.example.com/errors/order_not_found",
+  "title": "Not Found",
   "status": 404,
-  "detail": "No order found with id: 550e8400-e29b-41d4-a716-446655440000",
-  "instance": "/api/v1/orders/550e8400-e29b-41d4-a716-446655440000",
-  "errorCode": "ORDER_NOT_FOUND",
-  "timestamp": "2026-04-13T10:00:00Z"
+  "detail": "Order not found",
+  "instance": "/api/orders/123",
+  "errorCode": "ORDER_NOT_FOUND"
 }
 ```
 
-## Global Exception Handler
+Use project-owned, stable URIs for custom problem types. An explicit `type` is optional;
+when omitted it defaults to `about:blank`. Its title should then match the HTTP status phrase.
+The HTTP status and the body status must agree. Use `application/problem+json` for JSON problems.
+Use extensions such as `errorCode` or `violations` for machine-readable details instead of
+requiring clients to parse human-readable messages.
 
-```java
-@RestControllerAdvice
-public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
+## Verification
 
-    @ExceptionHandler(EntityNotFoundException.class)
-    public ProblemDetail handleNotFound(EntityNotFoundException ex, HttpServletRequest request) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, ex.getMessage());
-        problem.setType(URI.create("https://api.example.com/errors/not-found"));
-        problem.setTitle("Resource Not Found");
-        problem.setInstance(URI.create(request.getRequestURI()));
-        problem.setProperty("errorCode", "NOT_FOUND");
-        problem.setProperty("timestamp", Instant.now());
-        return problem;
-    }
+Test actual HTTP responses for domain 404/422, validation 400, unexpected 500, and framework
+errors such as malformed JSON and unsupported methods. Assert content type, status, stable
+error codes and absence of stack traces or internal messages. Separately test filter 401/403.
+The repository verification fixture imports these exact templates for both Boot versions.
 
-    @ExceptionHandler(BusinessRuleViolationException.class)
-    public ProblemDetail handleBusinessRule(BusinessRuleViolationException ex, HttpServletRequest request) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, ex.getMessage());
-        problem.setType(URI.create("https://api.example.com/errors/business-rule"));
-        problem.setTitle("Business Rule Violation");
-        problem.setInstance(URI.create(request.getRequestURI()));
-        problem.setProperty("errorCode", ex.getErrorCode());
-        problem.setProperty("timestamp", Instant.now());
-        return problem;
-    }
+## Official sources
 
-    @Override
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(
-        MethodArgumentNotValidException ex, HttpHeaders headers,
-        HttpStatusCode status, WebRequest request
-    ) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-            HttpStatus.BAD_REQUEST, "Request validation failed");
-        problem.setType(URI.create("https://api.example.com/errors/validation"));
-        problem.setTitle("Validation Failed");
-        problem.setProperty("timestamp", Instant.now());
-        problem.setProperty("violations", ex.getBindingResult().getFieldErrors().stream()
-            .map(e -> Map.of("field", e.getField(), "message", e.getDefaultMessage()))
-            .toList());
-        return ResponseEntity.badRequest().body(problem);
-    }
-
-    @ExceptionHandler(Exception.class)
-    public ProblemDetail handleGeneric(Exception ex, HttpServletRequest request) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(
-            HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred");
-        problem.setType(URI.create("https://api.example.com/errors/internal"));
-        problem.setTitle("Internal Server Error");
-        problem.setInstance(URI.create(request.getRequestURI()));
-        problem.setProperty("timestamp", Instant.now());
-        // Don't expose ex.getMessage() in production — log it instead
-        log.error("Unhandled exception at {}", request.getRequestURI(), ex);
-        return problem;
-    }
-}
-```
-
-## Custom Domain Exceptions
-
-```java
-// Base exception
-public abstract class DomainException extends RuntimeException {
-    private final String errorCode;
-
-    protected DomainException(String errorCode, String message) {
-        super(message);
-        this.errorCode = errorCode;
-    }
-
-    public String getErrorCode() { return errorCode; }
-}
-
-// Specific exceptions
-public class OrderNotFoundException extends DomainException {
-    public OrderNotFoundException(UUID orderId) {
-        super("ORDER_NOT_FOUND", "Order not found: " + orderId);
-    }
-}
-
-public class InsufficientInventoryException extends DomainException {
-    public InsufficientInventoryException(UUID productId, int requested, int available) {
-        super("INSUFFICIENT_INVENTORY",
-            "Insufficient inventory for product %s: requested %d, available %d"
-                .formatted(productId, requested, available));
-    }
-}
-```
-
-## Content Negotiation
-
-Clients can request problem details explicitly with `Accept: application/problem+json`. Spring handles this automatically when `problemdetails.enabled: true` — your handler returns `ProblemDetail` and Spring sets the correct `Content-Type: application/problem+json`.
-
-## ProblemDetail vs ApiResponse Envelope
-
-| Use Case | Approach |
-|---|---|
-| Error responses only | ProblemDetail (RFC 9457) |
-| All responses (success + error) | ApiResponse envelope |
-| Public API with diverse clients | ProblemDetail — RFC standard |
-| Internal microservices | Either — be consistent across services |
-
-Choose one approach per project. Don't mix `ApiResponse` for success and `ProblemDetail` for errors — it confuses API consumers who see two different shapes.
+- [RFC 9457](https://www.rfc-editor.org/rfc/rfc9457.html)
+- [Spring MVC error responses](https://docs.spring.io/spring-framework/reference/web/webmvc/mvc-ann-rest-exceptions.html)
 
 ## Gotchas
-- Agent assumes `problemdetails.enabled: true` covers everything — it only converts *Spring's own* MVC exceptions; your domain exceptions still need `@ExceptionHandler` methods
-- Agent returns `Map<String, Object>` for errors — use `ProblemDetail`
-- Agent exposes raw exception messages in 500 errors — log it, return generic message
-- Agent uses custom error envelope alongside ProblemDetail — pick one standard
-- Agent forgets to set `type` URI — required for RFC 9457 compliance
-- Agent returns 200 with error in body — always use the correct HTTP status code
-- Agent creates handler without extending `ResponseEntityExceptionHandler` — extend it to get Spring's built-in exception handling for free
+
+- Agent handles a different exception class than the domain throws - test the concrete exceptions.
+- Agent forces Problem Details into an existing legacy API - preserve its contract unless asked to migrate.
+- Agent requires an explicit type for every error - about:blank is the default.
+- Agent treats success envelopes and Problem Details as incompatible - only error policy must be consistent.
+- Agent relies on advice for filter exceptions - configure the security handlers separately.
+- Agent returns internal exception messages in 500 responses - log privately and return generic detail.

@@ -42,7 +42,7 @@ Not as a summary of what's inside. The agent decides whether to load the skill b
 
 ## What Makes a Good Skill
 
-- **Opinionated** — takes a clear position, doesn't say "it depends"
+- **Context-aware** — explains tradeoffs and preserves existing project contracts
 - **Gotchas-rich** — captures real failures, not hypothetical ones
 - **Examples-driven** — shows good AND bad code side by side
 - **Narrow** — one concern per skill, not a catch-all
@@ -59,3 +59,19 @@ Not as a summary of what's inside. The agent decides whether to load the skill b
 - [ ] Doesn't duplicate what Spring Boot already does by default
 - [ ] Both Boot 3 and Boot 4 versions are updated, or the version-specific scope is documented
 - [ ] `bash scripts/validate-skills.sh` passes
+
+Install validator dependencies in a virtual environment first:
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r scripts/requirements.txt
+python3 -m unittest discover -s scripts -p 'test_*.py'
+bash scripts/validate-skills.sh
+```
+
+For executable template changes, run the matching Boot profiles in
+[verification](verification/README.md). Add behavioral assertions for the failure being fixed.
+For skill selection or instruction changes, add a representative prompt and observable
+criteria to the [agent evaluations](evaluations/README.md). Record model results separately;
+do not describe structural validation as proof of model correctness.

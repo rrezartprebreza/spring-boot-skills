@@ -1,7 +1,8 @@
 package com.example.common.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.extern.slf4j.Slf4j;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -17,10 +18,12 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import java.net.URI;
 import java.time.Instant;
 import java.util.Map;
+import java.util.Locale;
 
-@Slf4j
 @RestControllerAdvice
 public class ProblemDetailExceptionHandler extends ResponseEntityExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(ProblemDetailExceptionHandler.class);
 
     private static final String ERROR_BASE_URI = "https://api.example.com/errors/";
 
@@ -28,7 +31,7 @@ public class ProblemDetailExceptionHandler extends ResponseEntityExceptionHandle
     public ProblemDetail handleDomainException(DomainException ex, HttpServletRequest request) {
         HttpStatus status = ex.getHttpStatus();
         ProblemDetail problem = ProblemDetail.forStatusAndDetail(status, ex.getMessage());
-        problem.setType(URI.create(ERROR_BASE_URI + ex.getErrorCode().toLowerCase()));
+        problem.setType(URI.create(ERROR_BASE_URI + ex.getErrorCode().toLowerCase(Locale.ROOT)));
         problem.setTitle(status.getReasonPhrase());
         problem.setInstance(URI.create(request.getRequestURI()));
         problem.setProperty("errorCode", ex.getErrorCode());
@@ -58,7 +61,7 @@ public class ProblemDetailExceptionHandler extends ResponseEntityExceptionHandle
         problem.setProperty("errorCode", "VALIDATION_FAILED");
         problem.setProperty("timestamp", Instant.now());
         problem.setProperty("violations", ex.getBindingResult().getFieldErrors().stream()
-            .map(e -> Map.of("field", e.getField(), "message", e.getDefaultMessage()))
+            .map(e -> Map.of("field", e.getField(), "message", e.getDefaultMessage() == null ? "Invalid value" : e.getDefaultMessage()))
             .toList());
         return ResponseEntity.badRequest().body(problem);
     }

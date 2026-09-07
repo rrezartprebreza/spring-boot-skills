@@ -23,8 +23,8 @@ public class OrderController {
     }
 
     @GetMapping
-    public ApiResponse<Page<OrderResponse>> list(Pageable pageable) {
-        return ApiResponse.ok(orderService.findAll(pageable).map(OrderResponse::from));
+    public ApiResponse<PageResponse<OrderResponse>> list(Pageable pageable) {
+        return ApiResponse.ok(PageResponse.from(orderService.findAll(pageable).map(OrderResponse::from)));
     }
 
     @DeleteMapping("/{id}")
