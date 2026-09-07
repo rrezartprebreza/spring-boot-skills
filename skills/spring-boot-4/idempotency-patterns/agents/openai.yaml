@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring Boot 4 Idempotency Patterns"
+  short_description: "Prevent duplicate effects across concurrent retries"
+  default_prompt: "Use $idempotency-patterns to implement and verify idempotency patterns in this Spring Boot 4 project."

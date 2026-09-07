@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring Boot 3 Spring Modulith"
+  short_description: "Verify module boundaries and durable events"
+  default_prompt: "Use $spring-modulith to implement and verify spring modulith in this Spring Boot 3 project."

@@ -8,9 +8,18 @@ description: >
 
 # REST API Conventions
 
-## Response Envelope
+## Project Contract
 
-All endpoints return a consistent envelope:
+Inspect existing controllers, tests and OpenAPI before choosing a response contract.
+Preserve the project's IDs, response shape and versioning strategy. Do not migrate unrelated
+endpoints while adding one route. The envelope below is an optional convention for a project
+that uses it; plain success DTOs are equally valid. A 204 response has no body.
+
+Success and error formats are independent: an existing success envelope can coexist with
+RFC 9457 errors. Use one consistent error policy; choose the legacy error examples below only
+when the project already requires that format.
+
+Example success envelope:
 
 ```json
 {
@@ -78,7 +87,7 @@ public record ApiError(String code, String message, List<String> details) {}
 - **Kebab-case** for multi-word: `/order-items`, not `/orderItems`
 - **Versioning in path**: `/api/v1/orders` — route with native API versioning (below), don't duplicate controllers per version
 - **Nested resources** max 2 levels: `/orders/{id}/items` ✅, `/orders/{id}/items/{itemId}/notes` ❌ — flatten to `/order-item-notes/{id}`
-- **IDs as UUIDs** in path, never auto-increment integers exposed in URL
+- **IDs**: preserve the existing ID type. UUIDs are an option, not an authorization mechanism.
 
 ```
 GET    /api/v1/orders              → list (paginated)
@@ -153,8 +162,8 @@ Query params: `?page=0&size=20&sort=createdAt,desc`
 Use Spring Data `Pageable` in controllers:
 ```java
 @GetMapping
-public ApiResponse<Page<OrderResponse>> list(Pageable pageable) {
-    return ApiResponse.ok(orderService.findAll(pageable).map(OrderResponse::from));
+public ApiResponse<PageResponse<OrderResponse>> list(Pageable pageable) {
+    return ApiResponse.ok(PageResponse.from(orderService.findAll(pageable).map(OrderResponse::from)));
 }
 ```
 
@@ -170,7 +179,12 @@ spring:
         max-page-size: 100   # requests above this are silently clamped
 ```
 
-## Global Exception Handler
+The compiled [PageResponse](templates/PageResponse.java) fixes the JSON pagination contract.
+Mapping entities to DTOs alone does not stabilize Spring Data `PageImpl` serialization.
+Spring Data's `org.springframework.data.web.PagedModel` is another option when its shape fits
+the API. Validate sort fields against an allowlist and add an ID tie-breaker to non-unique sorts.
+
+## Legacy Envelope Exception Handler
 
 ```java
 @RestControllerAdvice
@@ -198,12 +212,12 @@ public class GlobalExceptionHandler {
 ```
 
 ## Gotchas
-- Agent returns raw objects without envelope — always wrap in `ApiResponse.ok(...)`
-- Agent uses `ResponseEntity<Map<String, Object>>` for errors — use `ApiResponse`
+- Agent imposes a new envelope - preserve the existing success contract.
+- Agent invents competing error handlers - use the project's established error contract.
 - Agent puts exception handlers in controllers — always use `@RestControllerAdvice`
-- Agent uses `Long` IDs in URLs — use `UUID`
+- Agent changes ID types while adding an endpoint - retain the existing ID scheme.
 - Agent accepts unbounded `Pageable` — set `spring.data.web.pageable.max-page-size` or one request can pull the whole table
-- Agent returns `Page<Entity>` serialized directly — exposes Hibernate internals; map to DTOs first
+- Agent serializes PageImpl directly - map entities to DTOs, then wrap in PageResponse.
 - Agent hand-rolls versioning with duplicated `/v1`/`/v2` controllers — Boot 4 has native API versioning: `version` attribute on mappings + `spring.mvc.apiversion.*`
 - Agent adds `spring-boot-starter-web` — renamed `spring-boot-starter-webmvc` in Boot 4 (MockMvc tests: `spring-boot-starter-webmvc-test`)
 - Agent uses `@JsonComponent` or `Jackson2ObjectMapperBuilderCustomizer` to tune serialization — Jackson 3 renames: `@JacksonComponent`, `JsonMapperBuilderCustomizer`; declare `JsonMapper` beans, not generic `ObjectMapper`

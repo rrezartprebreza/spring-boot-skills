@@ -9,7 +9,7 @@
 
 <br/>
 
-[![skills](https://img.shields.io/badge/skills-30_%C3%97_2-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
+[![skills](https://img.shields.io/badge/skills-33_%C3%97_2-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x_%7C_4.x-6DB33F?style=for-the-badge&labelColor=0f172a&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&labelColor=0f172a&logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/License-MIT-94a3b8?style=for-the-badge&labelColor=0f172a)](LICENSE)
@@ -89,6 +89,12 @@ Fast-moving integrations were last verified in August 2026 against Spring Boot 4
 MCP Java SDK 2.0, Spring Cloud 2025.1, and Spring Cloud Gateway 5.0. Keep BOM-managed dependency
 versions together and recheck the linked official sources before adopting a newer release line.
 
+### Configuration
+
+| Skill | Description | Tags |
+|-------|-------------|------|
+| [**configuration-properties**](skills/spring-boot-4/configuration-properties/) | Typed binding, startup validation, duration units and secret handling. | `configuration` `validation` |
+
 ### 🏗️ Architecture
 
 | Skill | Description | Tags |
@@ -97,6 +103,7 @@ versions together and recheck the linked official sources before adopting a newe
 | [**hexagonal-architecture**](skills/spring-boot-4/hexagonal-architecture/) | Ports and adapters pattern for Spring Boot. Keeps domain clean of framework dependencies. | `architecture` `ddd` |
 | [**domain-driven-design**](skills/spring-boot-4/domain-driven-design/) | Aggregates, value objects, domain events with commit-safe publication. Includes JPA mapping conventions. | `ddd` `jpa` |
 | [**multi-module-maven**](skills/spring-boot-4/multi-module-maven/) | Parent POM conventions, shared BOM, inter-module dependency rules. Prevents circular deps. | `maven` `architecture` |
+| [**spring-modulith**](skills/spring-boot-4/spring-modulith/) | Module boundaries, verification and durable event publication. | `architecture` `modulith` |
 | [**multi-tenancy**](skills/spring-boot-4/multi-tenancy/) | Tenant resolution, database/schema isolation, tenant-aware persistence, caches, jobs, and migrations. | `architecture` `security` `data` |
 
 ### 🔌 API Design
@@ -106,6 +113,7 @@ versions together and recheck the linked official sources before adopting a newe
 | [**rest-api-conventions**](skills/spring-boot-4/rest-api-conventions/) | Your project's response envelope, error codes, pagination contract, versioning strategy. Fill in the template. | `rest` `api` |
 | [**openapi-first**](skills/spring-boot-4/openapi-first/) | Generate controllers and DTOs from OpenAPI spec. Uses `openapi-generator-maven-plugin`. | `openapi` `codegen` |
 | [**problem-details-rfc9457**](skills/spring-boot-4/problem-details-rfc9457/) | RFC 9457 compliant error responses with Spring's `ProblemDetail`. Replaces ad-hoc error envelopes. | `error-handling` `rest` |
+| [**idempotency-patterns**](skills/spring-boot-4/idempotency-patterns/) | Concurrent retries, scoped request keys, replay and transaction boundaries. | `api` `transactions` |
 | [**hateoas**](skills/spring-boot-4/hateoas/) | Spring HATEOAS link building conventions. Teaches agent when and how to add hypermedia links. | `hateoas` `rest` |
 
 ### 🌐 Edge & Reactive
@@ -455,7 +463,7 @@ Without the skill, the agent guesses: dead pre-GA artifact names, removed SDK co
 ## 🗺️ Roadmap
 
 - [x] Skills for Spring Batch
-- [x] Spring Boot 4 versions of all 30 skills (`skills/spring-boot-4/`)
+- [x] Spring Boot 4 versions of all 33 skills (`skills/spring-boot-4/`)
 - [x] Skills for Spring Cloud Gateway
 - [x] Skills for Spring WebFlux / reactive patterns
 - [x] Skills for multi-tenancy
@@ -476,14 +484,29 @@ Without the skill, the agent guesses: dead pre-GA artifact names, removed SDK co
 
 Skills get better with real-world use. If you find a gap — the agent did something stupid in your Spring Boot project — open a PR and add it to the Gotchas section of the relevant skill.
 
-Before opening a PR, run:
+Before opening a PR, install the validator dependency in a virtual environment and run:
 
 ```bash
+python3 -m venv .venv
+source .venv/bin/activate
+python3 -m pip install -r scripts/requirements.txt
 bash scripts/validate-skills.sh
 ```
 
-The validation script checks both version trees, front matter, README catalog paths, and required
-skill sections.
+The validator parses YAML safely, rejects duplicate keys, and checks both version trees, metadata,
+README links and marketplace packaging. There are **33 topics with Boot 3 and Boot 4 variants**.
+
+### Executable verification
+
+[The behavior fixture](verification/README.md) compiles the shipped JWT, Problem Details,
+pagination and configuration templates. Its tests cover token/account rejection, HTTP error
+contracts, configuration startup validation, and JPA/Flyway against PostgreSQL.
+CI runs Boot 3.5 and Boot 4.1 with Java 17 and 21. The MCP compilation fixture remains separate.
+This is targeted coverage, not a claim that every example in the catalog has executable tests.
+
+[Agent evaluations](evaluations/README.md) provide repeatable prompts and review criteria for
+Claude Code and Codex. Transcript collection and human review are separate from CI validation;
+a successful model invocation is not a benchmark pass.
 
 ```
 1. Fork the repo

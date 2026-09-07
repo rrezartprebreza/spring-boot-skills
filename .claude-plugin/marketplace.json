@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "spring-boot-4-skills",
-      "description": "30 Spring Boot 4, Framework 7, security, messaging, deployment, Spring AI, and MCP skills.",
+      "description": "33 Spring Boot 4, Framework 7, security, messaging, deployment, Spring AI, and MCP skills.",
       "source": "./",
       "strict": false,
       "skills": ["./skills/spring-boot-4/"],
@@ -16,7 +16,7 @@
     },
     {
       "name": "spring-boot-3-skills",
-      "description": "30 Spring Boot 3, Framework 6, security, messaging, deployment, Spring AI, and MCP skills.",
+      "description": "33 Spring Boot 3, Framework 6, security, messaging, deployment, Spring AI, and MCP skills.",
       "source": "./",
       "strict": false,
       "skills": ["./skills/spring-boot-3/"],

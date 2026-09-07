@@ -1,14 +1,14 @@
-// ❌ BAD — returns Map, missing RFC fields, exposes internals, wrong status codes
+// ❌ BAD — returns Map, exposes internals, wrong status codes
 
 @RestControllerAdvice
-public class GlobalExceptionHandler {                      // not extending ResponseEntityExceptionHandler
+public class GlobalExceptionHandler {                      // no framework error handling shown
 
     @ExceptionHandler(OrderNotFoundException.class)
     public Map<String, Object> handleNotFound(OrderNotFoundException ex) {
         return Map.of(                                     // returns Map, not ProblemDetail
             "error", ex.getMessage(),
             "status", 404
-        );                                                 // missing type, title, instance, timestamp
+        );                                                 // body says 404 but HTTP status remains 200
     }
 
     @ExceptionHandler(BusinessRuleViolationException.class)

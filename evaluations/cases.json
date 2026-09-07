@@ -1,0 +1,106 @@
+[
+  {
+    "id": "boot3-existing-contract",
+    "boot": 3,
+    "skills": [
+      "rest-api-conventions"
+    ],
+    "prompt": "This Boot 3.5 MVC project returns plain success DTOs, uses Long order IDs and /api/orders without versioning. Add paginated GET /api/orders, preserving the existing public contract and architecture. Describe the controller and serialization changes.",
+    "criteria": [
+      "Select the Boot 3 REST skill, not the Boot 4 version.",
+      "Preserve Long IDs, plain successes and existing routes.",
+      "Use a stable page DTO, a page-size cap and allowed sort fields.",
+      "Do not introduce native Framework 7 API versioning or an architecture migration."
+    ]
+  },
+  {
+    "id": "boot4-domain-errors",
+    "boot": 4,
+    "skills": [
+      "problem-details-rfc9457",
+      "rest-api-conventions"
+    ],
+    "prompt": "Our Boot 4 MVC API uses ApiResponse only for successful responses and RFC 9457 errors. OrderNotFoundException and InsufficientInventoryException currently become 500s. Fix mapping without changing success responses.",
+    "criteria": [
+      "Preserve the success envelope and Problem Details errors.",
+      "Map the exact domain hierarchy to 404 and 422.",
+      "Do not claim an explicit type URI is required for RFC compliance.",
+      "Specify HTTP-level tests, not only direct advice method calls."
+    ]
+  },
+  {
+    "id": "first-party-jwt",
+    "boot": 4,
+    "skills": [
+      "spring-security-jwt",
+      "oauth2-resource-server"
+    ],
+    "prompt": "Our Boot 4 service already issues first-party access/refresh JWTs and uses UserDetailsService. Fix the filter: expired or tampered tokens cause 500, refresh tokens and disabled accounts sometimes reach a protected endpoint.",
+    "criteria": [
+      "Choose the first-party JWT skill for this existing implementation.",
+      "Reject invalid/refresh tokens with 401 and Bearer challenge.",
+      "Check current account enabled/locked/expired state.",
+      "Keep downstream exceptions outside authentication exception handling.",
+      "Do not silently replace the authentication system."
+    ]
+  },
+  {
+    "id": "external-jwt-routing",
+    "boot": 3,
+    "skills": [
+      "oauth2-resource-server",
+      "spring-security-jwt"
+    ],
+    "prompt": "This Boot 3.5 API receives JWTs from Keycloak. Add issuer and audience validation to our existing resource-server configuration.",
+    "criteria": [
+      "Choose oauth2-resource-server, not custom token issuance.",
+      "Preserve the identity provider and use issuer/audience validation.",
+      "Do not introduce JJWT token generation or a hand-written authentication filter."
+    ]
+  },
+  {
+    "id": "concurrent-order-retry",
+    "boot": 4,
+    "skills": [
+      "idempotency-patterns",
+      "transactional-patterns"
+    ],
+    "prompt": "Two concurrent retries of POST /orders with the same client key create duplicates in our PostgreSQL-backed multi-tenant service. The endpoint can also request payment from an external provider. Design the fix and its transaction boundaries.",
+    "criteria": [
+      "Scope key uniqueness by authenticated tenant/principal and operation.",
+      "Use an atomic claim and request-hash conflict handling.",
+      "Store replay result with the local business mutation in one transaction.",
+      "Treat external payment separately with provider idempotency/outbox and reconciliation.",
+      "Test concurrency, rollback and tenant isolation against PostgreSQL."
+    ]
+  },
+  {
+    "id": "invalid-config",
+    "boot": 3,
+    "skills": [
+      "configuration-properties"
+    ],
+    "prompt": "Our Boot 3.5 client properties accept timeout=-1s, missing base-url and retry count 100. Add startup validation and show how the properties record is registered.",
+    "criteria": [
+      "Register the typed properties and include a validation provider.",
+      "Reject missing URL, non-positive timeout and excessive retries.",
+      "Test context startup failure and duration unit conversion.",
+      "Do not add default secrets or log complete credentials."
+    ]
+  },
+  {
+    "id": "modular-monolith",
+    "boot": 4,
+    "skills": [
+      "spring-modulith"
+    ],
+    "prompt": "We deliberately use a Boot 4 modular monolith. Checkout imports inventory.internal.InventoryRepository, and module event handling is lost when the process crashes. Improve module verification and delivery.",
+    "criteria": [
+      "Check the Modulith line against the exact Boot minor.",
+      "Use module API/events rather than importing inventory internals.",
+      "Add ApplicationModules.verify and module behavior tests.",
+      "Configure persistent publication tracking, idempotent handlers and retry/republication.",
+      "Do not promise end-to-end exactly-once delivery."
+    ]
+  }
+]

@@ -8,6 +8,39 @@ import re
 import sys
 from pathlib import Path
 
+import yaml
+
+
+class UniqueKeyLoader(yaml.SafeLoader):
+    """Reject duplicate keys instead of silently discarding earlier settings."""
+
+
+def unique_mapping(loader, node, deep=False):
+    mapping = {}
+    for key_node, value_node in node.value:
+        key = loader.construct_object(key_node, deep=deep)
+        if key in mapping:
+            raise yaml.constructor.ConstructorError(
+                None, None, f"duplicate YAML key: {key}", key_node.start_mark
+            )
+        mapping[key] = loader.construct_object(value_node, deep=deep)
+    return mapping
+
+
+UniqueKeyLoader.add_constructor(
+    yaml.resolver.BaseResolver.DEFAULT_MAPPING_TAG, unique_mapping
+)
+
+
+def parse_yaml(text: str, path: Path) -> dict:
+    try:
+        value = yaml.load(text, Loader=UniqueKeyLoader)
+        if not isinstance(value, dict):
+            raise ValueError("expected a YAML mapping")
+        return value
+    except (yaml.YAMLError, ValueError, TypeError) as error:
+        fail(f"invalid YAML in {path}: {error}")
+
 
 ROOT = Path(__file__).resolve().parents[1]
 BOOT_ROOTS = {version: ROOT / "skills" / f"spring-boot-{version}" for version in (3, 4)}
@@ -36,15 +69,12 @@ def frontmatter(path: Path, text: str) -> tuple[str, str]:
     except ValueError:
         fail(f"{path.relative_to(ROOT)} has unterminated frontmatter")
 
-    block = lines[1:end]
-    keys = [match.group(1) for line in block if (match := re.match(r"^([a-z_]+):", line))]
-    if keys != ["name", "description"]:
-        fail(f"{path.relative_to(ROOT)} frontmatter keys must be name and description only")
-
-    name_line = next(line for line in block if line.startswith("name:"))
-    name = name_line.split(":", 1)[1].strip().strip('"\'')
-    description_index = next(i for i, line in enumerate(block) if line.startswith("description:"))
-    description = " ".join(line.strip() for line in block[description_index + 1 :])
+    block = parse_yaml("\n".join(lines[1:end]), path)
+    name, description = block.get("name"), block.get("description")
+    if not isinstance(name, str) or not re.fullmatch(r"[a-z0-9-]{1,64}", name):
+        fail(f"{path} must have a valid skill name")
+    if not isinstance(description, str) or not description.strip():
+        fail(f"{path} must have a nonempty description")
     if "Use when" not in description:
         fail(f"{path.relative_to(ROOT)} description must include a 'Use when' trigger")
     return name, description
@@ -73,13 +103,15 @@ def validate_skill(version: int, skill_dir: Path, catalog_version: int) -> None:
     if not metadata.is_file():
         fail(f"missing {metadata.relative_to(ROOT)}")
     metadata_text = metadata.read_text(encoding="utf-8")
-    for field in ("display_name:", "short_description:", "default_prompt:"):
-        if field not in metadata_text:
-            fail(f"{metadata.relative_to(ROOT)} is missing {field[:-1]}")
-    if f"${skill_name}" not in metadata_text:
+    interface = parse_yaml(metadata_text, metadata).get("interface")
+    if not isinstance(interface, dict):
+        fail(f"{metadata} must contain an interface mapping")
+    for field in ("display_name", "short_description", "default_prompt"):
+        if not isinstance(interface.get(field), str) or not interface[field].strip():
+            fail(f"{metadata.relative_to(ROOT)} is missing {field}")
+    if f"${skill_name}" not in interface["default_prompt"]:
         fail(f"{metadata.relative_to(ROOT)} default prompt must mention ${skill_name}")
-    short_match = re.search(r'^\s*short_description:\s*"([^"]+)"', metadata_text, re.MULTILINE)
-    if not short_match or not 25 <= len(short_match.group(1)) <= 64:
+    if not 25 <= len(interface["short_description"]) <= 64:
         fail(f"{metadata.relative_to(ROOT)} short description must contain 25-64 characters")
     if PLACEHOLDER.search(metadata_text):
         fail(f"{metadata.relative_to(ROOT)} contains a placeholder")
@@ -161,9 +193,9 @@ def validate_version_sensitive_examples() -> None:
     webmvc_routes = (gateway_dir / "examples" / "good-webmvc-routes.yml").read_text(encoding="utf-8")
     if "spring-cloud-starter-gateway-server-webflux" not in gateway_skill:
         fail("Boot 4 Gateway skill is missing the Gateway 5 WebFlux starter")
-    if "server:\n        webflux:" not in webflux_routes:
+    if not parse_yaml(webflux_routes, gateway_dir).get("spring", {}).get("cloud", {}).get("gateway", {}).get("server", {}).get("webflux"):
         fail("Boot 4 WebFlux Gateway example must use the Gateway 5 server namespace")
-    if "server:\n        webmvc:" not in webmvc_routes:
+    if not parse_yaml(webmvc_routes, gateway_dir).get("spring", {}).get("cloud", {}).get("gateway", {}).get("server", {}).get("webmvc"):
         fail("Boot 4 Web MVC Gateway example must use the Gateway 5 server namespace")
 
     for version in (3, 4):

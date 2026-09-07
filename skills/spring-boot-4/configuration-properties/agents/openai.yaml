@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring Boot 4 Configuration Properties"
+  short_description: "Bind and validate typed application configuration"
+  default_prompt: "Use $configuration-properties to implement and verify configuration properties in this Spring Boot 4 project."

@@ -1,7 +1,7 @@
 // ❌ BAD — all the common mistakes in one controller
 
 @RestController
-@RequestMapping("/orders")          // missing /api/v1 prefix
+@RequestMapping("/orders")          // preserve the project route prefix
 public class OrderController {
 
     @Autowired                       // field injection
@@ -11,11 +11,11 @@ public class OrderController {
     public Order createOrder(@RequestBody CreateOrderRequest request) { // returns entity directly
         Order order = new Order();   // no factory method
         order.setEmail(request.getEmail());
-        return orderRepository.save(order); // no response wrapper, no 201
+        return orderRepository.save(order); // entity leakage; missing creation status
     }
 
     @GetMapping("/{id}")
-    public Map<String, Object> getOrder(@PathVariable Long id) { // Long ID exposed
+    public Map<String, Object> getOrder(@PathVariable Long id) { // ID type is not the problem; authorization still matters
         Optional<Order> order = orderRepository.findById(id);
         if (!order.isPresent()) {
             return Map.of("error", "not found"); // ad-hoc error, no status code
