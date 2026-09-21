@@ -21,7 +21,26 @@ def load_cases():
         assert case["prompt"] and len(case["criteria"]) >= 3
         for skill in case["skills"]:
             assert (ROOT / "skills" / f"spring-boot-{case['boot']}" / skill / "SKILL.md").is_file()
+        reference_paths(case)
     return cases
+
+
+def reference_paths(case):
+    """Resolve explicit case inputs inside the selected version's skill folders."""
+    references = case.get("references", [])
+    if not isinstance(references, list) or any(not isinstance(item, str) for item in references):
+        raise ValueError("references must be a list of paths relative to the Boot skill tree")
+    tree = (ROOT / "skills" / f"spring-boot-{case['boot']}").resolve()
+    allowed = [(tree / skill).resolve() for skill in case["skills"]]
+    paths = []
+    for reference in references:
+        path = (tree / reference).resolve()
+        if Path(reference).is_absolute() or not any(path.is_relative_to(folder) for folder in allowed):
+            raise ValueError(f"reference must stay inside a selected skill: {reference}")
+        if not path.is_file():
+            raise ValueError(f"missing reference: {reference}")
+        paths.append(path)
+    return paths
 
 
 def prompt_for(case):
@@ -29,11 +48,15 @@ def prompt_for(case):
     for path in sorted((ROOT / "skills").glob("*/*/SKILL.md")):
         _, description = frontmatter(path, path.read_text())
         catalog.append(f"{path.relative_to(ROOT)}: {description.strip()}")
-    references = []
+    paths = []
     for skill in case["skills"]:
         folder = ROOT / "skills" / f"spring-boot-{case['boot']}" / skill
-        for path in [folder / "SKILL.md", *sorted((folder / "templates").glob("*.java"))]:
-            references.append(f"FILE: {path.relative_to(ROOT)}\n{path.read_text()}")
+        paths.extend([folder / "SKILL.md", *sorted((folder / "templates").glob("*.java"))])
+    paths.extend(reference_paths(case))
+    references = [
+        f"FILE: {path.relative_to(ROOT)}\n{path.read_text()}"
+        for path in dict.fromkeys(path.resolve() for path in paths)
+    ]
     return (
         "This is a response-level skill evaluation. Do not use tools or modify files. "
         "Treat the request below as the user's task. State which versioned skill paths apply, "
