@@ -28,4 +28,11 @@ suite and project-specific tests.
 No unattended model calls run in CI. CI validates case structure; model evaluation requires an
 authenticated CLI. No model benchmark score is claimed without reviewed transcripts.
 
+Cases may declare `references`: paths relative to their Boot version's skill tree, inside
+one of the selected skills. Use these for relevant SQL, configuration or good/bad examples
+that the tool-free evaluator otherwise cannot open. Selected SKILL.md files and Java
+templates are included automatically; explicit duplicates are included only once.
+The optimistic-lock retry, success-audit and durable-domain-event cases cover transaction
+boundaries and contract preservation. Adding a case does not mean a model has passed it.
+
 See [the initial smoke review](SMOKE-REVIEW.md) for the limited run completed during development.

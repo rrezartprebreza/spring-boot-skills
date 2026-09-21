@@ -6,14 +6,14 @@ public class OrderService {
     @Autowired
     private OrderRepository orderRepository;
 
-    public Order findById(UUID id) {                      // missing readOnly = true — DB can't optimize
+    public Order findById(UUID id) {                      // ambiguous not-found contract
         return orderRepository.findById(id).orElse(null);
     }
 
     @Transactional
     public void processOrders(List<UUID> orderIds) {
         for (UUID id : orderIds) {
-            this.processSingle(id);                       // self-invocation — proxy is bypassed, no TX
+            this.processSingle(id);                       // joins outer TX; no independent transaction
         }
     }
 
@@ -30,7 +30,7 @@ public class OrderService {
             orderRepository.save(order);
             riskyExternalCall(order);
         } catch (Exception e) {
-            log.error("Failed", e);                       // swallows exception — rollback never triggers
+            log.error("Failed", e);                       // hides failure; may commit or remain rollback-only
         }
     }
 

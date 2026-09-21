@@ -65,6 +65,9 @@
       "idempotency-patterns",
       "transactional-patterns"
     ],
+    "references": [
+      "idempotency-patterns/examples/good-idempotency.sql"
+    ],
     "prompt": "Two concurrent retries of POST /orders with the same client key create duplicates in our PostgreSQL-backed multi-tenant service. The endpoint can also request payment from an external provider. Design the fix and its transaction boundaries.",
     "criteria": [
       "Scope key uniqueness by authenticated tenant/principal and operation.",
@@ -72,6 +75,46 @@
       "Store replay result with the local business mutation in one transaction.",
       "Treat external payment separately with provider idempotency/outbox and reconciliation.",
       "Test concurrency, rollback and tenant isolation against PostgreSQL."
+    ]
+  },
+  {
+    "id": "boot3-optimistic-lock-retry",
+    "boot": 3,
+    "skills": ["transactional-patterns", "resilience-retry"],
+    "prompt": "Our Boot 3.5 JPA checkout catches an OptimisticLockException and retries save in the same @Transactional method. Adding noRollbackFor did not help. Explain the smallest fix while preserving our service boundaries and current Spring Retry dependency.",
+    "criteria": [
+      "Remove noRollbackFor for optimistic-lock failures and let the failed transaction roll back.",
+      "Retry a complete unit of work with a fresh entity read and transaction per attempt.",
+      "Keep the retry boundary outside any ambient transaction and cover failures raised at commit.",
+      "Use Boot 3-compatible Spring Retry annotations and a bounded retry policy.",
+      "Describe a contention test that verifies committed state through Spring proxies."
+    ]
+  },
+  {
+    "id": "boot4-success-audit",
+    "boot": 4,
+    "skills": ["transactional-patterns"],
+    "references": ["transactional-patterns/examples/good-transactional-service.java"],
+    "prompt": "Our Boot 4 checkout calls an audit bean with REQUIRES_NEW immediately after saving a new order. It records ORDER_CREATED and references the order ID. Some requests roll back but the audit remains, and others block at the foreign key. We need success audits only for committed orders. Describe the fix.",
+    "criteria": [
+      "Write the success audit and order mutation in the same database transaction.",
+      "Use REQUIRED or MANDATORY on the audit bean instead of independently committing success.",
+      "Explain why an independent transaction cannot rely on the outer transaction's uncommitted parent row.",
+      "Keep any independently committed attempt/failure log semantically separate from success records.",
+      "Test that both rows commit together and both disappear on rollback."
+    ]
+  },
+  {
+    "id": "boot4-durable-domain-events",
+    "boot": 4,
+    "skills": ["domain-driven-design", "transactional-patterns", "event-driven-messaging"],
+    "prompt": "In our Boot 4 DDD application, orderRepository.save is followed by publishEvent inside a transaction. An AFTER_COMMIT @Async listener sends a required email. Notifications disappear after crashes. Order IDs are Long and the aggregate has five children with one atomic invariant. Improve reliability without changing the public contract.",
+    "criteria": [
+      "Distinguish repository save and in-transaction publication from database commit.",
+      "State that AFTER_COMMIT and Async alone provide no durable retry or crash recovery.",
+      "Persist delivery intent atomically with the order and process it with retry and duplicate handling.",
+      "Preserve Long API IDs and aggregate boundaries justified by the atomic invariant.",
+      "Test rollback suppression and crash recovery, including duplicate delivery after an uncertain outcome."
     ]
   },
   {

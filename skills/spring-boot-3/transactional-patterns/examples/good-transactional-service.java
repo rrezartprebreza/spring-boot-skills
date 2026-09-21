@@ -1,4 +1,5 @@
-// ✅ GOOD — class-level readOnly, method-level override, proper propagation, separate bean for REQUIRES_NEW
+// ✅ GOOD — business mutation and success audit commit or roll back together.
+// Illustrative: imports and domain types are supplied by the application.
 
 @Service
 @RequiredArgsConstructor
@@ -21,7 +22,7 @@ public class OrderService {
     public Order createOrder(CreateOrderRequest request) {
         Order order = Order.create(request.customerEmail());
         order = orderRepository.save(order);
-        auditService.logCreation(order);  // REQUIRES_NEW — audit persists even if outer rolls back
+        auditService.logCreation(order);  // same transaction; no success record on rollback
         return order;
     }
 
@@ -40,12 +41,12 @@ public class OrderAuditService {
 
     private final AuditLogRepository auditLogRepository;
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.MANDATORY)
     public void logCreation(Order order) {
         auditLogRepository.save(AuditLog.orderCreated(order));
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.MANDATORY)
     public void logCancellation(Order order) {
         auditLogRepository.save(AuditLog.orderCancelled(order));
     }

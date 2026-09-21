@@ -23,7 +23,7 @@ public class TransactionalOrderService {
     private final OrderRepository orderRepository;
     private final OrderEventPublisher eventPublisher;
 
-    // Inherits class-level readOnly = true — DB can use read replicas
+    // Read-only hint; replica routing requires separate infrastructure.
     public Order findById(UUID id) {
         return orderRepository.findById(id)
             .orElseThrow(() -> new OrderNotFoundException(id));
@@ -53,9 +53,9 @@ public class TransactionalOrderService {
 }
 
 /**
- * Separate bean for operations needing independent transactions.
- * REQUIRES_NEW via self-invocation does NOT work — Spring proxy is bypassed.
- * Always use a separate bean.
+ * Success audit entries must commit or roll back with the business operation.
+ * MANDATORY prevents accidental use outside its transaction.
+ * This template requires the application's domain, repository and audit types.
  */
 @Slf4j
 @Service
@@ -64,15 +64,15 @@ class OrderEventPublisher {
 
     private final AuditLogRepository auditLogRepository;
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.MANDATORY)
     public void publishOrderCreated(Order order) {
         auditLogRepository.save(AuditLog.orderCreated(order));
-        log.info("Audit logged: order created {}", order.getId());
+        log.debug("Creation audit staged for order {}", order.getId());
     }
 
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
+    @Transactional(propagation = Propagation.MANDATORY)
     public void publishOrderCancelled(Order order) {
         auditLogRepository.save(AuditLog.orderCancelled(order));
-        log.info("Audit logged: order cancelled {}", order.getId());
+        log.debug("Cancellation audit staged for order {}", order.getId());
     }
 }

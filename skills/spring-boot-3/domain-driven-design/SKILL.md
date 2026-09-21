@@ -1,8 +1,9 @@
 ---
 name: domain-driven-design
 description: >
-  Use when working with domain models, aggregates, value objects, domain events, or
-  repositories in a DDD-style project. Ensures rich domain model over anemic CRUD.
+  Use when evolving aggregate invariants, value objects or domain events in an existing
+  DDD-style Spring Boot 3 application, or when DDD is explicitly requested. Preserve existing
+  API identifiers and architecture when changing domain behavior.
 ---
 
 # Domain-Driven Design
@@ -10,8 +11,12 @@ description: >
 ## Aggregate Rules
 - One repository per aggregate root
 - External code only accesses aggregate through root — never child entities directly
-- Aggregates reference other aggregates by ID only, not direct object reference
-- Keep aggregates small — if it has more than 3-4 child entities, split it
+- Prefer references by ID across aggregate boundaries; preserve deliberate mappings.
+- Choose boundaries from invariants that must commit atomically and expected contention,
+  not a fixed number of child entities. Splitting requires an explicit consistency plan.
+
+The snippets are illustrative and require the application's domain types and imports.
+Keep existing public identifiers and persistence mappings unless the task includes a migration.
 
 ```java
 // ✅ Aggregate root controls all access to children
@@ -81,7 +86,7 @@ public class Order {
     }
 }
 
-// Publish after successful save
+// Publish inside the transaction; save() is not commit.
 @Service
 @RequiredArgsConstructor
 public class OrderApplicationService {
@@ -93,21 +98,20 @@ public class OrderApplicationService {
         Order order = orderRepository.findById(command.orderId()).orElseThrow();
         order.place();
         Order saved = orderRepository.save(order);
-        saved.pullDomainEvents().forEach(eventPublisher::publishEvent); // publish after commit
+        saved.pullDomainEvents().forEach(eventPublisher::publishEvent); // commit-bound listener below
         return saved;
     }
 }
 
 // Listen to events — bind to commit, not just publish.
 // @EventListener fires synchronously inside the TX; if the TX later rolls back you've
-// already sent the email. Prefer @TransactionalEventListener(AFTER_COMMIT) — see [[transactional-patterns]].
+// already sent the email. AFTER_COMMIT avoids rollback delivery but is best effort.
 @Component
 @RequiredArgsConstructor
 public class OrderPlacedHandler {
     private final EmailService emailService;
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
-    @Async
     public void onOrderPlaced(OrderPlaced event) {
         emailService.sendOrderConfirmation(event.customerId(), event.orderId());
     }
@@ -118,6 +122,13 @@ public class OrderPlacedHandler {
 > `@DomainEvents` method (returns the collected events) and an `@AfterDomainEventPublication` method
 > (clears them) on the aggregate root. Spring Data's repository drains and publishes them automatically
 > on every `save()` — no manual wiring in the service.
+
+Neither publication mechanism guarantees durable delivery. For required external effects,
+persist an outbox entry with the aggregate change or use a persistent publication registry,
+with idempotent consumers and retry/recovery. `@Async` changes execution, not durability.
+Post-commit database writes need a new transaction because the original resources may still
+be bound after completion. See [transaction boundaries](../transactional-patterns/SKILL.md),
+[messaging](../event-driven-messaging/SKILL.md) and [Modulith](../spring-modulith/SKILL.md).
 
 ## Specifications (complex queries)
 
@@ -162,7 +173,7 @@ public class PaymentGatewayAdapter implements PaymentPort {
         // Translate domain → external
         PaymentApiRequest apiRequest = new PaymentApiRequest(
             orderId.value().toString(),
-            amount.amount().doubleValue(),
+            amount.amount(), // illustrative provider accepts BigDecimal
             amount.currency().getCurrencyCode());
 
         // Call external system
@@ -176,10 +187,26 @@ public class PaymentGatewayAdapter implements PaymentPort {
 }
 ```
 
+Use the provider's exact monetary representation. For integer minor units, convert with
+the currency's fraction digits and exact arithmetic; do not silently round or convert
+money to binary floating point.
+
+## Verification
+
+Test aggregate invariants, rollback preventing external notification, and recovery from
+a crash after commit for durable publication. Verify that existing API IDs and database
+relationships remain compatible with the requested change.
+
 ## Gotchas
 - Agent creates anemic models with only getters/setters — put behavior on domain objects
-- Agent uses `Long` for entity IDs — use typed value objects (`OrderId`, `CustomerId`)
+- Agent replaces existing Long/UUID API IDs with value objects - preserve the public contract; map internal types explicitly.
 - Agent puts domain logic in services — services should orchestrate, not decide
 - Agent accesses child entities directly from outside — always go through aggregate root
-- Agent publishes events before saving — publish after successful save/commit
+- Agent confuses save with commit - publish in the transaction and select listener/durable delivery semantics deliberately.
+- Agent splits an aggregate at an arbitrary child count - derive boundaries from business invariants.
 - Agent lets external API models into domain — use an Anti-Corruption Layer to translate
+
+## Official sources
+
+- [Spring Data aggregate event publication](https://docs.spring.io/spring-data/jpa/reference/repositories/core-domain-events.html)
+- [Spring transaction-bound events](https://docs.spring.io/spring-framework/reference/data-access/transaction/event.html)
