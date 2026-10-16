@@ -1,4 +1,4 @@
-// ❌ BAD — every common @Transactional mistake
+// BAD — every common @Transactional mistake
 
 @Service
 public class OrderService {

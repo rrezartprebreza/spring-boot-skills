@@ -1,4 +1,4 @@
-// ❌ BAD — every common JPA mistake
+// BAD — every common JPA mistake
 
 @Entity
 @Data                                   // @Data generates setters — bad for entities

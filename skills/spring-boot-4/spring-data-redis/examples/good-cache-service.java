@@ -1,4 +1,4 @@
-// ✅ GOOD — caches DTOs, JSON serialization, TTL configured, proper eviction
+// GOOD — caches DTOs, JSON serialization, TTL configured, proper eviction
 
 @Service
 @RequiredArgsConstructor

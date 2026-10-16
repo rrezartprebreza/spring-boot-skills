@@ -1,4 +1,4 @@
-// ❌ BAD — pre-Security-7 API (won't compile), wrong role check, unnecessary UserDetailsService, session-based
+// BAD — pre-Security-7 API (won't compile), wrong role check, unnecessary UserDetailsService, session-based
 
 @Configuration
 @EnableWebSecurity

@@ -1,4 +1,4 @@
-// ✅ GOOD — Spring Batch 5 / Boot 3: no @EnableBatchProcessing, builders take JobRepository,
+// GOOD — Spring Batch 5 / Boot 3: no @EnableBatchProcessing, builders take JobRepository,
 // chunk takes a transaction manager, reader is @StepScope with a deterministic sort, job is restartable.
 
 @Configuration

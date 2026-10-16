@@ -1,4 +1,4 @@
-// ✅ GOOD — GA CallAdvisor API, Micrometer metrics, async audit via separate bean, no PII in logs
+// GOOD — GA CallAdvisor API, Micrometer metrics, async audit via separate bean, no PII in logs
 
 @Component
 @RequiredArgsConstructor

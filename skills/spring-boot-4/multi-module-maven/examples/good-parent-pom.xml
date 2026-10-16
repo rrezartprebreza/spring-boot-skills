@@ -1,4 +1,4 @@
-<!-- ✅ GOOD — dependencyManagement in parent, plugin only in web module -->
+<!-- GOOD — dependencyManagement in parent, plugin only in web module -->
 
 <project>
     <modelVersion>4.0.0</modelVersion>

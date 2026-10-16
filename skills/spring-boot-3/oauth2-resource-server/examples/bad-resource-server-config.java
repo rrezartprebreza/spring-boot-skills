@@ -1,4 +1,4 @@
-// ❌ BAD — wrong role check, unnecessary UserDetailsService, session-based
+// BAD — wrong role check, unnecessary UserDetailsService, session-based
 
 @Configuration
 @EnableWebSecurity

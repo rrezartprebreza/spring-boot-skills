@@ -53,6 +53,7 @@ Not as a summary of what's inside. The agent decides whether to load the skill b
 - [ ] Description is a trigger ("Use when..."), not a summary
 - [ ] Has a Gotchas section with at least 3 entries
 - [ ] Has paired good/bad examples
+- [ ] Labels good and bad code with words (`GOOD`, `BAD`, `Safe:`), not emoji or icons
 - [ ] Has `agents/openai.yaml` with a default prompt that names the skill
 - [ ] Code examples compile (or are clearly illustrative)
 - [ ] Version-sensitive claims link to primary official documentation

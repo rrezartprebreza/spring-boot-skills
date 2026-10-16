@@ -86,7 +86,7 @@ public record ApiError(String code, String message, List<String> details) {}
 - **Plural nouns** for resources: `/orders`, `/users`, `/products`
 - **Kebab-case** for multi-word: `/order-items`, not `/orderItems`
 - **Versioning in path**: `/api/v1/orders`
-- **Nested resources** max 2 levels: `/orders/{id}/items` ✅, `/orders/{id}/items/{itemId}/notes` ❌ — flatten to `/order-item-notes/{id}`
+- **Nested resources** max 2 levels: `/orders/{id}/items` is fine, `/orders/{id}/items/{itemId}/notes` is too deep — flatten to `/order-item-notes/{id}`
 - **IDs**: preserve the existing ID type. UUIDs are an option, not an authorization mechanism.
 
 ```

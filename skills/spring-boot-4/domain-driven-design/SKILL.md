@@ -19,11 +19,11 @@ The snippets are illustrative and require the application's domain types and imp
 Keep existing public identifiers and persistence mappings unless the task includes a migration.
 
 ```java
-// ✅ Aggregate root controls all access to children
+// GOOD: Aggregate root controls all access to children
 order.addItem(productId, quantity); // through root
 order.removeItem(itemId);           // through root
 
-// ❌ Direct child access from outside
+// BAD: Direct child access from outside
 order.getItems().add(new OrderItem(...)); // bypasses invariants
 ```
 
@@ -161,7 +161,7 @@ orderRepository.findAll(spec, pageable);
 - ACL lives in infrastructure layer, not domain
 
 ```java
-// ✅ GOOD — ACL translates external payment API to domain concepts
+// GOOD — ACL translates external payment API to domain concepts
 @Component
 @RequiredArgsConstructor
 public class PaymentGatewayAdapter implements PaymentPort {

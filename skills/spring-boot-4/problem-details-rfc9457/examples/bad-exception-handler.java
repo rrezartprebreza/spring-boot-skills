@@ -1,4 +1,4 @@
-// ❌ BAD — returns Map, exposes internals, wrong status codes
+// BAD — returns Map, exposes internals, wrong status codes
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {                      // no framework error handling shown

@@ -86,21 +86,21 @@ ALTER TABLE orders
 ## Safe Migration Patterns
 
 ```sql
--- ✅ Safe: add nullable column
+-- Safe: add nullable column
 ALTER TABLE orders ADD COLUMN notes TEXT;
 
--- ✅ Safe: add column with default
+-- Safe: add column with default
 ALTER TABLE orders ADD COLUMN priority INT NOT NULL DEFAULT 0;
 
--- ✅ Safe: add index CONCURRENTLY (no table lock in Postgres)
--- ⚠️ BUT: CONCURRENTLY cannot run inside a transaction, and Flyway wraps every
+-- Safe: add index CONCURRENTLY (no table lock in Postgres)
+-- BUT: CONCURRENTLY cannot run inside a transaction, and Flyway wraps every
 -- migration in one by default → the migration FAILS. Opt that one script out
 -- with a sidecar config file:
 --   V4__add_orders_email_index.sql.conf  →  executeInTransaction=false
 -- Keep the CONCURRENTLY statement alone in its own migration file.
 CREATE INDEX CONCURRENTLY idx_orders_email ON orders(customer_email);
 
--- ✅ Safe: rename via add + backfill + drop (multi-step)
+-- Safe: rename via add + backfill + drop (multi-step)
 -- Step 1 (V5): add new column
 ALTER TABLE orders ADD COLUMN customer_email VARCHAR(255);
 -- Step 2 (V5): backfill
@@ -110,10 +110,10 @@ ALTER TABLE orders ALTER COLUMN customer_email SET NOT NULL;
 -- Step 4 (later V6, after code is deployed): drop old column
 ALTER TABLE orders DROP COLUMN user_id;
 
--- ❌ Dangerous: rename column directly (breaks running app)
+-- Dangerous: rename column directly (breaks running app)
 ALTER TABLE orders RENAME COLUMN user_id TO customer_id;
 
--- ❌ Dangerous: NOT NULL without default on large table (locks table)
+-- Dangerous: NOT NULL without default on large table (locks table)
 ALTER TABLE orders ADD COLUMN priority INT NOT NULL; -- will fail on existing rows
 ```
 

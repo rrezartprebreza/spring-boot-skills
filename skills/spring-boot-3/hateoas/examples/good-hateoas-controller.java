@@ -1,4 +1,4 @@
-// ✅ GOOD — RepresentationModelAssembler, conditional links, PagedResourcesAssembler
+// GOOD — RepresentationModelAssembler, conditional links, PagedResourcesAssembler
 
 @Component
 @RequiredArgsConstructor

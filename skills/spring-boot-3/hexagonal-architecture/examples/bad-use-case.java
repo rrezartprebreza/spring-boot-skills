@@ -1,4 +1,4 @@
-// ❌ BAD — infrastructure leaks into domain, anemic model, no ports
+// BAD — infrastructure leaks into domain, anemic model, no ports
 
 @Service
 @RequiredArgsConstructor

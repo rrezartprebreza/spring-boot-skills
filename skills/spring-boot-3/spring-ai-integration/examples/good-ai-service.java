@@ -1,4 +1,4 @@
-// ✅ GOOD — injected ChatClient, externalized prompts, structured output, error handling
+// GOOD — injected ChatClient, externalized prompts, structured output, error handling
 
 @Service
 @RequiredArgsConstructor

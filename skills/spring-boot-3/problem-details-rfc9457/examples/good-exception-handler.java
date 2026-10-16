@@ -1,4 +1,4 @@
-// ✅ GOOD — extends ResponseEntityExceptionHandler, maps the actual domain exception hierarchy, custom properties
+// GOOD — extends ResponseEntityExceptionHandler, maps the actual domain exception hierarchy, custom properties
 
 @RestControllerAdvice
 @Slf4j

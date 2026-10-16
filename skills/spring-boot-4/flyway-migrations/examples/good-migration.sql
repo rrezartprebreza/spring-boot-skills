@@ -1,4 +1,4 @@
--- ✅ GOOD — V4__add_shipping_address_to_orders.sql
+-- GOOD — V4__add_shipping_address_to_orders.sql
 -- Correct double-underscore naming, nullable column, safe index creation
 
 -- Step 1: Add nullable column (safe for existing data — no lock, no rewrite)

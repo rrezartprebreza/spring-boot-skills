@@ -1,4 +1,4 @@
-// ❌ BAD — all the common mistakes in one controller
+// BAD — all the common mistakes in one controller
 
 @RestController
 @RequestMapping("/orders")          // preserve the project route prefix
