@@ -19,6 +19,7 @@
 [![Spring AI](https://img.shields.io/badge/Spring_AI-1.x_%7C_2.0-6DB33F?style=flat-square&labelColor=1e293b)](https://spring.io/projects/spring-ai)
 [![MCP Java SDK](https://img.shields.io/badge/MCP_Java_SDK-2.0-e879f9?style=flat-square&labelColor=1e293b)](https://github.com/modelcontextprotocol/java-sdk)
 [![GitHub Stars](https://img.shields.io/github/stars/rrezartprebreza/spring-boot-skills?style=flat-square&label=stars&labelColor=1e293b&color=fbbf24)](https://github.com/rrezartprebreza/spring-boot-skills/stargazers)
+[![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/rrezartprebreza/badge.svg)](https://hub.xerj.org/contributors/rrezartprebreza)
 
 <br/>
 
