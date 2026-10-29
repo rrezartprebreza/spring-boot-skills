@@ -36,3 +36,7 @@ The optimistic-lock retry, success-audit and durable-domain-event cases cover tr
 boundaries and contract preservation. Adding a case does not mean a model has passed it.
 
 See [the initial smoke review](SMOKE-REVIEW.md) for the limited run completed during development.
+
+For a practical task and a baseline-versus-skills collection procedure, see the
+[walkthrough](WALKTHROUGH.md). Use `--context baseline` to omit the catalog and reference
+content; the default `--context skills` retains the reference-assisted evaluation.

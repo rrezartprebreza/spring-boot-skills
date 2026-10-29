@@ -298,6 +298,10 @@ That's it. Your agent reads the skill before writing a single line.
 
 ## ⚔️ Before / After
 
+The snippets below are illustrative, not captured model outputs or benchmark results.
+For a copyable task and a reproducible comparison procedure, see the
+[practical walkthrough](evaluations/WALKTHROUGH.md).
+
 The value of these skills is not generic Spring Boot advice. The value is preventing the small mistakes AI agents make when they do not know your backend conventions.
 
 <table>
