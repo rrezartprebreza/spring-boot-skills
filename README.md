@@ -9,7 +9,7 @@
 
 <br/>
 
-[![skills](https://img.shields.io/badge/skills-33_%C3%97_2-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
+[![skills](https://img.shields.io/badge/skills-34_%C3%97_2-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x_%7C_4.x-6DB33F?style=for-the-badge&labelColor=0f172a&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&labelColor=0f172a&logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/License-MIT-94a3b8?style=for-the-badge&labelColor=0f172a)](LICENSE)
@@ -187,6 +187,7 @@ versions together and recheck the linked official sources before adopting a newe
 | Skill | Description | Tags |
 |-------|-------------|------|
 | [**testing-pyramid**](skills/spring-boot-4/testing-pyramid/) | Unit → Slice → Integration conventions. `@WebMvcTest`, `@DataJpaTest`, `@MockitoBean`, Testcontainers. | `testing` |
+| [**agent-qa-browser-regression**](skills/spring-boot-4/agent-qa-browser-regression/) | Scoped browser QA with agent-qa, run evidence, and memidex memory provenance alongside backend tests. | `testing` `browser` |
 
 ---
 
@@ -468,7 +469,7 @@ Without the skill, the agent guesses: dead pre-GA artifact names, removed SDK co
 ## 🗺️ Roadmap
 
 - [x] Skills for Spring Batch
-- [x] Spring Boot 4 versions of all 33 skills (`skills/spring-boot-4/`)
+- [x] Spring Boot 4 versions of all 34 skills (`skills/spring-boot-4/`)
 - [x] Skills for Spring Cloud Gateway
 - [x] Skills for Spring WebFlux / reactive patterns
 - [x] Skills for multi-tenancy
@@ -499,7 +500,7 @@ bash scripts/validate-skills.sh
 ```
 
 The validator parses YAML safely, rejects duplicate keys, and checks both version trees, metadata,
-README links and marketplace packaging. There are **33 topics with Boot 3 and Boot 4 variants**.
+README links and marketplace packaging. There are **34 topics with Boot 3 and Boot 4 variants**.
 
 ### Executable verification
 

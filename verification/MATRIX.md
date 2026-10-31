@@ -10,6 +10,7 @@ Spring AI 1.0.0 / 2.0.0 respectively. Database CI uses PostgreSQL 16.
 
 | Skill | Shipped Java compiled | Runtime verification |
 | --- | --- | --- |
+| agent-qa-browser-regression | No Java shipped | Response-level cases and illustrative plans; no live browser/provider execution |
 | ai-observability | Advisor and metrics, both trees | Async saturation, shutdown, writes and failure isolation |
 | api-versioning | No | No |
 | configuration-properties | ClientProperties, both trees | Valid and invalid startup configuration |

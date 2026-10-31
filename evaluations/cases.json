@@ -145,5 +145,47 @@
       "Configure persistent publication tracking, idempotent handlers and retry/republication.",
       "Do not promise end-to-end exactly-once delivery."
     ]
+  },
+  {
+    "id": "boot3-agent-qa-browser-scope",
+    "boot": 3,
+    "skills": [
+      "agent-qa-browser-regression",
+      "testing-pyramid"
+    ],
+    "references": [
+      "agent-qa-browser-regression/examples/good-checkout-plan.md",
+      "agent-qa-browser-regression/examples/bad-checkout-plan.md"
+    ],
+    "prompt": "Our Boot 3 checkout has a separate frontend at localhost:5173, API at localhost:8080 and management health at localhost:9090. We already have agent-qa and tests/checkout.yaml. Backend tests are green, validation and a dry run exited 0, and an old memidex record says checkout passed. A colleague proposes reporting the new deployed build as passed, using @Transactional to clean up browser-created orders, and disabling CSRF if login returns 403. We only authorize a verification plan now. Describe the scoped plan, exact commands where appropriate, and evidence needed for a release report while preserving existing API and authentication contracts.",
+    "criteria": [
+      "Select the Boot 3 browser-regression skill and retain the existing backend verification gates.",
+      "Choose the frontend UI origin rather than API or management health as browser target; match the real deployed build.",
+      "State that validation, dry run, health and historical memory do not establish a current application pass.",
+      "Keep authentication/CSRF and explain that real HTTP server writes do not roll back with the test thread; use scoped fixture cleanup.",
+      "Plan selected-test validation/dry run and an authorized later live run; do not claim execution or broaden to the whole suite.",
+      "Use explicit run IDs and supported digest/overview/evidence reads; inspect scoped memory provenance without modifying it."
+    ]
+  },
+  {
+    "id": "boot4-agent-qa-browser-scope",
+    "boot": 4,
+    "skills": [
+      "agent-qa-browser-regression",
+      "testing-pyramid"
+    ],
+    "references": [
+      "agent-qa-browser-regression/examples/good-checkout-plan.md",
+      "agent-qa-browser-regression/examples/bad-checkout-plan.md"
+    ],
+    "prompt": "Our Boot 4 checkout has a separate frontend at localhost:5173, API at localhost:8080 and management health at localhost:9090. We already have agent-qa and tests/checkout.yaml. Backend tests are green, validation and a dry run exited 0, and an old memidex record says checkout passed. A colleague proposes reporting the new deployed build as passed, using @Transactional to clean up browser-created orders, and disabling CSRF if login returns 403. We only authorize a verification plan now. Describe the scoped plan, exact commands where appropriate, and evidence needed for a release report while preserving existing API and authentication contracts.",
+    "criteria": [
+      "Select the Boot 4 browser-regression skill and retain the existing backend verification gates.",
+      "Choose the frontend UI origin rather than API or management health as browser target; match the real deployed build.",
+      "State that validation, dry run, health and historical memory do not establish a current application pass.",
+      "Keep authentication/CSRF and explain that real HTTP server writes do not roll back with the test thread; use scoped fixture cleanup.",
+      "Plan selected-test validation/dry run and an authorized later live run; do not claim execution or broaden to the whole suite.",
+      "Use explicit run IDs and supported digest/overview/evidence reads; inspect scoped memory provenance without modifying it."
+    ]
   }
 ]

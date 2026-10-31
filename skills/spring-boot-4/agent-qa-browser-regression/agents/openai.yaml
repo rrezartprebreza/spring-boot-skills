@@ -1,0 +1,4 @@
+interface:
+  display_name: "agent-qa Browser Regression"
+  short_description: "Verify scoped browser journeys with agent-qa"
+  default_prompt: "Use $agent-qa-browser-regression to plan or review browser QA for this Spring Boot application."
