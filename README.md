@@ -58,6 +58,18 @@ This repo is a collection of battle-tested skills. Copy, adapt, drop in.
 
 ---
 
+## Verify your conventions with AgentAccord
+
+[**AgentAccord**](https://github.com/rrezartprebreza/agentaccord) is a free, MIT-licensed companion tool for checking team engineering rules in source code and AI instruction files.
+
+**Spring Boot Skills teaches your agent how to work. AgentAccord checks supported rules your team has explicitly approved.** It can flag field injection in application code, conflicting instructions in `AGENTS.md`, `CLAUDE.md`, and `SKILL.md`, and policy violations in supported Java examples. Run it locally through its CLI or browser app, or use its GitHub Action in CI.
+
+Choose policies that fit your project. For example, restrictions on `@Value` or `@WebMvcTest` are optional team decisions, not universal Spring Boot rules. AgentAccord checks a defined set of patterns; it does not automatically enforce every recommendation in this skills catalog.
+
+[Get started with AgentAccord](https://github.com/rrezartprebreza/agentaccord#install) · [See the v0.4.0 release](https://github.com/rrezartprebreza/agentaccord/releases/tag/v0.4.0)
+
+---
+
 ## 🧠 Concepts
 
 | Concept | Description |
@@ -535,6 +547,7 @@ a successful model invocation is not a benchmark pass.
 
 | Repo | Description |
 |------|-------------|
+| [**AgentAccord**](https://github.com/rrezartprebreza/agentaccord) | Check approved engineering policies against source code, AI instructions, and supported Java examples — local CLI/app and GitHub Action |
 | [**Hatch**](https://github.com/rrezartprebreza/hatch) | Multi-module background job library for Spring Boot — REST polling, retry, Redis/JDBC backends, SSE dashboard |
 | [**SpringPulse**](https://github.com/rrezartprebreza/springpulse) | Runtime observability for `@Scheduled` methods — AOP interception, WebSocket dashboard |
 | [**rest-api-generator**](https://github.com/rrezartprebreza/rest-api-generator) | CLI that scaffolds Spring Boot REST APIs from plain English prompts |
