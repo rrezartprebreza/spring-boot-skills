@@ -1,6 +1,7 @@
 package com.example.config;
 
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.authentication.AuthenticationCredentialsNotFoundException;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.stereotype.Component;
 
@@ -14,6 +15,10 @@ import java.util.Map;
  */
 @Component
 public class JwtClaimExtractor {
+
+    public ExternalIdentity getIdentity() {
+        return ExternalIdentity.from(getJwt());
+    }
 
     // Opaque provider id ("auth0|...", Okta "00u..."): map it to your user record, don't parse it.
     public String getSubject() {
@@ -54,7 +59,11 @@ public class JwtClaimExtractor {
     }
 
     private Jwt getJwt() {
-        return (Jwt) SecurityContextHolder.getContext()
-            .getAuthentication().getPrincipal();
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !authentication.isAuthenticated()
+                || !(authentication.getPrincipal() instanceof Jwt jwt)) {
+            throw new AuthenticationCredentialsNotFoundException("Authenticated JWT required");
+        }
+        return jwt;
     }
 }

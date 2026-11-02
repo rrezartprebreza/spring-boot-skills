@@ -514,6 +514,10 @@ failures without calling a model provider. Database tests cover safe Flyway base
 authenticated create/retrieve HTTP workflow. See the [per-skill coverage matrix](verification/MATRIX.md)
 for the exact scope and remaining gaps.
 
+Additional runtime checks cover external issuer/subject identity, tenant-scoped database
+access, Redis concurrency and serialization, and bounded HTTP read retries. The skills
+document failure policies and limitations rather than treating every example as a universal default.
+
 [Agent evaluations](evaluations/README.md) provide repeatable prompts and review criteria for
 Claude Code and Codex. Transcript collection and human review are separate from CI validation;
 a successful model invocation is not a benchmark pass.

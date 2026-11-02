@@ -1,5 +1,56 @@
 [
   {
+    "id": "external-identity-email-change",
+    "boot": 4,
+    "skills": ["oauth2-resource-server"],
+    "prompt": "Our Boot 4 Keycloak API looks up profile and order ownership by the JWT email claim. Users change email, and we are adding a second trusted issuer whose subject values can overlap. Fix identity mapping without changing local Long account IDs or automatically linking accounts by email.",
+    "criteria": [
+      "Use the exact verified issuer and opaque subject together, mapped to the existing local account ID.",
+      "Treat email as optional mutable profile data, never an automatic linking key.",
+      "Preserve issuer, audience, signature and expiry validation and restrict accepted issuers.",
+      "Backfill known issuer for legacy subject mappings and test email change/reuse and overlapping subjects."
+    ]
+  },
+  {
+    "id": "redis-concurrent-misses",
+    "boot": 3,
+    "skills": ["spring-data-redis"],
+    "prompt": "Our Boot 3.5 service uses the default non-locking RedisCacheManager and @Cacheable(sync=true). Concurrent misses still hit the database twice. Redis outages also occur. Improve read-cache behavior without treating Redis locks as payment correctness guarantees or silently ignoring failed write-side evictions.",
+    "criteria": [
+      "Explain that sync loading depends on the provider and the default Redis writer is non-locking.",
+      "Explain cache-wide locking, lease expiry and contention tradeoffs rather than promise exactly-once loading.",
+      "Separate optional read fallback from security/session/rate-limit and write-invalidation failure policies.",
+      "Propose real Redis concurrency, TTL, serialization and rollback tests."
+    ]
+  },
+  {
+    "id": "retry-uncertain-payment",
+    "boot": 4,
+    "skills": ["resilience-retry", "http-interface-clients", "idempotency-patterns"],
+    "prompt": "A Boot 4 payment POST times out after the provider may have charged the card. Our gateway retries and the service retries five more times. The caller has a two-second deadline. Propose a bounded policy preserving the current HTTP interface, and explain which outcomes require reconciliation.",
+    "criteria": [
+      "Do not assume a timeout means no charge; require provider idempotency with the same key and payload across retries.",
+      "Avoid multiplied retries and account for all attempts, waits and transport timeouts within the caller deadline.",
+      "Distinguish per-attempt timeouts from total deadlines and preserve cancellation.",
+      "Do not retry authentication/validation errors or fabricate success on exhaustion.",
+      "Reconcile unknown outcomes and test duplicate suppression and deadline exhaustion."
+    ]
+  },
+  {
+    "id": "tenant-worker-and-cache-leak",
+    "boot": 4,
+    "skills": ["multi-tenancy"],
+    "references": ["multi-tenancy/examples/tenant-orders.sql"],
+    "prompt": "Two tenants can have the same order ID in our shared PostgreSQL schema. A background export reuses a thread pool, and the cache key is just order ID. Tenant B sometimes gets tenant A's data after a failed export. Fix the data boundaries without replacing shared-schema storage.",
+    "criteria": [
+      "Derive tenant membership from verified authentication and current server-side policy, not a public header.",
+      "Scope every read and mutation by tenant plus ID and preserve composite database constraints.",
+      "Include unambiguous tenant identity in cache keys.",
+      "Capture context at submission and clear or restore it even when a worker fails, without InheritableThreadLocal.",
+      "Test cross-tenant reads/writes and sequential tasks on the same worker; context propagation alone is not authorization."
+    ]
+  },
+  {
     "id": "boot3-existing-contract",
     "boot": 3,
     "skills": [
