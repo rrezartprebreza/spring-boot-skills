@@ -10,12 +10,16 @@ description: >
 ## Structure
 
 ```
-Unit Tests         — fast, no Spring context, mock dependencies    (70%)
-Slice Tests        — partial Spring context (@WebMvcTest, @DataJpaTest) (20%)
-Integration Tests  — full context + real DB via Testcontainers     (10%)
+Unit Tests         — fast domain logic checks without a Spring context
+Slice Tests        — focused web or persistence infrastructure checks
+Integration Tests  — cross-boundary behavior with real dependencies
 ```
 
 ## Unit Tests — Services
+
+Choose the mix by risk, not a fixed percentage. Use real database/Redis tests for concurrency,
+serialization and transaction semantics that mocks cannot establish. Preserve the project's
+JUnit/AssertJ and mocking conventions; changing assertion libraries is not a correctness fix.
 
 ```java
 @ExtendWith(MockitoExtension.class)
@@ -230,12 +234,19 @@ login_withInvalidCredentials_shouldReturn401()
 </dependency>
 ```
 
+## Verification scope
+
+The repository fixture targets Boot 3.5.16 with Java 17/21 and checks
+selected templates and an equivalent HTTP workflow; application-specific inline fixtures still need adaptation. Check the
+[coverage matrix](https://github.com/rrezartprebreza/spring-boot-skills/blob/main/verification/MATRIX.md)
+before treating another minor version or an illustrative snippet as verified.
+
 ## Gotchas
 - Agent uses `@SpringBootTest` for everything — use slices for speed
 - Agent uses `H2` in-memory DB for `@DataJpaTest` — use Testcontainers for accuracy
 - Agent uses `@MockBean` — deprecated since Spring Boot 3.4; use `@MockitoBean` (and `@MockitoSpyBean` for spies)
-- Agent uses `Mockito.mock()` instead of `@Mock` — use annotations with `@ExtendWith(MockitoExtension.class)`
+- Agent relies only on mocks for transaction or concurrency guarantees - test those boundaries with real infrastructure.
 - Agent forgets `@WithMockUser` on controller tests — security filter blocks all requests with 401
 - Agent POSTs in `@WebMvcTest` without `.with(csrf())` — Boot's default security enables CSRF, so every write returns 403 even with `@WithMockUser`
-- Agent uses `assertEquals` from JUnit — use AssertJ (`assertThat(...).isEqualTo(...)`)
+- Agent checks only a response status - also assert persisted state, ownership and the relevant failure effects.
 - Agent names tests `test_createOrder()` — use `createOrder_condition_expected()` pattern

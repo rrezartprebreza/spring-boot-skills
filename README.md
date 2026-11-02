@@ -19,6 +19,7 @@
 [![Spring AI](https://img.shields.io/badge/Spring_AI-1.x_%7C_2.0-6DB33F?style=flat-square&labelColor=1e293b)](https://spring.io/projects/spring-ai)
 [![MCP Java SDK](https://img.shields.io/badge/MCP_Java_SDK-2.0-e879f9?style=flat-square&labelColor=1e293b)](https://github.com/modelcontextprotocol/java-sdk)
 [![GitHub Stars](https://img.shields.io/github/stars/rrezartprebreza/spring-boot-skills?style=flat-square&label=stars&labelColor=1e293b&color=fbbf24)](https://github.com/rrezartprebreza/spring-boot-skills/stargazers)
+[![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/rrezartprebreza/badge.svg)](https://hub.xerj.org/contributors/rrezartprebreza)
 
 <br/>
 
@@ -54,6 +55,18 @@ flowchart LR
 ```
 
 This repo is a collection of battle-tested skills. Copy, adapt, drop in.
+
+---
+
+## Verify your conventions with AgentAccord
+
+[**AgentAccord**](https://github.com/rrezartprebreza/agentaccord) is a free, MIT-licensed companion tool for checking team engineering rules in source code and AI instruction files.
+
+**Spring Boot Skills teaches your agent how to work. AgentAccord checks supported rules your team has explicitly approved.** It can flag field injection in application code, conflicting instructions in `AGENTS.md`, `CLAUDE.md`, and `SKILL.md`, and policy violations in supported Java examples. Run it locally through its CLI or browser app, or use its GitHub Action in CI.
+
+Choose policies that fit your project. For example, restrictions on `@Value` or `@WebMvcTest` are optional team decisions, not universal Spring Boot rules. AgentAccord checks a defined set of patterns; it does not automatically enforce every recommendation in this skills catalog.
+
+[Get started with AgentAccord](https://github.com/rrezartprebreza/agentaccord#install) · [See the v0.4.0 release](https://github.com/rrezartprebreza/agentaccord/releases/tag/v0.4.0)
 
 ---
 
@@ -298,6 +311,10 @@ That's it. Your agent reads the skill before writing a single line.
 
 ## ⚔️ Before / After
 
+The snippets below are illustrative, not captured model outputs or benchmark results.
+For a copyable task and a reproducible comparison procedure, see the
+[practical walkthrough](evaluations/WALKTHROUGH.md).
+
 The value of these skills is not generic Spring Boot advice. The value is preventing the small mistakes AI agents make when they do not know your backend conventions.
 
 <table>
@@ -510,6 +527,10 @@ failures without calling a model provider. Database tests cover safe Flyway base
 authenticated create/retrieve HTTP workflow. See the [per-skill coverage matrix](verification/MATRIX.md)
 for the exact scope and remaining gaps.
 
+Additional runtime checks cover external issuer/subject identity, tenant-scoped database
+access, Redis concurrency and serialization, and bounded HTTP read retries. The skills
+document failure policies and limitations rather than treating every example as a universal default.
+
 [Agent evaluations](evaluations/README.md) provide repeatable prompts and review criteria for
 Claude Code and Codex. Transcript collection and human review are separate from CI validation;
 a successful model invocation is not a benchmark pass.
@@ -527,6 +548,7 @@ a successful model invocation is not a benchmark pass.
 
 | Repo | Description |
 |------|-------------|
+| [**AgentAccord**](https://github.com/rrezartprebreza/agentaccord) | Check approved engineering policies against source code, AI instructions, and supported Java examples — local CLI/app and GitHub Action |
 | [**Hatch**](https://github.com/rrezartprebreza/hatch) | Multi-module background job library for Spring Boot — REST polling, retry, Redis/JDBC backends, SSE dashboard |
 | [**SpringPulse**](https://github.com/rrezartprebreza/springpulse) | Runtime observability for `@Scheduled` methods — AOP interception, WebSocket dashboard |
 | [**rest-api-generator**](https://github.com/rrezartprebreza/rest-api-generator) | CLI that scaffolds Spring Boot REST APIs from plain English prompts |
