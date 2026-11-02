@@ -19,25 +19,25 @@ Spring AI 1.0.0 / 2.0.0 respectively. Database CI uses PostgreSQL 16.
 | flyway-migrations | SQL, not Java | Shipped migration examples, concurrent index and documented baseline setting |
 | hateoas | No | No |
 | hexagonal-architecture | No | No |
-| http-interface-clients | No | No |
+| http-interface-clients | CatalogHttpClient, both trees | Real stub HTTP server: transient/permanent status classification and read timeout |
 | idempotency-patterns | SQL, not Java | Claim schema, contention, tenant isolation and rollback; not a payment workflow |
 | layered-architecture | CreateOrderRequest, both trees | Bean Validation and HTTP validation; not the full architecture |
 | mcp-server | Boot 4 OrderMcpTools | Compilation only; no protocol session tests |
 | multi-module-maven | No | No |
-| multi-tenancy | No | No |
+| multi-tenancy | Shared-schema templates, both trees | PostgreSQL reads/writes, cache-key isolation, filter cleanup and pooled task propagation |
 | null-safety | No | No |
-| oauth2-resource-server | No | No |
+| oauth2-resource-server | Config, extractor and identity, both trees | Signed-token issuer/audience/expiry rejection, missing scopes and email-independent account mapping |
 | openapi-first | No | No |
 | problem-details-rfc9457 | Handler, both trees | Selected HTTP error contracts |
 | production-observability | No | No |
-| resilience-retry | No | No |
+| resilience-retry | CatalogRetryService, both trees | Real proxies: recovery, exhaustion, permanent errors and interruption |
 | rest-api-conventions | Envelope, page DTO and handler, both trees | Pagination, HTTP errors and fixture create/retrieve |
 | spring-ai-integration | No | No provider or conversation tests |
 | spring-batch | No | No |
 | spring-boot-migration | No | No generated application migration tests |
 | spring-cloud-gateway | No | No |
 | spring-data-jpa | No | Fixture entity checks mappings, versioning and rollback; not every shipped snippet |
-| spring-data-redis | No | No |
+| spring-data-redis | Config, coalescing manager and optional lookup, both trees | Redis 7.4: concurrent loads, TTL, serialization, transaction callbacks; injected outage failures and real recovered reads |
 | spring-modulith | No | No |
 | spring-security-jwt | Templates, both trees | Token/account rejection, authorization and real HTTP authentication |
 | testing-pyramid | No inline examples | Equivalent HTTP workflow fixture; application fixtures and Testcontainers snippets not compiled |
@@ -50,10 +50,12 @@ The [published smoke review](../evaluations/SMOKE-REVIEW.md) records one histori
 first-party-JWT response on an uncommitted tree with the configured default model.
 It is not a current-commit regression run. No Claude result is published.
 
-Before claiming validated behavior for both agents, run all ten configured scenarios from a clean commit,
+Before claiming validated behavior for both agents, run all configured scenarios from a clean commit,
 record the model identifier, CLI version and commit, and review the rubric for each response.
 Separately test actual skill installation and automatic discovery: supplying a skill explicitly
 in a prompt does not demonstrate discovery. Keep transcripts free of credentials and private code.
 
-Next coverage priorities: Redis serialization/cache behavior, HTTP client configuration, retry
-limits and deadline handling, then executable slice/Testcontainers examples.
+Next coverage priorities: full client deadline/cancellation under load, Redis failover and
+cluster behavior, reactive tenant propagation, then executable slice/Testcontainers examples.
+These fixtures do not claim distributed-lock correctness after lease expiry, database RLS
+coverage, production identity-provider integration or autonomous agent benchmark results.

@@ -20,7 +20,7 @@ request validation and response envelope. A minimal JDBC controller checks creat
 401 for anonymous requests, and 400 without persistence for empty items. It does not test
 inventory, a production order controller, or the application-specific SQL fixtures in the skill.
 
-Prerequisites: Maven, Java 17 or 21, and a disposable PostgreSQL 16 database. These tests
+Prerequisites: Maven, Java 17 or 21, disposable PostgreSQL 16 and Redis 7.4 instances. These tests
 insert data and run migrations; never point them at a shared or production database.
 
 ```sh
@@ -28,12 +28,17 @@ docker run --detach --rm --name spring-skills-qa-db \
   -e POSTGRES_USER=skills -e POSTGRES_PASSWORD=skills -e POSTGRES_DB=skills \
   -p 127.0.0.1:55439:5432 postgres:16-alpine
 docker exec spring-skills-qa-db pg_isready -U skills
+docker run --detach --rm --name spring-skills-qa-redis \
+  -p 127.0.0.1:56389:6379 redis:7.4-alpine
+docker exec spring-skills-qa-redis redis-cli ping
 mvn -f verification/behavior/pom.xml -Pboot3 clean test
 mvn -f verification/behavior/pom.xml -Pboot4 clean test
 docker stop spring-skills-qa-db
+docker stop spring-skills-qa-redis
 ```
 
 Wait until pg_isready reports that PostgreSQL is accepting connections before running Maven.
+Wait for Redis PONG too. Use TEST_REDIS_PORT to override its localhost port (default 56389).
 Use TEST_DATABASE_URL to select a different disposable database URL. The fixture username
 and password are both skills. Clean between Boot profiles to avoid stale compiled classes.
 To verify Java 21 compilation, select JDK 21 and pass -Dmaven.compiler.release=21.
@@ -66,3 +71,25 @@ and audit record are test contracts, not verified JPA mappings. No provider cred
 network calls to AI services are needed.
 
 The [coverage matrix](MATRIX.md) separates compiled sources, behavioral checks and agent evidence.
+
+## Identity, tenancy, caching and client contracts
+
+The behavior fixture now compiles the resource-server templates, shared-schema tenant example,
+Redis configuration/coalescing/fallback templates and catalog HTTP/retry adapters from each tree.
+
+- Identity tests use signed test JWTs through a real resource-server filter chain. They cover
+  email changes/reuse, issuer/subject identity, invalid issuer/audience/expiry/signature and scopes.
+- Tenant tests execute the shipped schema and repository against PostgreSQL, try same-ID
+  cross-tenant reads and writes, check cache keys, and reuse one worker after a failed job.
+- Redis tests use a real server and two independent cache managers. Non-locking loads overlap;
+  configured locking coalesces normal concurrent loads. TTL, DTO money/time serialization and
+  database transaction commit/rollback are verified. Outage exception injection checks the
+  read-fallback policy, not network failover or write reconciliation.
+- Client tests use real Spring retry proxies and a local stub HTTP server. Three-attempt bounds,
+  permanent error rejection, pre-call interruption and a delayed-response timeout are checked.
+  They do not establish a total caller deadline or interruption of an already-running request.
+
+Boot 3 uses the BOM-managed Spring Retry line; Boot 4 uses core Framework resilience.
+The Boot 3 fixture verifies an existing dependency, not a recommendation to adopt the
+archived Spring Retry project for new applications.
+Both HTTP adapters use RestClient (Boot 3.2+), not Boot 4 group-registration verification.
