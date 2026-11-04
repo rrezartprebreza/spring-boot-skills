@@ -19,6 +19,7 @@ class JsonValidationTest(unittest.TestCase):
             })
 
     def test_rejects_duplicate_keys_at_any_depth(self):
+        """Reject root, nested, and escape-equivalent duplicates with diagnostics."""
         cases = (
             ('{"plugins": [], "plugins": []}', "plugins"),
             ('{"plugins": [{"name": "boot3", "name": "boot4"}]}', "name"),
@@ -34,6 +35,7 @@ class JsonValidationTest(unittest.TestCase):
                 self.assertIn(f"duplicate JSON key: {key}", error.getvalue())
 
     def test_rejects_non_object_roots(self):
+        """Reject arrays and scalar roots before manifest consumers access fields."""
         for text in ('[]', 'null', '"plugin"', '42', 'true'):
             with self.subTest(text=text), patch.object(Path, "read_text", return_value=text):
                 error = io.StringIO()
