@@ -53,10 +53,24 @@ def fail(message: str) -> None:
     raise SystemExit(1)
 
 
+def unique_json_object(pairs: list[tuple[str, object]]) -> dict:
+    mapping = {}
+    for key, value in pairs:
+        if key in mapping:
+            raise ValueError(f"duplicate JSON key: {key}")
+        mapping[key] = value
+    return mapping
+
+
 def load_json(path: Path) -> dict:
     try:
-        return json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as error:
+        value = json.loads(
+            path.read_text(encoding="utf-8"), object_pairs_hook=unique_json_object
+        )
+        if not isinstance(value, dict):
+            raise ValueError("expected a JSON object")
+        return value
+    except (OSError, ValueError) as error:
         fail(f"invalid JSON in {path.relative_to(ROOT)}: {error}")
 
 
