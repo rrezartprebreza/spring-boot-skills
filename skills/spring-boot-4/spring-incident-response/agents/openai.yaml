@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring Incident Response"
+  short_description: "Triage Spring incidents with bounded evidence work"
+  default_prompt: "Use $spring-incident-response to triage the supplied Spring Boot incident evidence and propose approved next steps without changing production."

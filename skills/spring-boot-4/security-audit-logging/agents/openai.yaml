@@ -1,0 +1,4 @@
+interface:
+  display_name: "Security Audit Logging"
+  short_description: "Design bounded and privacy-aware security records"
+  default_prompt: "Use $security-audit-logging to design security audit events with redaction, durable delivery, and explicit failure behavior."

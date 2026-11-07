@@ -93,6 +93,8 @@ jobs:
         run: mvn --batch-mode --no-transfer-progress -f verification/behavior/pom.xml -P${{ matrix.boot }} -Dmaven.compiler.release=${{ matrix.java }} test
       - name: Test shipped AI audit templates
         run: mvn --batch-mode --no-transfer-progress -f verification/ai/pom.xml -P${{ matrix.boot }} -Dmaven.compiler.release=${{ matrix.java }} test
+      - name: Test shipped security boundaries
+        run: mvn --batch-mode --no-transfer-progress -f verification/security/pom.xml -P${{ matrix.boot }} -Dmaven.compiler.release=${{ matrix.java }} test
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
@@ -101,3 +103,4 @@ jobs:
           path: |
             verification/behavior/target/surefire-reports/
             verification/ai/target/surefire-reports/
+            verification/security/target/surefire-reports/

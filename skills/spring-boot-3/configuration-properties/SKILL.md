@@ -39,6 +39,21 @@ Do not publish configprops/env actuator endpoints publicly or disable sanitizati
 Binding is normally at startup; changing a file or secret does not imply live refresh.
 Define restart/rotation behavior when configuration changes.
 
+## Secret rotation and exposure checks
+
+Document who owns each secret, how consumers reload it, and when the old credential is revoked.
+Configuration binding at startup does not automatically refresh a connection pool, HTTP client,
+signing key or cached credential. Test the real restart/reload path before a rotation rollout.
+Where a provider supports overlapping keys, keep the overlap bounded and verify that consumers
+accept the new key before removing the old one. A compromised key may require immediate
+revocation through the incident owner rather than a normal overlap window.
+
+Check config files, build output, container layers and CI logs for accidental credential exposure.
+Use synthetic canary values in tests, never production secrets. Test that binding failures,
+generated toString methods and startup logs do not echo credentials. If exposure is found,
+coordinate revocation and evidence handling; deleting a file does not invalidate its credential.
+Do not publish secret-bearing diagnostics or rewrite repository history without approval.
+
 ## Verification
 
 Use ApplicationContextRunner with EnableConfigurationProperties to assert valid binding and

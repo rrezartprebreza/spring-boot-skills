@@ -38,6 +38,16 @@ Choose JVM, AOT cache, checkpoint/restore, or native from measured requirements.
 - Generate an SBOM, scan the final image, and regularly rebuild on patched run images.
 - Sign and attest release images where the delivery platform supports it.
 
+Scan the actual final image by immutable digest, including OS packages and bundled Java
+dependencies; record the scanner database timestamp and findings that need manual triage.
+Verify signatures against the expected signer identity and issuer or trusted key, and check
+that provenance refers to the intended source commit and build workflow. A signature from
+an arbitrary identity is not a release policy. Retain SBOM/provenance evidence for the promoted
+digest; rebuilding the same tag produces a different artifact and requires new verification.
+Test untrusted-signer and digest-mismatch rejection before enforcing a deployment policy.
+For dependency/BOM remediation and CI trust-boundary review, use java-supply-chain-security
+if installed; this skill remains responsible for image construction and runtime behavior.
+
 ## Examples
 
 - See `examples/good-dockerfile` and `examples/bad-dockerfile`.

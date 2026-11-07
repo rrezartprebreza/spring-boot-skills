@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring AI Security"
+  short_description: "Bound AI tools and protect tenant-scoped retrieval"
+  default_prompt: "Use $spring-ai-security to review this Spring AI workflow for prompt injection, tool authorization, and tenant data isolation."
