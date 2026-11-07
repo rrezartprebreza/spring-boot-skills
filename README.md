@@ -5,7 +5,7 @@
 <br/>
 <br/>
 
-**Production-grade Spring Boot skills for Claude Code and Codex. Drop a skill into your project and your AI coding agent instantly understands your architecture, patterns, and conventions.**
+**34 Spring Boot skill topics for Claude Code and Codex, each with separate Boot 3 and Boot 4 versions. Practical guidance for architecture, REST APIs, persistence, security, testing, observability, and AI integrations.**
 
 <br/>
 
@@ -23,7 +23,7 @@
 
 <br/>
 
-[**Quick Start**](#-quick-start) · [**Skills Catalog**](#-skills) · [**Before / After**](#-before--after) · [**Skill Anatomy**](#-skill-anatomy) · [**Contributing**](#-contributing)
+[**Browse Website**](https://rrezartprebreza.github.io/spring-boot-skills/) · [**Quick Start**](#-quick-start) · [**Skills Catalog**](#-skills) · [**Before / After**](#-before--after) · [**Skill Anatomy**](#-skill-anatomy) · [**Maintainer**](#maintainer) · [**Contributing**](#-contributing)
 
 </div>
 
@@ -31,11 +31,11 @@
 
 ## Why this exists
 
-AI coding agents are great at Python. They hallucinate in Spring Boot.
+AI coding agents can generate plausible Spring Boot code while missing your project's conventions or mixing incompatible framework versions.
 
 They generate `@Autowired` field injection instead of constructor injection. They use `ResponseEntity<?>` where you have a standard response wrapper. They ignore your existing exception hierarchy and invent a new one. They don't know your project uses Flyway, so they generate schema SQL by hand. They emit pre-GA Spring AI artifact names that no longer exist in Maven Central.
 
-**Skills fix this.** A skill is a markdown file your agent reads before touching your code. It tells the agent *your* conventions, your stack, your gotchas — not generic Spring Boot from 2020.
+**Skills provide task-specific guidance.** Each `SKILL.md` describes when to use it, conventions to follow, and pitfalls to check. Install the version that matches your project, then ask Claude Code or Codex to apply it. Adapt project-specific examples to your existing contracts and review and test the resulting code.
 
 ```mermaid
 flowchart LR
@@ -54,7 +54,12 @@ flowchart LR
     style F fill:#10241a,stroke:#6DB33F,color:#a7f3d0
 ```
 
-This repo is a collection of battle-tested skills. Copy, adapt, drop in.
+### What the collection includes
+
+- **Task-based instructions:** choose skills for endpoint design, database changes, authentication, background jobs, or other concrete work.
+- **Version-specific examples:** separate Boot 3 and Boot 4 guidance, supporting templates, and gotchas.
+- **Claude Code and Codex packaging:** marketplace plugins, individual skill folders, and project instruction templates.
+- **Visible verification scope:** [per-skill coverage](verification/MATRIX.md) and [agent evaluation scenarios](evaluations/README.md), with tested behavior distinguished from guidance that still needs project-level validation.
 
 ---
 
@@ -112,10 +117,10 @@ versions together and recheck the linked official sources before adopting a newe
 
 | Skill | Description | Tags |
 |-------|-------------|------|
-| [**layered-architecture**](skills/spring-boot-4/layered-architecture/) | Enforces Controller → Service → Repository separation. Prevents business logic leaking into controllers or repositories. | `architecture` |
+| [**layered-architecture**](skills/spring-boot-4/layered-architecture/) | Organize controllers, services, and repositories with explicit responsibilities and dependency boundaries. | `architecture` |
 | [**hexagonal-architecture**](skills/spring-boot-4/hexagonal-architecture/) | Ports and adapters pattern for Spring Boot. Keeps domain clean of framework dependencies. | `architecture` `ddd` |
 | [**domain-driven-design**](skills/spring-boot-4/domain-driven-design/) | Aggregates, value objects, domain events with commit-safe publication. Includes JPA mapping conventions. | `ddd` `jpa` |
-| [**multi-module-maven**](skills/spring-boot-4/multi-module-maven/) | Parent POM conventions, shared BOM, inter-module dependency rules. Prevents circular deps. | `maven` `architecture` |
+| [**multi-module-maven**](skills/spring-boot-4/multi-module-maven/) | Structure parent POMs, shared BOMs, and module dependencies with rules for avoiding circular dependencies. | `maven` `architecture` |
 | [**spring-modulith**](skills/spring-boot-4/spring-modulith/) | Module boundaries, verification and durable event publication. | `architecture` `modulith` |
 | [**multi-tenancy**](skills/spring-boot-4/multi-tenancy/) | Tenant resolution, database/schema isolation, tenant-aware persistence, caches, jobs, and migrations. | `architecture` `security` `data` |
 
@@ -123,7 +128,7 @@ versions together and recheck the linked official sources before adopting a newe
 
 | Skill | Description | Tags |
 |-------|-------------|------|
-| [**rest-api-conventions**](skills/spring-boot-4/rest-api-conventions/) | Your project's response envelope, error codes, pagination contract, versioning strategy. Fill in the template. | `rest` `api` |
+| [**rest-api-conventions**](skills/spring-boot-4/rest-api-conventions/) | Design controllers, DTOs, success responses, pagination, HTTP status mapping, and API versioning around existing project contracts. | `rest` `api` |
 | [**openapi-first**](skills/spring-boot-4/openapi-first/) | Generate controllers and DTOs from OpenAPI spec. Uses `openapi-generator-maven-plugin`. | `openapi` `codegen` |
 | [**problem-details-rfc9457**](skills/spring-boot-4/problem-details-rfc9457/) | RFC 9457 compliant error responses with Spring's `ProblemDetail`. Replaces ad-hoc error envelopes. | `error-handling` `rest` |
 | [**idempotency-patterns**](skills/spring-boot-4/idempotency-patterns/) | Concurrent retries, scoped request keys, replay and transaction boundaries. | `api` `transactions` |
@@ -207,10 +212,10 @@ versions together and recheck the linked official sources before adopting a newe
 
 ### Website catalog
 
-The [website](website/README.md) provides searchable Boot 3 and Boot 4 catalogs,
+The [live website](https://rrezartprebreza.github.io/spring-boot-skills/) provides searchable Boot 3 and Boot 4 catalogs,
 skill pages, example previews, and installation commands for Claude Code and Codex.
 It is generated from this repository's skill files and verification matrix.
-See the website README for local development and GitHub Pages deployment.
+See the [website README](website/README.md) for local development and GitHub Pages deployment.
 
 **1. Prepare your coding agent**
 
@@ -312,7 +317,20 @@ codex
 > Generate a CRUD endpoint for the Order entity following our REST conventions
 ```
 
-That's it. Your agent reads the skill before writing a single line.
+After installation, explicitly name a skill in your request and confirm the agent has loaded the intended version. For example, in either Claude Code or Codex:
+
+```text
+Use rest-api-conventions and spring-data-jpa to add a paginated orders endpoint.
+Inspect the existing API contract first and add tests for the pagination behavior.
+
+Use flyway-migrations to plan adding a non-null column to an existing table.
+Account for existing rows and compatibility during a rolling deployment.
+
+Use spring-boot-migration to assess this Boot 3 project for migration to Boot 4.
+List incompatible dependencies and required code changes before editing files.
+```
+
+These are suggested tasks, not recorded agent results. Review the changes and run your project's tests.
 
 ---
 
@@ -551,6 +569,20 @@ a successful model invocation is not a benchmark pass.
 
 ---
 
+## Maintainer
+
+<a href="https://github.com/rrezartprebreza">
+  <img src="website/public/maintainer.jpg" alt="Rrezart Prebreza" width="96" height="96"/>
+</a>
+
+**[Rrezart Prebreza](https://github.com/rrezartprebreza)** is the creator and maintainer of Spring Boot Skills, a collection of practical Spring Boot guidance for developers working with Claude Code and Codex.
+
+[GitHub](https://github.com/rrezartprebreza) · [LinkedIn](https://www.linkedin.com/in/rrezartprebreza/) · [Spring Boot Skills website](https://rrezartprebreza.github.io/spring-boot-skills/)
+
+For questions about the skills, reproducible problems, or suggestions, [open a GitHub issue](https://github.com/rrezartprebreza/spring-boot-skills/issues).
+
+---
+
 ## 🛠️ More from the same workbench
 
 | Repo | Description |
@@ -569,13 +601,5 @@ a successful model invocation is not a benchmark pass.
 <br/>
 
 `spring-boot` · `java` · `claude-code` · `codex` · `mcp` · `spring-ai` · `skills` · `developer-tools`
-
-<br/>
-
-*Built by [@rrezartprebreza](https://github.com/rrezartprebreza) · Pristina, Kosovo*
-
-<br/>
-
-[LinkedIn](https://www.linkedin.com/in/rrezartprebreza/)
 
 </div>
