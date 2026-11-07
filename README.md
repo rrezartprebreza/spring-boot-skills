@@ -205,6 +205,13 @@ versions together and recheck the linked official sources before adopting a newe
 
 ## ⚡ Quick Start
 
+### Website catalog
+
+The [website](website/README.md) provides searchable Boot 3 and Boot 4 catalogs,
+skill pages, example previews, and installation commands for Claude Code and Codex.
+It is generated from this repository's skill files and verification matrix.
+See the website README for local development and GitHub Pages deployment.
+
 **1. Prepare your coding agent**
 
 Install Claude Code if needed:

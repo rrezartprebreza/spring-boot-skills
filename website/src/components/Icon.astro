@@ -1,0 +1,7 @@
+---
+import { ArrowUpRight, ArrowRight, BookOpen, ChevronRight, CodeXml, Copy, FlaskConical, GitFork, Layers, Leaf, Search, ShieldCheck, Sun, Terminal, X } from '@lucide/astro';
+const icons = { ArrowUpRight, ArrowRight, BookOpen, ChevronRight, CodeXml, Copy, FlaskConical, Github: GitFork, Layers, Leaf, Search, ShieldCheck, Sun, Terminal, X };
+const { name, size = 18 } = Astro.props;
+const Symbol = icons[name] ?? BookOpen;
+---
+<Symbol size={size} strokeWidth={1.7} aria-hidden="true" />

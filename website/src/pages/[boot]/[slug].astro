@@ -1,0 +1,24 @@
+---
+import { Code } from 'astro:components';
+import Layout from '../../layouts/Layout.astro';
+import Install from '../../components/Install.astro';
+import Icon from '../../components/Icon.astro';
+import { getCatalog, renderMarkdown, exampleContent, href, REPO } from '../../lib/content.mjs';
+export async function getStaticPaths() { return (await getCatalog()).map(skill => ({ params: { boot: `boot-${skill.version}`, slug: skill.slug }, props: { skill } })); }
+const { skill } = Astro.props;
+const { html, headings } = await renderMarkdown(skill.text, skill.source, true);
+const examples = await Promise.all(skill.examples.map(async file => ({ ...file, content: await exampleContent(file.source) })));
+const languages = { java: 'java', xml: 'xml', yml: 'yaml', yaml: 'yaml', sql: 'sql', json: 'json', md: 'markdown', sh: 'bash', properties: 'properties', kt: 'kotlin' };
+---
+<Layout title={skill.title} description={skill.summary} version={skill.version} slug={skill.slug}>
+  <nav class="breadcrumbs" aria-label="Breadcrumb"><a href={href(`boot-${skill.version}/`)}>Catalog</a><Icon name="ChevronRight" size={14}/><span>{skill.category}</span><Icon name="ChevronRight" size={14}/><span>Boot {skill.version}</span></nav>
+  <header class="detail-header"><span class="eyebrow green">{skill.category}</span><h1>{skill.title}</h1><p>{skill.trigger}</p><a class="source-link" href={`${REPO}/blob/main/${skill.source}`}>View SKILL.md <Icon name="ArrowUpRight" size={15}/></a></header>
+  <div class="doc-grid"><div class="doc-main">
+    <div class="prose" set:html={html}/>
+    <section id="source-files" class="examples"><span class="eyebrow">FROM THE REPOSITORY</span><h2>Examples & templates</h2>
+      {examples.map(file => <details class="example"><summary><span><Icon name="CodeXml" size={16}/>{file.name}</span><span class="small-label">{file.folder}</span></summary><div class="example-body"><a href={`${REPO}/blob/main/${file.source}`} class="source-link">Source on GitHub <Icon name="ArrowUpRight" size={13}/></a><Code code={file.content} lang={languages[file.name.split('.').pop()] ?? (file.name.includes('dockerfile') ? 'dockerfile' : 'text')} theme="github-dark" wrap={false}/></div></details>)}
+    </section>
+    <section id="coverage" class="coverage"><h2>Verification scope</h2><dl><dt>Compiled sources</dt><dd>{skill.compiled}</dd><dt>Runtime checks</dt><dd>{skill.runtime}</dd></dl><p>Coverage describes checked-in fixtures, not a guarantee for every snippet or project.</p><a class="source-link" href={href('verification/')}>Coverage matrix & agent evidence <Icon name="ArrowRight" size={14}/></a></section>
+    <Install version={skill.version}/>
+  </div><aside class="toc"><span class="eyebrow">ON THIS PAGE</span><nav aria-label="On this page">{headings.map(heading => <a href={`#${heading.id}`}>{heading.title}</a>)}<a href="#source-files">Examples & templates</a><a href="#coverage">Verification scope</a><a href="#install-title">Install skills</a></nav></aside></div>
+</Layout>
