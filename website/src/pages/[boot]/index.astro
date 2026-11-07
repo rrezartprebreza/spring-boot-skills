@@ -1,0 +1,6 @@
+---
+import Catalog from '../../components/Catalog.astro';
+export function getStaticPaths() { return ['3', '4'].map(version => ({ params: { boot: `boot-${version}` }, props: { version } })); }
+const { version } = Astro.props;
+---
+<Catalog version={version}/>

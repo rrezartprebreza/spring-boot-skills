@@ -1,0 +1,17 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Icon from '../components/Icon.astro';
+import { getCatalog, REPO, href } from '../lib/content.mjs';
+const catalog = await getCatalog();
+---
+<Layout title="About" section="about">
+  <header class="page-header"><span class="eyebrow green">OPEN SOURCE ENGINEERING KNOWLEDGE</span><h1>Spring Boot Skills.</h1><p>Project-aware guidance for the details generic code generation misses.</p></header>
+  <div class="about-grid"><div class="prose">
+    <h2>Conventions belong with the code.</h2><p>Response contracts, transaction boundaries, tenant isolation, and failure handling are engineering decisions. These skills give Claude Code and Codex a starting point that you can adapt to your team's architecture.</p>
+    <p>The collection contains {new Set(catalog.map(s => s.slug)).size} topics across Spring Boot 3 and Spring Boot 4. Each version has its own instructions, examples, and agent metadata.</p>
+    <h2>A repository, not a black box.</h2><p>The skill pages are generated from the same Markdown files distributed in the plugins. Examples and verification scope link back to their source. The project is MIT licensed and community contributions are welcome.</p>
+    <p><a href={`${REPO}/blob/main/CONTRIBUTING.md`}>Contribute a skill or a gotcha</a> · <a href={href('verification/')}>Read the verification scope</a></p>
+    <h2>Pair guidance with checks.</h2><p>AgentAccord is a companion project for checking supported team-approved rules in source code and AI instruction files. It complements these skills; it does not enforce every recommendation in the catalog.</p><p><a href="https://github.com/rrezartprebreza/agentaccord">Explore AgentAccord</a></p>
+    <p class="small-label">Independent community project. Not affiliated with or endorsed by Spring, Anthropic, or OpenAI.</p>
+  </div><aside class="maintainer"><img src={href('maintainer.jpg')} alt="Rrezart Prebreza" width="160" height="160"/><span class="eyebrow">CREATOR & MAINTAINER</span><h2>Rrezart Prebreza</h2><a href="https://www.linkedin.com/in/rrezartprebreza/">LinkedIn <Icon name="ArrowUpRight" size={15}/></a><a href="https://github.com/rrezartprebreza">GitHub <Icon name="ArrowUpRight" size={15}/></a></aside></div>
+</Layout>

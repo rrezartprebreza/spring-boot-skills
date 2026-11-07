@@ -1,0 +1,84 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Install from './Install.astro';
+import Icon from './Icon.astro';
+import { getCatalog, href } from '../lib/content.mjs';
+const { version = '4' } = Astro.props;
+const skills = (await getCatalog()).filter(skill => skill.version === version);
+---
+<Layout version={version}>
+  <div class="catalog-intro">
+    <div class="intro-meta"><span class="eyebrow green">THE ENGINEERING COLLECTION</span><span class="release-label">SPRING BOOT {version}.x</span></div>
+    <h1>Spring Boot Skills<span class="title-period">.</span></h1>
+    <p>Engineering conventions for <strong>Claude Code</strong> and <strong>Codex</strong>.<br/>From your first endpoint to the production details that matter.</p>
+    <div class="intro-stats"><span><strong>{skills.length}</strong> skills</span><span><strong>2</strong> agents</span><a href={href('verification/')}><Icon name="FlaskConical" size={16}/> Examples & verification <Icon name="ArrowUpRight" size={14}/></a></div>
+  </div>
+  <Install version={version}/>
+  <section class="catalog-section" aria-labelledby="catalog-title" data-catalog>
+    <div class="catalog-toolbar"><div><h2 id="catalog-title">All skills <span class="count">{skills.length}</span></h2><p class="small-label">Spring Boot {version} collection</p></div>
+      <label class="search"><Icon name="Search"/><input type="search" id="skill-search" placeholder="Search skills, topics, conventions..." aria-label="Search skills"/><span class="search-hint">/</span></label>
+    </div>
+    <div class="filter-state"><span id="result-status" role="status" aria-live="polite">{skills.length} skills</span><button id="clear-filters" hidden>Clear filters <Icon name="X" size={13}/></button></div>
+    <div class="skill-grid">
+      {skills.map((skill, i) => <a class="skill-card" href={skill.url} data-category={skill.category} data-search={`${skill.title} ${skill.slug} ${skill.summary} ${skill.trigger} ${skill.tags.join(' ')}`.toLowerCase()}>
+        <div class="card-top"><span class="category-label">{skill.category}</span><span class="index">{String(i + 1).padStart(2, '0')}</span></div>
+        <h3>{skill.title}<Icon name="ArrowUpRight" size={18}/></h3>
+        <p>{skill.summary}</p>
+        <div class="card-bottom"><span>{skill.slug}</span><span><Icon name="CodeXml" size={13}/>{skill.examples.length} files</span></div>
+      </a>)}
+    </div>
+    <div id="no-results" class="empty-state" hidden><Icon name="Search" size={32}/><h3>No matching skills</h3><p>Try another term or clear the selected category.</p></div>
+  </section>
+  <section class="bottom-link"><div><span class="eyebrow">START WITH A TASK</span><h2>A few skills. One concrete goal.</h2></div><a class="button" href={href('guides/')}>Task guides <Icon name="ArrowRight"/></a></section>
+</Layout>
+<script>
+  const search = document.querySelector<HTMLInputElement>('#skill-search')!;
+  const cards = Array.from(document.querySelectorAll<HTMLAnchorElement>('.skill-card'));
+  const clear = document.querySelector<HTMLButtonElement>('#clear-filters')!;
+  let category = '';
+  function update(writeUrl = true) {
+    const query = search.value.trim().toLowerCase();
+    let count = 0;
+    for (const card of cards) {
+      card.hidden = Boolean((category && card.dataset.category !== category) || !query.split(/\s+/).every(word => card.dataset.search!.includes(word)));
+      if (!card.hidden) count++;
+    }
+    document.querySelector('#result-status')!.textContent = `${count} ${count === 1 ? 'skill' : 'skills'}${category ? ` in ${category}` : ''}`;
+    document.querySelector<HTMLElement>('#no-results')!.hidden = count !== 0;
+    clear.hidden = !query && !category;
+    document.querySelector<HTMLSelectElement>('#category-select')!.value = category;
+    document.querySelectorAll<HTMLAnchorElement>('[data-category-link]').forEach(link => {
+      const active = link.dataset.categoryLink === category;
+      link.classList.toggle('active', active);
+      if (active) link.setAttribute('aria-current', 'true'); else link.removeAttribute('aria-current');
+    });
+    if (writeUrl) {
+      const url = new URL(location.href);
+      for (const [key, value] of [['q', search.value], ['category', category]]) {
+        if (value) url.searchParams.set(key, value); else url.searchParams.delete(key);
+      }
+      history.replaceState(null, '', url);
+    }
+    document.querySelectorAll<HTMLAnchorElement>('[data-version-link]').forEach(link => link.search = location.search);
+  }
+  function restore() {
+    const params = new URLSearchParams(location.search);
+    search.value = params.get('q') ?? '';
+    category = params.get('category') ?? '';
+    update(false);
+  }
+  restore();
+  window.addEventListener('popstate', restore);
+  search.addEventListener('input', () => update());
+  document.querySelector<HTMLSelectElement>('#category-select')!.addEventListener('change', event => {
+    category = (event.target as HTMLSelectElement).value; update();
+  });
+  document.querySelectorAll<HTMLAnchorElement>('[data-category-link]').forEach(link => link.addEventListener('click', event => {
+    if (event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    event.preventDefault(); category = link.dataset.categoryLink ?? ''; update();
+  }));
+  clear.addEventListener('click', () => { search.value = ''; category = ''; update(); search.focus(); });
+  document.addEventListener('keydown', event => {
+    if (event.key === '/' && !(event.target instanceof HTMLInputElement) && !(event.target instanceof HTMLTextAreaElement) && !(event.target instanceof HTMLElement && event.target.isContentEditable)) { event.preventDefault(); search.focus(); }
+  });
+</script>

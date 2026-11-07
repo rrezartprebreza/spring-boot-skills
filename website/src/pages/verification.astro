@@ -1,0 +1,11 @@
+---
+import { readFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
+import Layout from '../layouts/Layout.astro';
+import { ROOT, REPO, renderMarkdown } from '../lib/content.mjs';
+const { html } = await renderMarkdown(await readFile(resolve(ROOT, 'verification/MATRIX.md'), 'utf8'), 'verification/MATRIX.md', true);
+---
+<Layout title="Verification" section="verification">
+  <header class="page-header"><span class="eyebrow green">EVIDENCE, NOT ASSUMPTIONS</span><h1>Verification scope.</h1><p>What is checked, what is illustrative, and where agent evidence ends.</p><a class="source-link" href={`${REPO}/actions/workflows/validate.yml`}>Latest CI results</a></header>
+  <div class="prose verification-prose" set:html={html}/>
+</Layout>

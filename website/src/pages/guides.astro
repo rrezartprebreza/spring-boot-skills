@@ -1,0 +1,16 @@
+---
+import Layout from '../layouts/Layout.astro';
+import Icon from '../components/Icon.astro';
+import { getCatalog } from '../lib/content.mjs';
+const catalog = await getCatalog();
+const guides = [
+  { title: 'Build a REST API', category: 'API & PERSISTENCE', description: 'Start at the HTTP boundary, establish your service contracts, then persist and test.', skills: ['rest-api-conventions', 'layered-architecture', 'spring-data-jpa', 'testing-pyramid'] },
+  { title: 'Secure an application', category: 'IDENTITY & ISOLATION', description: 'Validate external identities, enforce tenant boundaries, and verify denied requests.', skills: ['oauth2-resource-server', 'multi-tenancy', 'testing-pyramid'] },
+  { title: 'Migrate to Spring Boot 4', category: 'MIGRATION', description: 'Plan the upgrade, align dependencies, adapt nullability, and run regression tests.', skills: ['spring-boot-migration', 'multi-module-maven', 'null-safety', 'testing-pyramid'] },
+  { title: 'Make remote calls resilient', category: 'DISTRIBUTED SYSTEMS', description: 'Set client contracts and retry boundaries without duplicating side effects.', skills: ['http-interface-clients', 'resilience-retry', 'idempotency-patterns', 'production-observability'] },
+];
+---
+<Layout title="Task guides" section="guides">
+  <header class="page-header"><span class="eyebrow green">COMPOSE YOUR WORKFLOW</span><h1>Start with a task.</h1><p>Curated reading paths through the collection. Adapt each skill to your existing project contracts.</p></header>
+  <div class="guide-list">{guides.map((guide, index) => <section class="guide"><div class="guide-number">0{index + 1}</div><div><span class="eyebrow">{guide.category}</span><h2>{guide.title}</h2><p>{guide.description}</p><ol>{guide.skills.map(slug => <li><span>{catalog.find(s => s.slug === slug).title}</span><div>{['3', '4'].map(version => <a href={catalog.find(s => s.slug === slug && s.version === version).url}>Boot {version} <Icon name="ArrowUpRight" size={13}/></a>)}</div></li>)}</ol></div></section>)}</div>
+</Layout>

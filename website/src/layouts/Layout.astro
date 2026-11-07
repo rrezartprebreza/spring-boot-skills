@@ -1,0 +1,87 @@
+---
+import Icon from '../components/Icon.astro';
+import { getCatalog, href, REPO } from '../lib/content.mjs';
+import '../styles/global.css';
+const { title = 'Spring Boot Skills', description = 'Spring Boot engineering skills for Claude Code and Codex. Browse version-specific guidance, examples, and installation commands.', version = '4', slug, section = 'catalog' } = Astro.props;
+const skills = (await getCatalog()).filter(skill => skill.version === version);
+const categories = [...new Set(skills.map(skill => skill.category))].sort();
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const versionLink = (v) => href(slug ? `boot-${v}/${slug}/` : `boot-${v}/`);
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title === 'Spring Boot Skills' ? title : `${title} | Spring Boot Skills`}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonical} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content={canonical} />
+    <meta name="color-scheme" content="light dark" />
+    <script is:inline>
+      try { document.documentElement.dataset.theme = localStorage.getItem('skills-theme') || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'); } catch {}
+    </script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+    <header class="topbar">
+      <a class="brand" href={href()}><span class="brand-mark"><Icon name="Leaf" size={24}/></span><span>Spring Boot <strong>Skills</strong></span></a>
+      <nav class="toplinks" aria-label="Main navigation">
+        <a href={href(`boot-${version}/`)} aria-current={section === 'catalog' ? 'page' : undefined}>Catalog</a>
+        <a href={href('guides/')} aria-current={section === 'guides' ? 'page' : undefined}>Task guides</a>
+        <a href={href('about/')} aria-current={section === 'about' ? 'page' : undefined}>About</a>
+      </nav>
+      <div class="toptools">
+        <a class="github-link" href={REPO}><Icon name="Github"/><span>GitHub</span><Icon name="ArrowUpRight" size={14}/></a>
+        <button id="theme-toggle" class="icon-button" aria-label="Switch color theme" title="Switch color theme"><Icon name="Sun"/></button>
+      </div>
+    </header>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="sidebar-top"><span class="eyebrow">YOUR STACK</span><span class="small-label">Java 17+</span></div>
+        <nav class="segments version-switch" aria-label="Spring Boot version">
+          {['3', '4'].map(v => <a href={versionLink(v)} data-version-link aria-current={version === v ? 'page' : undefined}>Boot {v}<span class="version-dot"></span></a>)}
+        </nav>
+        <div class="stack-caption">{version === '4' ? 'Framework 7 / Security 7' : 'Framework 6 / Security 6'}</div>
+        <label class="mobile-category"><span class="eyebrow">CATEGORY</span><select id="category-select" aria-label="Skill category"><option value="">All skills ({skills.length})</option>{categories.map(category => <option value={category}>{category}</option>)}</select></label>
+        <details class="category-menu" open>
+          <summary class="eyebrow">BROWSE SKILLS <Icon name="ChevronRight" size={14}/></summary>
+          <nav aria-label="Skill categories" class="categories">
+            <a href={href(`boot-${version}/`)} data-category-link="" class={!slug && section === 'catalog' ? 'active' : ''}><span><Icon name="Layers" size={16}/>All skills</span><small>{skills.length}</small></a>
+            {categories.map(category => <a href={`${href(`boot-${version}/`)}?category=${encodeURIComponent(category)}`} data-category-link={category}><span>{category}</span><small>{skills.filter(s => s.category === category).length}</small></a>)}
+          </nav>
+        </details>
+        <div class="sidebar-links">
+          <a href={href('verification/')}><Icon name="ShieldCheck" size={16}/> Verification</a>
+          <a href={`${REPO}/blob/main/CONTRIBUTING.md`}><Icon name="CodeXml" size={16}/> Contribute <Icon name="ArrowUpRight" size={13}/></a>
+        </div>
+        <a class="author" href="https://www.linkedin.com/in/rrezartprebreza/">
+          <img src={href('maintainer.jpg')} width="32" height="32" alt="" loading="lazy"/>
+          <span>Rrezart Prebreza<small>Creator & maintainer</small></span><Icon name="ArrowUpRight" size={14}/>
+        </a>
+      </aside>
+      <main id="main" tabindex="-1"><slot/></main>
+    </div>
+    <footer class="site-footer"><span>Spring Boot Skills <span class="muted">/ Open source, MIT licensed</span></span><span>Claude Code + Codex <a href={`${REPO}/blob/main/LICENSE`}>License <Icon name="ArrowUpRight" size={12}/></a></span></footer>
+    <script>
+      document.querySelector('#theme-toggle')?.addEventListener('click', () => {
+        const theme = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark';
+        document.documentElement.dataset.theme = theme;
+        try { localStorage.setItem('skills-theme', theme); } catch {}
+      });
+      document.querySelectorAll<HTMLAnchorElement>('[data-version-link]').forEach(link => {
+        link.search = location.search;
+      });
+      if (!document.querySelector('[data-catalog]')) {
+        document.querySelector<HTMLSelectElement>('#category-select')?.addEventListener('change', event => {
+          const value = (event.target as HTMLSelectElement).value;
+          const link = Array.from(document.querySelectorAll<HTMLAnchorElement>('[data-category-link]')).find(link => link.dataset.categoryLink === value);
+          if (link) location.href = link.href;
+        });
+      }
+    </script>
+  </body>
+</html>
