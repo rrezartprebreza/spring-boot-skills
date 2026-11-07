@@ -22,6 +22,7 @@ Spring AI 1.0.0 / 2.0.0 respectively. Database CI uses PostgreSQL 16.
 | hexagonal-architecture | No | No |
 | http-interface-clients | CatalogHttpClient, both trees | Real stub HTTP server: transient/permanent status classification and read timeout |
 | idempotency-patterns | SQL, not Java | Claim schema, contention, tenant isolation and rollback; not a payment workflow |
+| java-supply-chain-security | Python helper, not Java | Offline CycloneDX inventory, malformed input, size/depth limits and CLI; no scanner/signature verification |
 | layered-architecture | CreateOrderRequest, both trees | Bean Validation and HTTP validation; not the full architecture |
 | mcp-server | Boot 4 OrderMcpTools | Compilation only; no protocol session tests |
 | multi-module-maven | No | No |
@@ -33,14 +34,18 @@ Spring AI 1.0.0 / 2.0.0 respectively. Database CI uses PostgreSQL 16.
 | production-observability | No | No |
 | resilience-retry | CatalogRetryService, both trees | Real proxies: recovery, exhaustion, permanent errors and interruption |
 | rest-api-conventions | Envelope, page DTO and handler, both trees | Pagination, HTTP errors and fixture create/retrieve |
+| security-audit-logging | SecurityAuditRecord, both trees | Typed fields, identity requirements and correlation validation; no sink/outbox integration |
 | spring-ai-integration | No | No provider or conversation tests |
+| spring-ai-security | DocumentReadTool, both trees | Scoped in-memory reads, argument validation, concurrent call budget and output limits; no model/adapter tests |
 | spring-batch | No | No |
 | spring-boot-migration | No | No generated application migration tests |
 | spring-cloud-gateway | No | No |
 | spring-data-jpa | No | Fixture entity checks mappings, versioning and rollback; not every shipped snippet |
 | spring-data-redis | Config, coalescing manager and optional lookup, both trees | Redis 7.4: concurrent loads, TTL, serialization, transaction callbacks; injected outage failures and real recovered reads |
+| spring-incident-response | Python helper, not Java | Local hashes, changed/non-regular file rejection and CLI; no live collection or provenance proof |
 | spring-modulith | No | No |
 | spring-security-jwt | Templates, both trees | Token/account rejection, authorization and real HTTP authentication |
+| spring-security-review | DocumentAccess, both trees | Identity/scope rejection and scoped in-memory lookup; no HTTP chain or real SQL for this template |
 | testing-pyramid | No inline examples | Equivalent HTTP workflow fixture; application fixtures and Testcontainers snippets not compiled |
 | transactional-patterns | No | Fixture rollback only; no full skill-specific suite |
 | webflux-reactive-patterns | No | No |

@@ -16,9 +16,9 @@ test('catalog filters, empty state, reset and URL persistence', async ({ page })
   await page.getByRole('button', { name: 'Clear filters' }).click();
   if (await page.locator('#category-select').isVisible()) await page.locator('#category-select').selectOption('Security');
   else await page.locator('[data-category-link="Security"]').click();
-  await expect(page.locator('.skill-card:visible')).toHaveCount(2);
+  await expect(page.locator('.skill-card:visible')).toHaveCount(catalog.filter(skill => skill.version === '4' && skill.category === 'Security').length);
   await page.getByRole('navigation', { name: 'Spring Boot version' }).getByRole('link', { name: 'Boot 3' }).click();
-  await expect(page.locator('.skill-card:visible')).toHaveCount(2);
+  await expect(page.locator('.skill-card:visible')).toHaveCount(catalog.filter(skill => skill.version === '3' && skill.category === 'Security').length);
   await expect(page).toHaveURL(/boot-3\/\?category=Security/);
 });
 
@@ -52,7 +52,7 @@ test('skill page, version counterpart, source examples, anchors and themes', asy
 });
 
 test('responsive pages fit the viewport and render media', async ({ page }, testInfo) => {
-  for (const path of ['', 'boot-4/spring-data-jpa/', 'guides/', 'verification/', 'about/']) {
+  for (const path of ['', 'boot-4/spring-data-jpa/', 'boot-4/java-supply-chain-security/', 'boot-3/spring-ai-security/', 'guides/', 'verification/', 'about/']) {
     await page.goto(`${base}${path}`);
     await expect(page.locator('h1')).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1)).toBe(true);

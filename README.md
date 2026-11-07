@@ -9,7 +9,7 @@
 
 <br/>
 
-[![skills](https://img.shields.io/badge/skills-34_%C3%97_2-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
+[![skills](https://img.shields.io/badge/skills-39_%C3%97_2-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x_%7C_4.x-6DB33F?style=for-the-badge&labelColor=0f172a&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&labelColor=0f172a&logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/License-MIT-94a3b8?style=for-the-badge&labelColor=0f172a)](LICENSE)
@@ -179,12 +179,17 @@ versions together and recheck the linked official sources before adopting a newe
 |-------|-------------|------|
 | [**spring-security-jwt**](skills/spring-boot-4/spring-security-jwt/) | JWT auth filter chain, access and refresh token validation, RBAC with method security. Opinionated starting point. | `security` `jwt` |
 | [**oauth2-resource-server**](skills/spring-boot-4/oauth2-resource-server/) | OAuth2 resource server config, JWT claim extraction, scope-based authorization. | `security` `oauth2` |
+| [**spring-security-review**](skills/spring-boot-4/spring-security-review/) | Evidence-backed review of object authorization, tenant boundaries, untrusted inputs, and management exposure. | `security` `review` |
+| [**java-supply-chain-security**](skills/spring-boot-4/java-supply-chain-security/) | Dependency/BOM risk, offline SBOM inventory, compatible remediation, and release provenance. | `security` `supply-chain` |
+| [**security-audit-logging**](skills/spring-boot-4/security-audit-logging/) | Typed security events, privacy boundaries, durable delivery design, and explicit audit failure policies. | `security` `audit` |
+| [**spring-incident-response**](skills/spring-boot-4/spring-incident-response/) | Scoped incident triage, local evidence fingerprints, redacted handoffs, and approval before containment. | `security` `operations` |
 
 ### 🤖 AI & MCP
 
 | Skill | Description | Tags |
 |-------|-------------|------|
 | [**spring-ai-integration**](skills/spring-boot-4/spring-ai-integration/) | Spring AI ChatClient, chat memory, RAG pipeline, structured output. Real GA artifact names — no dead pre-GA coordinates. | `spring-ai` `llm` |
+| [**spring-ai-security**](skills/spring-boot-4/spring-ai-security/) | Prompt-injection threat modeling, server-authorized tools, tenant-scoped retrieval, and execution budgets. | `spring-ai` `security` |
 | [**mcp-server**](skills/spring-boot-4/mcp-server/) | Build MCP servers with the Java SDK 2.x and Spring AI 2.0 native annotations. Tool registration, Streamable HTTP, and stdio safety. | `mcp` `ai-agents` |
 | [**ai-observability**](skills/spring-boot-4/ai-observability/) | Token usage tracking, latency monitoring, prompt/response logging for Spring AI apps. | `observability` `spring-ai` |
 
@@ -488,7 +493,7 @@ Without the skill, the agent guesses: dead pre-GA artifact names, removed SDK co
 ## 🗺️ Roadmap
 
 - [x] Skills for Spring Batch
-- [x] Spring Boot 4 versions of all 34 skills (`skills/spring-boot-4/`)
+- [x] Spring Boot 4 versions of all 39 skills (`skills/spring-boot-4/`)
 - [x] Skills for Spring Cloud Gateway
 - [x] Skills for Spring WebFlux / reactive patterns
 - [x] Skills for multi-tenancy
@@ -519,9 +524,14 @@ bash scripts/validate-skills.sh
 ```
 
 The validator parses YAML safely, rejects duplicate keys, and checks both version trees, metadata,
-README links and marketplace packaging. There are **34 topics with Boot 3 and Boot 4 variants**.
+README links and marketplace packaging. There are **39 topics with Boot 3 and Boot 4 variants**.
 
 ### Executable verification
+
+The [security fixture](verification/security/README.md) tests the shipped authorization,
+AI tool-boundary and audit-record templates in both version trees. Offline Python tests cover
+SBOM inventory and evidence fingerprints. These checks do not claim live vulnerability scanning,
+provider-backed prompt-injection resistance, durable audit delivery, or production incident validation.
 
 [The behavior fixture](verification/README.md) compiles the shipped JWT, Problem Details,
 pagination and configuration templates. Its tests cover token/account rejection, HTTP error

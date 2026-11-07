@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring Security Review"
+  short_description: "Review Spring authorization and attack surfaces"
+  default_prompt: "Use $spring-security-review to review this Spring Boot application's security boundaries and propose evidence-backed fixes."
