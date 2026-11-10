@@ -29,6 +29,7 @@
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-security</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-validation</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-jpa</artifactId></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-redis</artifactId></dependency>
         <dependency><groupId>${flyway.group}</groupId><artifactId>${flyway.artifact}</artifactId></dependency>
         <dependency><groupId>org.flywaydb</groupId><artifactId>flyway-database-postgresql</artifactId></dependency>
         <dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>runtime</scope></dependency>
@@ -64,6 +65,9 @@
                         <include>rest-api-conventions/templates/ApiResponse.java</include>
                         <include>rest-api-conventions/templates/PageResponse.java</include>
                         <include>configuration-properties/examples/ClientProperties.java</include>
+                        <include>async-execution/templates/*.java</include>
+                        <include>scheduled-tasks/templates/*.java</include>
+                        <include>spring-data-redis/templates/AtomicWindowLimiter.java</include>
                     </includes>
                 </configuration>
             </plugin>

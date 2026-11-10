@@ -59,6 +59,14 @@ jobs:
         boot: [boot3, boot4]
         java: ["17", "21"]
     services:
+      redis:
+        image: redis:7.4-alpine
+        ports: ["6379:6379"]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
       postgres:
         image: postgres:16-alpine
         env:
@@ -78,9 +86,10 @@ jobs:
           distribution: temurin
           java-version: ${{ matrix.java }}
           cache: maven
-      - name: Test shipped templates against PostgreSQL
+      - name: Test shipped templates against PostgreSQL and Redis
         env:
           TEST_DATABASE_URL: jdbc:postgresql://localhost:5432/skills
+          TEST_REDIS_PORT: "6379"
         run: mvn --batch-mode --no-transfer-progress -f verification/behavior/pom.xml -P${{ matrix.boot }} -Dmaven.compiler.release=${{ matrix.java }} test
       - name: Upload test reports
         if: always()

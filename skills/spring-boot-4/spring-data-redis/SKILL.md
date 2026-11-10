@@ -140,23 +140,23 @@ public class OrderCacheService {
 
 ## Rate Limiting with Redis
 
-```java
-@Component
-@RequiredArgsConstructor
-public class RateLimiter {
+Use [AtomicWindowLimiter](templates/AtomicWindowLimiter.java) with StringRedisTemplate.
+It runs a single-key Lua script: the first allowed request creates the counter and expiry
+in one SET; later requests increment only below the limit and do not extend the window.
+Separate INCR and EXPIRE calls can leave a permanent counter if the client fails between them.
 
-    private final RedisTemplate<String, String> redisTemplate;
+This is a first-request-anchored fixed window, not a sliding window or token bucket; bursts
+across expiry are possible. The example restricts windows to 1ms through one day. Derive the
+bounded bucket from trusted tenant/principal and operation data, not arbitrary client keys.
+Keep quota/window settings consistent across callers, bound key cardinality and use a dedicated
+namespace. The v2 prefix avoids reusing counters leaked by the old non-atomic example.
 
-    public boolean isAllowed(String identifier, int maxRequests, Duration window) {
-        String key = "ratelimit:" + identifier;
-        Long count = redisTemplate.opsForValue().increment(key);
-        if (count == 1) {
-            redisTemplate.expire(key, window);
-        }
-        return count <= maxRequests;
-    }
-}
-```
+Redis errors propagate: choose the endpoint's explicit fail-closed or fail-open policy; do not
+silently grant permission on infrastructure failure. Do not pipeline this boolean decision.
+Redis restart/failover can lose counters; this is traffic control, not a financial quota ledger.
+Test simultaneous requests, expiry, scope isolation and unavailable Redis against real Redis.
+See [Redis INCR rate-limiter discussion](https://redis.io/docs/latest/commands/incr/) and
+[Spring Data Redis scripting](https://docs.spring.io/spring-data/redis/reference/redis/scripting.html).
 
 ## application.yml
 
@@ -184,14 +184,16 @@ the same value (the "thundering herd"). For expensive, high-traffic loads, let o
 the rest wait:
 
 ```java
-// sync = true — only one thread computes the value; others block on it
+// sync = true requests provider-supported synchronized loading; verify the actual provider.
 @Cacheable(value = "products", key = "#id", sync = true)
 public ProductResponse findById(UUID id) { ... }
 ```
 
-`sync = true` serializes recomputation per key within a single instance. For a fleet-wide guarantee,
-add a short Redis lock (`SETNX` with a TTL) around the recompute. Pair with jittered TTLs so a batch of
-keys written together doesn't all expire on the same second.
+`sync = true` is a provider-dependent hint, not a fleet-wide guarantee. Verify the configured
+Cache implementation. If coordination is needed, use a tested mechanism with lock ownership,
+safe release and expiry behavior; bare SETNX plus TTL is insufficient for stale-owner safety.
+Pair this with appropriate TTL jitter and an explicit stale-data policy.
+See [Spring's synchronized caching contract](https://docs.spring.io/spring-framework/reference/integration/cache/annotations.html#cache-annotations-cacheable-synchronized).
 
 ## Gotchas
 - Agent uses Java serialization for values — always use JSON (`GenericJacksonJsonRedisSerializer`)
@@ -199,7 +201,8 @@ keys written together doesn't all expire on the same second.
 - Agent uses no TTL — always set expiry, memory is not infinite
 - Agent forgets `@EnableCaching` — `@Cacheable` silently does nothing without it
 - Agent caches `null` values — use `.disableCachingNullValues()` to avoid storing misses
-- Agent leaves hot keys unprotected — use `@Cacheable(sync = true)` to prevent stampede on expiry
+- Agent treats sync = true as a distributed lock - verify provider behavior and coordinate explicitly if needed.
+- Agent separates counter creation from expiry - use one atomic script with an expiring initial SET.
 - Agent gives every entry the same TTL — add jitter so keys don't expire in a synchronized wave
 - Agent uses `GenericJackson2JsonRedisSerializer` — deprecated Jackson 2 API; use `GenericJacksonJsonRedisSerializer` (Jackson 3, `tools.jackson`)
 - Agent expects default typing out of the box — the Jackson 3 serializer ships with it OFF; call `.enableDefaultTyping(validator)` or `@Cacheable` hits come back as `LinkedHashMap` and throw `ClassCastException`

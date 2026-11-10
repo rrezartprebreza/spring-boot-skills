@@ -1,0 +1,6 @@
+# GOOD: no schedule until explicitly configured; Spring cron includes seconds.
+jobs:
+  stale-orders:
+    cron: ${STALE_ORDER_CRON:-} # for example: "0 */5 * * * *"
+    zone: UTC
+# Configure @EnableScheduling and Clock/SweepAction beans before enabling this job.

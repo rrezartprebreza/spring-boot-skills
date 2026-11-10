@@ -1,0 +1,4 @@
+interface:
+  display_name: "Scheduled Tasks"
+  short_description: "Cron, safe job triggers and replica coordination"
+  default_prompt: "Use $scheduled-tasks to review cron configuration, duplicate execution and recovery for this scheduled job."
