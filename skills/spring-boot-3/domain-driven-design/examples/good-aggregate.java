@@ -5,16 +5,25 @@ public class Order {
     private final OrderId id;
     private final CustomerId customerId;
     private final EmailAddress customerEmail;
+    private final Currency currency;
     private OrderStatus status;
     private Money total;
     private final List<OrderItem> items = new ArrayList<>();
     @Transient
     private final List<Object> domainEvents = new ArrayList<>();
 
+    private Order(OrderId id, CustomerId customerId, EmailAddress customerEmail, Currency currency) {
+        this.id = Objects.requireNonNull(id);
+        this.customerId = Objects.requireNonNull(customerId);
+        this.customerEmail = Objects.requireNonNull(customerEmail);
+        this.currency = Objects.requireNonNull(currency);
+        this.status = OrderStatus.DRAFT;
+        this.total = Money.zero(currency);
+    }
+
     // Static factory — enforces valid initial state
-    public static Order create(CustomerId customerId, EmailAddress email) {
-        Order order = new Order(OrderId.generate(), customerId, email, OrderStatus.DRAFT, Money.ZERO);
-        return order;
+    public static Order create(CustomerId customerId, EmailAddress email, Currency currency) {
+        return new Order(OrderId.generate(), customerId, email, currency);
     }
 
     // Behavior methods enforce invariants
@@ -23,6 +32,8 @@ public class Order {
             throw new OrderNotModifiableException(id);
         if (quantity <= 0)
             throw new InvalidQuantityException(quantity);
+        if (!unitPrice.currency().equals(currency))
+            throw new CurrencyMismatchException(currency, unitPrice.currency());
         items.add(new OrderItem(productId, name, quantity, unitPrice));
         recalculateTotal();
     }
@@ -52,11 +63,12 @@ public class Order {
     private void recalculateTotal() {
         this.total = items.stream()
             .map(OrderItem::lineTotal)
-            .reduce(Money.ZERO, Money::add);
+            .reduce(Money.zero(currency), Money::add);
     }
 
     // No public setters — state changes only through behavior methods
     public OrderId getId() { return id; }
+    public CustomerId getCustomerId() { return customerId; }
     public OrderStatus getStatus() { return status; }
     public Money getTotal() { return total; }
     public List<OrderItem> getItems() { return Collections.unmodifiableList(items); }

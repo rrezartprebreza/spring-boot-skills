@@ -29,7 +29,8 @@ public class OrderJpaEntity {
     @Column(name = "customer_email", nullable = false)
     private String customerEmail;
 
-    @Enumerated(EnumType.STRING)
+    // Stored as the enum's name; the persistence mapper converts to/from OrderStatus.
+    // (@Enumerated only applies to enum-typed fields — on a String Hibernate fails at startup.)
     @Column(nullable = false)
     private String status;
 

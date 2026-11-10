@@ -28,6 +28,12 @@ suite and project-specific tests.
 No unattended model calls run in CI. CI validates case structure; model evaluation requires an
 authenticated CLI. No model benchmark score is claimed without reviewed transcripts.
 
+Security scenarios cover object authorization, SBOM interpretation, AI tool/memory boundaries,
+audit commit/failure behavior, and offline incident handling in both Boot trees. They use
+synthetic inputs and do not authorize active scans, private-data uploads or production changes.
+Their criteria are intended for separate Claude Code and Codex response reviews; JSON validation
+alone is not a passing agent evaluation.
+
 Cases may declare `references`: paths relative to their Boot version's skill tree, inside
 one of the selected skills. Use these for relevant SQL, configuration or good/bad examples
 that the tool-free evaluator otherwise cannot open. Selected SKILL.md files and Java
@@ -41,3 +47,7 @@ evaluation protocols until transcripts are collected and reviewed. Their Java re
 tests cover narrower executable invariants, not agent behavior or production readiness.
 
 See [the initial smoke review](SMOKE-REVIEW.md) for the limited run completed during development.
+
+For a practical task and a baseline-versus-skills collection procedure, see the
+[walkthrough](WALKTHROUGH.md). Use `--context baseline` to omit the catalog and reference
+content; the default `--context skills` retains the reference-assisted evaluation.

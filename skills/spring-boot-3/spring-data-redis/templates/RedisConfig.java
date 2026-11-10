@@ -1,8 +1,8 @@
 package com.example.config;
 
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.jsontype.impl.LaissezFaireSubTypeValidator;
+import com.fasterxml.jackson.databind.json.JsonMapper;
+import com.fasterxml.jackson.databind.jsontype.BasicPolymorphicTypeValidator;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -27,9 +27,9 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(connectionFactory);
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer(redisObjectMapper()));
+        template.setValueSerializer(jsonSerializer());
         template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer(redisObjectMapper()));
+        template.setHashValueSerializer(jsonSerializer());
         return template;
     }
 
@@ -40,7 +40,7 @@ public class RedisConfig {
             .disableCachingNullValues()
             .serializeValuesWith(
                 RedisSerializationContext.SerializationPair
-                    .fromSerializer(new GenericJackson2JsonRedisSerializer(redisObjectMapper())));
+                    .fromSerializer(jsonSerializer()));
 
         // Per-cache TTL overrides
         Map<String, RedisCacheConfiguration> cacheConfigs = Map.of(
@@ -51,17 +51,28 @@ public class RedisConfig {
 
         return RedisCacheManager.builder(connectionFactory)
             .cacheDefaults(defaultConfig)
+            .transactionAware()   // put/evict only after the surrounding transaction commits
             .withInitialCacheConfigurations(cacheConfigs)
             .build();
     }
 
-    private ObjectMapper redisObjectMapper() {
-        ObjectMapper mapper = new ObjectMapper();
-        mapper.registerModule(new JavaTimeModule());
-        mapper.activateDefaultTyping(
-            LaissezFaireSubTypeValidator.instance,
-            ObjectMapper.DefaultTyping.NON_FINAL,
-            JsonTypeInfo.As.PROPERTY);
-        return mapper;
+    // Records are final, so DefaultTyping.NON_FINAL writes no type id for them and every
+    // cache read fails ("missing type id property '@class'"). The builder's defaultTyping(true)
+    // types user classes too; the validator limits type ids to an allow-list instead of
+    // LaissezFaire's "any class". BigDecimal is non-final, so java.math must be allowed.
+    private GenericJackson2JsonRedisSerializer jsonSerializer() {
+        ObjectMapper mapper = JsonMapper.builder()
+            .addModule(new JavaTimeModule())
+            .polymorphicTypeValidator(BasicPolymorphicTypeValidator.builder()
+                .allowIfSubType("com.example.")   // your DTO packages
+                .allowIfSubType("java.util.")
+                .allowIfSubType("java.math.")
+                .allowIfSubType("java.time.")
+                .build())
+            .build();
+        return GenericJackson2JsonRedisSerializer.builder()
+            .objectMapper(mapper)
+            .defaultTyping(true)
+            .build();
     }
 }

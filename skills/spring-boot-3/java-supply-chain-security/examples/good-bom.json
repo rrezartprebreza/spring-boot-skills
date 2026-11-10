@@ -1,0 +1,25 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "type": "application",
+      "name": "synthetic-review-fixture",
+      "version": "1.0.0"
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "group": "dev.example",
+      "name": "synthetic-library",
+      "version": "1.0.0",
+      "purl": "pkg:maven/dev.example/synthetic-library@1.0.0"
+    },
+    {
+      "type": "library",
+      "name": "unidentified-bundled-component"
+    }
+  ]
+}

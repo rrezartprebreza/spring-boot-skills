@@ -43,7 +43,17 @@ def reference_paths(case):
     return paths
 
 
-def prompt_for(case):
+def prompt_for(case, context="skills"):
+    if context not in ("skills", "baseline"):
+        raise ValueError(f"unknown context: {context}")
+    instructions = (
+        "This is a response-level implementation evaluation. Do not use tools or modify files. "
+        "Treat the request below as the user's task. "
+        "Provide concrete implementation guidance and code where necessary. "
+        "Preserve the stated project conventions. Do not grade your own response.\n\n"
+    )
+    if context == "baseline":
+        return instructions + "USER REQUEST\n" + case["prompt"]
     catalog = []
     for path in sorted((ROOT / "skills").glob("*/*/SKILL.md")):
         _, description = frontmatter(path, path.read_text())
@@ -58,10 +68,7 @@ def prompt_for(case):
         for path in dict.fromkeys(path.resolve() for path in paths)
     ]
     return (
-        "This is a response-level skill evaluation. Do not use tools or modify files. "
-        "Treat the request below as the user's task. State which versioned skill paths apply, "
-        "then provide concrete implementation guidance and code where necessary. "
-        "Preserve the stated project conventions. Do not grade your own response.\n\n"
+        instructions
         + "CATALOG\n" + "\n".join(catalog)
         + "\n\nAVAILABLE REFERENCE CONTENT\n" + "\n\n".join(references)
         + "\n\nUSER REQUEST\n" + case["prompt"]
@@ -75,6 +82,8 @@ def main():
     parser.add_argument("--executable", help="Optional absolute CLI path")
     parser.add_argument("--model", help="Record and select a specific model for reproducibility")
     parser.add_argument("--case", help="Case ID; omit to collect all cases")
+    parser.add_argument("--context", choices=["skills", "baseline"], default="skills",
+                        help="Supply repository references (default) or only the user request")
     parser.add_argument("--output", type=Path, default=ROOT / "evaluations/results")
     args = parser.parse_args()
     cases = load_cases()
@@ -94,9 +103,9 @@ def main():
     dirty = bool(subprocess.check_output(["git", "status", "--porcelain"], cwd=ROOT, text=True))
     version = subprocess.run([executable, "--version"], capture_output=True, text=True, check=True).stdout.strip()
     for case in selected:
-        prompt = prompt_for(case)
+        prompt = prompt_for(case, args.context)
         stamp = datetime.datetime.now(datetime.timezone.utc).strftime("%Y%m%dT%H%M%S%fZ")
-        prefix = args.output / f"{stamp}-{args.agent}-{case['id']}"
+        prefix = args.output / f"{stamp}-{args.agent}-{case['id']}-{args.context}"
         with tempfile.TemporaryDirectory(prefix="spring-skill-eval-") as directory:
             if args.agent == "codex":
                 response = Path(directory) / "response.txt"
@@ -113,7 +122,8 @@ def main():
                 record = {"exit_code": result.returncode, "response": answer, "stderr": result.stderr}
             except subprocess.TimeoutExpired as error:
                 record = {"exit_code": None, "response": "", "stderr": "Timed out after 300 seconds"}
-        record.update({"case": case["id"], "agent": args.agent, "model": args.model or "CLI default",
+        record.update({"case": case["id"], "context": args.context,
+                       "agent": args.agent, "model": args.model or "CLI default",
                        "cli_version": version, "revision": revision, "dirty_worktree": dirty,
                        "prompt": prompt, "review_status": "unreviewed", "criteria": case["criteria"]})
         prefix.with_suffix(".json").write_text(json.dumps(record, indent=2) + "\n")

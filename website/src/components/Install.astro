@@ -1,0 +1,36 @@
+---
+import Icon from './Icon.astro';
+import { installCommand } from '../lib/content.mjs';
+const { version = '4' } = Astro.props;
+---
+<details class="install" open aria-labelledby="install-title">
+  <summary class="install-heading"><div><span class="eyebrow">ADD TO YOUR AGENT</span><h2 id="install-title">Install Boot {version} skills</h2></div><Icon name="ChevronRight" size={20}/></summary>
+  <div class="install-toolbar">
+    <div class="segments agent-tabs" role="group" aria-label="Coding agent">
+      <button data-agent="claude" aria-pressed="true">Claude Code</button>
+      <button data-agent="codex" aria-pressed="false">Codex</button>
+    </div>
+    <button class="icon-button copy-command" aria-label="Copy installation commands" title="Copy installation commands"><Icon name="Copy" size={16}/></button>
+  </div>
+  {['claude', 'codex'].map(agent => <pre data-install-agent={agent} hidden={agent !== 'claude'}><code>{installCommand(agent, version)}</code></pre>)}
+  <div class="install-footer"><span>Requires the selected agent CLI with plugin support.</span><span class="copy-status" role="status" aria-live="polite"></span></div>
+  <noscript><h3>Codex</h3><pre><code>{installCommand('codex', version)}</code></pre></noscript>
+</details>
+<script>
+  document.querySelectorAll<HTMLElement>('.install').forEach(panel => {
+    if (matchMedia('(max-width: 760px)').matches) (panel as HTMLDetailsElement).open = false;
+    const status = panel.querySelector<HTMLElement>('.copy-status')!;
+    panel.querySelectorAll<HTMLButtonElement>('[data-agent]').forEach(button => {
+      button.addEventListener('click', () => {
+        panel.querySelectorAll('[data-agent]').forEach(tab => tab.setAttribute('aria-pressed', String(tab === button)));
+        panel.querySelectorAll<HTMLElement>('[data-install-agent]').forEach(pre => pre.hidden = pre.dataset.installAgent !== button.dataset.agent);
+        status.textContent = '';
+      });
+    });
+    panel.querySelector('.copy-command')?.addEventListener('click', async () => {
+      const text = panel.querySelector('[data-install-agent]:not([hidden])')?.textContent ?? '';
+      try { await navigator.clipboard.writeText(text); status.textContent = 'Copied'; }
+      catch { status.textContent = 'Copy unavailable. Select the commands to copy.'; }
+    });
+  });
+</script>

@@ -115,13 +115,16 @@ public class AiConfig {
 ```java
 // src/main/resources/prompts/analyze-order.st
 // Analyze this order and identify any anomalies:
-// Customer: {customer}
+// Customer: {customerEmail}
 // Items: {items}
 // Total: {total}
 // Flag any unusual patterns.
 
 @Service
+@RequiredArgsConstructor
 public class OrderAnalysisService {
+
+    private final ChatClient chatClient;
 
     @Value("classpath:prompts/analyze-order.st")
     private Resource promptTemplate;
@@ -130,7 +133,7 @@ public class OrderAnalysisService {
         return chatClient.prompt()
             .advisors(a -> a.param(ChatMemory.CONVERSATION_ID, conversationId))
             .user(u -> u.text(promptTemplate)
-                .param("customer", order.getCustomerEmail())
+                .param("customerEmail", order.getCustomerEmail()) // must match {customerEmail} in the .st
                 .param("items", order.getItems().toString())
                 .param("total", order.getTotal()))
             .call()
@@ -246,6 +249,7 @@ spring:
 ```
 
 ## Gotchas
+- Agent binds `.param("customer", ...)` when the `.st` file says `{customerEmail}` — the default renderer fails with "Not all variables were replaced"; keep param names and template placeholders identical
 - Agent uses pre-GA artifact names (`spring-ai-anthropic-spring-boot-starter`) — GA is `spring-ai-starter-model-anthropic`
 - Agent writes `new MessageChatMemoryAdvisor(new InMemoryChatMemory())` — both removed in GA; use `MessageChatMemoryAdvisor.builder(chatMemory)` + `MessageWindowChatMemory`
 - Agent writes `SearchRequest.defaults().withTopK(n)` — GA is `SearchRequest.builder().topK(n).build()`

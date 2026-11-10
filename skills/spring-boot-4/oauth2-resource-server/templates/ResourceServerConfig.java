@@ -40,10 +40,9 @@ public class ResourceServerConfig {
 
     @Bean
     public JwtAuthenticationConverter jwtAuthenticationConverter() {
-        // Standard OAuth2 scopes (e.g., Okta, Auth0)
+        // Defaults read the "scope" OR "scp" claim -> SCOPE_*. Setting the claim name to
+        // "scope" would drop the scp fallback that Okta and Entra ID access tokens use.
         JwtGrantedAuthoritiesConverter grantedAuthoritiesConverter = new JwtGrantedAuthoritiesConverter();
-        grantedAuthoritiesConverter.setAuthoritiesClaimName("scope");
-        grantedAuthoritiesConverter.setAuthorityPrefix("SCOPE_");
 
         JwtAuthenticationConverter converter = new JwtAuthenticationConverter();
         converter.setJwtGrantedAuthoritiesConverter(grantedAuthoritiesConverter);

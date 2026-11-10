@@ -6,7 +6,8 @@
         "-jar",
         "/path/to/your/order-service.jar",
         "--spring.profiles.active=mcp",
-        "--spring.ai.mcp.server.transport=stdio"
+        "--spring.ai.mcp.server.stdio=true",
+        "--spring.main.banner-mode=off"
       ],
       "env": {
         "SPRING_DATASOURCE_URL": "jdbc:postgresql://localhost:5432/orders",

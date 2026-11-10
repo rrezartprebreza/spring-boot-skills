@@ -5,6 +5,8 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.data.redis.cache.RedisCacheConfiguration;
 import org.springframework.data.redis.cache.RedisCacheManager;
+import org.springframework.data.redis.cache.RedisCacheWriter;
+import org.springframework.data.redis.cache.BatchStrategies;
 import org.springframework.data.redis.connection.RedisConnectionFactory;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.serializer.GenericJacksonJsonRedisSerializer;
@@ -46,8 +48,12 @@ public class RedisConfig {
             "users", defaultConfig.entryTtl(Duration.ofMinutes(5))
         );
 
-        return RedisCacheManager.builder(connectionFactory)
+        // Redis 4 can otherwise schedule writes asynchronously with Lettuce.
+        var writer = RedisCacheWriter.create(connectionFactory,
+            config -> config.immediateWrites().batchStrategy(BatchStrategies.scan(1000)));
+        return RedisCacheManager.builder(writer)
             .cacheDefaults(defaultConfig)
+            .transactionAware()   // put/evict only after the surrounding transaction commits
             .withInitialCacheConfigurations(cacheConfigs)
             .build();
     }
@@ -65,6 +71,8 @@ public class RedisConfig {
             .enableDefaultTyping(BasicPolymorphicTypeValidator.builder()
                 .allowIfSubType("com.example.")   // your DTO packages
                 .allowIfSubType("java.util.")     // collections
+                .allowIfSubType("java.math.")     // BigDecimal is non-final, so it carries a type id
+                .allowIfSubType("java.time.")
                 .build())
             .build();
     }

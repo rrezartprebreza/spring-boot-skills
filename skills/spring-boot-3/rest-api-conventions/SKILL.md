@@ -145,21 +145,35 @@ the API. Validate sort fields against an allowlist and add an ID tie-breaker to 
 ## Legacy Envelope Exception Handler
 
 ```java
+// Extends ResponseEntityExceptionHandler: without it the Exception.class catch-all turns
+// malformed JSON, 405, bad path variables and unknown URLs into 500. Full version, verified
+// against Boot 3 and 4: templates/GlobalExceptionHandler.java
 @RestControllerAdvice
-@RequiredArgsConstructor
-public class GlobalExceptionHandler {
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound(EntityNotFoundException ex) {
         return ResponseEntity.status(404).body(ApiResponse.error("NOT_FOUND", ex.getMessage()));
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex) {
+    @ExceptionHandler(AccessDeniedException.class) // @PreAuthorize denials surface here, not in the filter
+    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity.status(403).body(ApiResponse.error("FORBIDDEN", "Access denied"));
+    }
+
+    @Override // an @ExceptionHandler for this type would clash with the superclass at startup
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         List<String> details = ex.getBindingResult().getFieldErrors().stream()
             .map(e -> e.getField() + ": " + e.getDefaultMessage()).toList();
-        return ResponseEntity.status(400)
-            .body(new ApiResponse<>(false, null, new ApiError("VALIDATION_FAILED", "Invalid input", details), Instant.now()));
+        return ResponseEntity.status(400).body(ApiResponse.validationError(details));
+    }
+
+    @Override // keep the framework's status + headers, return the envelope
+    protected ResponseEntity<Object> handleExceptionInternal(
+            Exception ex, Object body, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        return ResponseEntity.status(status).headers(headers)
+            .body(ApiResponse.error("HTTP_" + status.value(), "Request could not be processed"));
     }
 
     @ExceptionHandler(Exception.class)
@@ -170,6 +184,7 @@ public class GlobalExceptionHandler {
 ```
 
 ## Gotchas
+- Agent writes an `Exception.class` catch-all in an advice that doesn't extend `ResponseEntityExceptionHandler` — malformed JSON, 405, type-mismatched path variables and unknown URLs all become 500
 - Agent imposes a new envelope - preserve the existing success contract.
 - Agent invents competing error handlers - use the project's established error contract.
 - Agent puts exception handlers in controllers — always use `@RestControllerAdvice`

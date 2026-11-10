@@ -66,6 +66,11 @@ my-app/
                 <artifactId>my-app-application</artifactId>
                 <version>${project.version}</version>
             </dependency>
+            <dependency>
+                <groupId>com.example</groupId>
+                <artifactId>my-app-infrastructure</artifactId>
+                <version>${project.version}</version>
+            </dependency>
             <!-- Third-party versions -->
             <dependency>
                 <groupId>org.mapstruct</groupId>
@@ -94,6 +99,11 @@ my-app/
                                 <groupId>org.mapstruct</groupId>
                                 <artifactId>mapstruct-processor</artifactId>
                                 <version>${mapstruct.version}</version>
+                            </path>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok-mapstruct-binding</artifactId>
+                                <version>0.2.0</version>
                             </path>
                         </annotationProcessorPaths>
                     </configuration>
@@ -190,6 +200,7 @@ package `org.springframework.boot.<technology>`). Pick one starter per technolog
   `<includeOptional>true</includeOptional>` on `spring-boot-maven-plugin` if you rely on them
 
 ## Gotchas
+- Agent configures Lombok and MapStruct processors without `lombok-mapstruct-binding` — the build then depends on processor order: with MapStruct first, generated mappers miss Lombok's builders/getters and fail to compile; the binding makes it order-independent
 - Agent puts `spring-boot-maven-plugin` in parent POM — only in the runnable module
 - Agent adds `<dependencies>` in parent instead of `<dependencyManagement>` — adds to all modules' classpath
 - Agent creates circular dependencies between modules — enforce the dependency direction above

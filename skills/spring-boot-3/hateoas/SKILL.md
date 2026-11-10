@@ -27,6 +27,8 @@ description: >
 ## Resource Model
 
 ```java
+@Getter // Jackson serializes through getters — without them the body is only "_links"
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public class OrderModel extends RepresentationModel<OrderModel> {
     private final UUID id;
     private final String status;

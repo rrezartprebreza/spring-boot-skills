@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>dev.rrezart</groupId>
+    <artifactId>security-skill-verification</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
+    <properties>
+        <boot.major>4</boot.major>
+        <boot.version>4.1.0</boot.version>
+        <maven.compiler.release>17</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.boot</groupId><artifactId>spring-boot-dependencies</artifactId>
+                <version>${boot.version}</version><type>pom</type><scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
+    <dependencies>
+        <dependency><groupId>org.springframework.security</groupId><artifactId>spring-security-core</artifactId></dependency>
+        <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
+    </dependencies>
+    <build>
+        <sourceDirectory>${project.basedir}/../../skills/spring-boot-${boot.major}</sourceDirectory>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.15.0</version>
+                <configuration><includes>
+                    <include>spring-security-review/templates/*.java</include>
+                    <include>spring-ai-security/templates/*.java</include>
+                    <include>security-audit-logging/templates/*.java</include>
+                </includes></configuration>
+            </plugin>
+            <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-resources-plugin</artifactId><version>3.3.1</version></plugin>
+            <plugin><groupId>org.apache.maven.plugins</groupId><artifactId>maven-surefire-plugin</artifactId><version>3.5.4</version></plugin>
+        </plugins>
+    </build>
+    <profiles>
+        <profile><id>boot3</id><properties>
+            <boot.major>3</boot.major><boot.version>3.5.16</boot.version>
+        </properties></profile>
+        <profile><id>boot4</id></profile>
+    </profiles>
+</project>

@@ -76,23 +76,31 @@ ALTER TABLE orders ADD COLUMN notes TEXT;
 -- Safe: add column with default
 ALTER TABLE orders ADD COLUMN priority INT NOT NULL DEFAULT 0;
 
--- Safe: add index CONCURRENTLY (no table lock in Postgres)
--- BUT: CONCURRENTLY cannot run inside a transaction, and Flyway wraps every
--- migration in one by default → the migration FAILS. Opt that one script out
--- with a sidecar config file:
---   V4__add_orders_email_index.sql.conf  →  executeInTransaction=false
--- Keep the CONCURRENTLY statement alone in its own migration file.
-CREATE INDEX CONCURRENTLY idx_orders_email ON orders(customer_email);
-
--- Safe: rename via add + backfill + drop (multi-step)
--- Step 1 (V5): add new column
+-- Safe: rename via expand → migrate → contract, spread across deploys
+-- Step 1 (V5): add new column (nullable — old instances keep inserting without it)
 ALTER TABLE orders ADD COLUMN customer_email VARCHAR(255);
 -- Step 2 (V5): backfill
 UPDATE orders SET customer_email = (SELECT email FROM users WHERE users.id = orders.user_id);
--- Step 3 (V5): add constraint after data is there
+-- Step 3 (V7, only after EVERY writer populates customer_email): add the check as NOT VALID —
+-- instant, no table scan, but new rows are already enforced
+ALTER TABLE orders ADD CONSTRAINT orders_customer_email_nn CHECK (customer_email IS NOT NULL) NOT VALID;
+-- Step 4 (V8 — a SEPARATE migration, so the V7 lock is already released): validate without
+-- blocking writes, then SET NOT NULL reuses the validated check and skips the scan (PG 12+)
+ALTER TABLE orders VALIDATE CONSTRAINT orders_customer_email_nn;
 ALTER TABLE orders ALTER COLUMN customer_email SET NOT NULL;
--- Step 4 (later V6, after code is deployed): drop old column
+-- Step 5 (V9, after no deployed code reads user_id): drop old column
 ALTER TABLE orders DROP COLUMN user_id;
+
+-- Safe: add index CONCURRENTLY (no table lock in Postgres) — TWO rules, both required:
+-- 1. Put it ALONE in its own migration file. Flyway detects CONCURRENTLY as
+--    non-transactional; mixed with any other statement the migration is rejected:
+--    "Detected both transactional and non-transactional statements".
+-- 2. Set spring.flyway.postgresql.transactional-lock=false. Flyway's default
+--    advisory lock holds an open transaction on a second connection, and
+--    CONCURRENTLY waits for every open transaction — including Flyway's own.
+--    The migration hangs forever. Session-level locks still block concurrent migrators.
+-- V6__index_orders_email.sql (after V5 adds the column)
+CREATE INDEX CONCURRENTLY idx_orders_email ON orders(customer_email);
 
 -- Dangerous: rename column directly (breaks running app)
 ALTER TABLE orders RENAME COLUMN user_id TO customer_id;
@@ -108,10 +116,27 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
-    baseline-on-migrate: true   # for existing databases
+    baseline-on-migrate: false  # reject non-empty schemas without migration history
     validate-on-migrate: true
     out-of-order: false         # enforce sequential execution
+    postgresql:
+      transactional-lock: false # required for CREATE INDEX CONCURRENTLY (see above)
 ```
+
+## Onboarding an existing database
+
+Keep automatic baselining disabled in normal application configuration. For a database
+that already has tables but no Flyway history:
+
+1. Back up the database and verify the target URL, database, schema and credentials.
+2. Compare its schema with the migrations and explicitly select the version already present.
+3. Run a one-time `flyway baseline -baselineVersion=<verified-version>` using that target.
+4. Inspect `flyway info`, then migrate only the later versions. Never baseline an unknown
+   or partially migrated schema just to silence a startup error.
+
+This is different from a baseline migration script for new environments. Automatic
+baselining removes Flyway's wrong-database safety check:
+[official baseline-on-migrate documentation](https://documentation.red-gate.com/flyway/reference/configuration/flyway-namespace/flyway-baseline-on-migrate-setting).
 
 ## Seed Data (test/dev only)
 
@@ -141,11 +166,13 @@ public class DevDataSeeder implements ApplicationRunner {
 - Never set `out-of-order: true` in production — it masks migration ordering bugs
 
 ## Gotchas
+- Agent adds only `flyway-core` — since Flyway 10 (Boot 3.3+) database support lives in `flyway-database-<db>` modules (e.g. `flyway-database-postgresql`); without it startup fails with "Unsupported Database"
 - Agent names files `V1_create_users.sql` (single underscore) — must be double `__`
 - Agent modifies existing migration files — never edit a migration that has run
 - Agent adds `NOT NULL` column without default — use nullable or provide default
 - Agent renames columns directly — use multi-step add/backfill/drop across deploys
 - Agent seeds data in Flyway migrations — use `@Profile("dev")` seeders instead
-- Agent uses `CREATE INDEX CONCURRENTLY` in a normal migration — fails inside Flyway's transaction; needs `executeInTransaction=false` in a `.sql.conf` sidecar and its own file
+- Agent mixes `CREATE INDEX CONCURRENTLY` with other statements in one migration — Flyway rejects it ("both transactional and non-transactional statements"); give it its own file
+- Agent ships a `CONCURRENTLY` migration without `spring.flyway.postgresql.transactional-lock=false` — the index build waits on Flyway's own advisory-lock transaction and deploys hang
 - Agent skips indexes — always index foreign keys and columns used in WHERE/ORDER BY
 - Agent creates migration with `DROP TABLE` or `DROP COLUMN` as first step — always add new column, deploy code, then drop old in a later migration

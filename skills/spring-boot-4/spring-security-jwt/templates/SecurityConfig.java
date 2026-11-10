@@ -30,7 +30,9 @@ public class SecurityConfig {
         return http.csrf(AbstractHttpConfigurer::disable)
             .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/v1/auth/**", "/actuator/health").permitAll()
+                // /error must be open: container error dispatches (404/405/500 forwarded there)
+                // carry no JWT, so without this every such error is rewritten to a 401.
+                .requestMatchers("/api/v1/auth/**", "/actuator/health", "/error").permitAll()
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated())
             .exceptionHandling(errors -> errors

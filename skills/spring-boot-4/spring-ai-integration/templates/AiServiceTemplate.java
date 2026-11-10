@@ -1,6 +1,5 @@
 package com.example.ai.service;
 
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Value;
@@ -12,10 +11,17 @@ import java.util.List;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class AiServiceTemplate {
 
+    // One-shot analysis: a stateless client built from the auto-configured (prototype)
+    // ChatClient.Builder. The shared ChatClient bean carries MessageChatMemoryAdvisor,
+    // which needs a per-user conversation id — without one, Spring AI 2 rejects the
+    // call and 1.x silently pools every user into one shared chat history.
     private final ChatClient chatClient;
+
+    public AiServiceTemplate(ChatClient.Builder builder) {
+        this.chatClient = builder.build();
+    }
 
     @Value("classpath:prompts/analyze-order.st")
     private Resource analyzePrompt;

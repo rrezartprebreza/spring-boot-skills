@@ -24,7 +24,7 @@ class RedisRateLimitTest {
     private final List<String> ownedKeys = new ArrayList<>();
 
     @BeforeEach void connectToDisposableRedis() {
-        int port = Integer.parseInt(System.getenv().getOrDefault("TEST_REDIS_PORT", "56379"));
+        int port = Integer.parseInt(System.getenv().getOrDefault("TEST_REDIS_PORT", "56389"));
         factory = new LettuceConnectionFactory("127.0.0.1", port);
         factory.afterPropertiesSet();
         redis = new StringRedisTemplate(factory);

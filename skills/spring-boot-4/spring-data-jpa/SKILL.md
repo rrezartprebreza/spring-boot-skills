@@ -263,8 +263,8 @@ Avoid:
 Identify N+1 by looking for lazy association access inside loops or JSON serialization of entities.
 
 ```java
-@EntityGraph(attributePaths = {"items", "items.product"})
-Optional<Order> findWithItemsAndProductsById(UUID id);
+@EntityGraph(attributePaths = {"items"}) // OrderItem holds a productId, not a Product association
+Optional<Order> findWithItemsById(UUID id);
 
 public interface OrderSummary {
     UUID getId();

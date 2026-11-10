@@ -36,9 +36,11 @@ migration guide. Do not assume raw SDK examples match the version managed by Spr
 
 ## Spring AI 1.x tool callback integration
 
-Spring AI 1.x commonly exposes model `@Tool` methods through an explicit
-`MethodToolCallbackProvider`. Keep this callback conversion path separate from native MCP
-annotations used by Spring AI 2.0.
+Spring AI 1.0.x exposes `@Tool` methods only through an explicit `MethodToolCallbackProvider` —
+a bare `@Component` with `@Tool` methods registers nothing. Spring AI 1.1.x additionally supports
+native `@McpTool`/`@McpToolParam` with `spring.ai.mcp.server.annotation-scanner.enabled=true`,
+imported from `org.springaicommunity.mcp.annotation` (Spring AI 2.0 moved them to
+`org.springframework.ai.mcp.annotation`). Pick one registration path per tool.
 
 ```java
 @Configuration
@@ -113,7 +115,9 @@ stdout clean in stdio mode because it carries JSON-RPC frames.
 ## Gotchas
 
 - Agent overrides the MCP SDK under Spring AI 1.x - let the Spring AI BOM manage it.
-- Agent copies Spring AI 2.0 native annotation code into a 1.x project - use the selected release's supported registration path.
+- Agent copies Spring AI 2.0 `org.springframework.ai.mcp.annotation` imports into a 1.1 project - 1.1 uses `org.springaicommunity.mcp.annotation`, and 1.0 has no MCP annotations at all.
+- Agent expects `@Tool` methods on a plain `@Component` to appear as MCP tools in 1.x - register them through a `ToolCallbackProvider` bean.
+- Agent passes `--spring.ai.mcp.server.transport=stdio` - no such property; Boot ignores it silently. Use `spring.ai.mcp.server.stdio=true`.
 - Agent uses removed `new CallToolResult(...)` constructors in raw SDK code - use builders.
 - Agent logs to stdout in stdio mode - route logs to stderr or a file and disable the banner.
 - Agent registers the same tool object twice - keep one callback provider per capability.

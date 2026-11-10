@@ -31,11 +31,11 @@ spring:
     chat:
       client:
         observations:
-          log-prompt: true       # OFF in prod (PII).
-          log-completion: true
+          log-prompt: false      # true only in local dev (PII)
+          log-completion: false
       observations:
-        log-prompt: true         # ChatModel prompt logging; OFF in prod (PII).
-        log-completion: true
+        log-prompt: false        # ChatModel prompt logging; true only in local dev (PII)
+        log-completion: false
         include-error-logging: true
 management:
   metrics:
@@ -72,7 +72,7 @@ public class AiMetrics {
             .tag("operation", operation)
             .tag("model", model)
             .register(meterRegistry)
-            .recordCallable(() -> call.get());
+            .record(call); // record(Supplier) — recordCallable throws checked Exception
     }
 
     public void recordTokens(String operation, String model, int inputTokens, int outputTokens) {
@@ -149,6 +149,16 @@ public class AiAuditAdvisor implements CallAdvisor {
 - Prefer provider billing exports for invoices; application estimates are operational signals only.
 
 ## Structured AI Audit Log (DB)
+
+The [audit advisor template](templates/AiAuditAdvisor.java) treats telemetry as best-effort.
+Catch submission failures around the call to the separate async bean, as well as persistence
+failures inside it: a full or stopped executor can reject a task before its method runs.
+Use a bounded executor and monitor rejected audit tasks; do not use caller-runs when response
+latency must remain independent of audit storage. Store sanitized error types, not raw provider
+exception messages. Mandatory compliance audit records need durable delivery, not this
+best-effort design.
+
+See [Spring task execution and rejection policies](https://docs.spring.io/spring-framework/reference/integration/scheduling.html).
 
 ```java
 @Entity

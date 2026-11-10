@@ -85,7 +85,7 @@ public record ApiError(String code, String message, List<String> details) {}
 
 - **Plural nouns** for resources: `/orders`, `/users`, `/products`
 - **Kebab-case** for multi-word: `/order-items`, not `/orderItems`
-- **Versioning in path**: `/api/v1/orders` — route with native API versioning (below), don't duplicate controllers per version
+- **Versioning in path**: `/api/v1/orders` URLs, mapped as `@RequestMapping("/api/{version}/orders")` — a literal `/api/v1/orders` mapping never matches `/api/v1.1/...` (404). Route with native API versioning (below), don't duplicate controllers per version
 - **Nested resources** max 2 levels: `/orders/{id}/items` is fine, `/orders/{id}/items/{itemId}/notes` is too deep — flatten to `/order-item-notes/{id}`
 - **IDs**: preserve the existing ID type. UUIDs are an option, not an authorization mechanism.
 
@@ -111,10 +111,10 @@ spring:
   mvc:                        # WebFlux: same keys under spring.webflux.apiversion.*
     apiversion:
       use:
-        path-segment: 1       # index of the path segment holding the version: /api/v1.1/orders
+        path-segment: 1       # /api/v1.1/orders — the mapping MUST declare it: "/api/{version}/orders"
         # header: X-API-Version
         # query-parameter: version
-      supported: [1.0, 1.1, 2.0]
+      supported: [1.0, 1.1, 1.2]
       default: 1.0
 ```
 
@@ -138,8 +138,8 @@ missing required version → 400 (`MissingApiVersionException`).
   `WebMvcConfigurer#configureApiVersioning(ApiVersionConfigurer)`) — it emits RFC 9745
   `Deprecation`/`Sunset` and `Link` response headers
 - **Clients**: `RestClient`/`WebClient` and HTTP interface clients send versions too —
-  configure `.apiVersionInserter(ApiVersionInserter.fromHeader("X-API-Version").build())`
-  and `.defaultVersion("1.2")` on the builder, matching the server's strategy
+  configure `.apiVersionInserter(ApiVersionInserter.usePathSegment(1))` (or `useHeader("X-API-Version")`)
+  and `.defaultApiVersion("1.2")` on the builder, matching the server's strategy
 
 ## Pagination
 
@@ -187,21 +187,35 @@ the API. Validate sort fields against an allowlist and add an ID tie-breaker to 
 ## Legacy Envelope Exception Handler
 
 ```java
+// Extends ResponseEntityExceptionHandler: without it the Exception.class catch-all turns
+// malformed JSON, 405, bad path variables and unknown URLs into 500. Full version, verified
+// against Boot 3 and 4: templates/GlobalExceptionHandler.java
 @RestControllerAdvice
-@RequiredArgsConstructor
-public class GlobalExceptionHandler {
+public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
 
     @ExceptionHandler(EntityNotFoundException.class)
     public ResponseEntity<ApiResponse<Void>> handleNotFound(EntityNotFoundException ex) {
         return ResponseEntity.status(404).body(ApiResponse.error("NOT_FOUND", ex.getMessage()));
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiResponse<Void>> handleValidation(MethodArgumentNotValidException ex) {
+    @ExceptionHandler(AccessDeniedException.class) // @PreAuthorize denials surface here, not in the filter
+    public ResponseEntity<ApiResponse<Void>> handleAccessDenied(AccessDeniedException ex) {
+        return ResponseEntity.status(403).body(ApiResponse.error("FORBIDDEN", "Access denied"));
+    }
+
+    @Override // an @ExceptionHandler for this type would clash with the superclass at startup
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(
+            MethodArgumentNotValidException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         List<String> details = ex.getBindingResult().getFieldErrors().stream()
             .map(e -> e.getField() + ": " + e.getDefaultMessage()).toList();
-        return ResponseEntity.status(400)
-            .body(new ApiResponse<>(false, null, new ApiError("VALIDATION_FAILED", "Invalid input", details), Instant.now()));
+        return ResponseEntity.status(400).body(ApiResponse.validationError(details));
+    }
+
+    @Override // keep the framework's status + headers, return the envelope
+    protected ResponseEntity<Object> handleExceptionInternal(
+            Exception ex, Object body, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        return ResponseEntity.status(status).headers(headers)
+            .body(ApiResponse.error("HTTP_" + status.value(), "Request could not be processed"));
     }
 
     @ExceptionHandler(Exception.class)
@@ -212,6 +226,8 @@ public class GlobalExceptionHandler {
 ```
 
 ## Gotchas
+- Agent keeps a literal `@RequestMapping("/api/v1/orders")` with path-segment versioning — versioned URLs like `/api/v1.1/orders` return 404; declare the segment as `{version}`
+- Agent writes an `Exception.class` catch-all in an advice that doesn't extend `ResponseEntityExceptionHandler` — malformed JSON, 405, type-mismatched path variables and unknown URLs all become 500
 - Agent imposes a new envelope - preserve the existing success contract.
 - Agent invents competing error handlers - use the project's established error contract.
 - Agent puts exception handlers in controllers — always use `@RestControllerAdvice`

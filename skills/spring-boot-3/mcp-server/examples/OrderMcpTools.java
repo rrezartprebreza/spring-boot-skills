@@ -10,7 +10,8 @@ import java.util.UUID;
 
 /**
  * MCP tools for Order Service.
- * Drop-in class — Spring AI scans @Tool methods automatically.
+ * Spring AI 1.x does NOT auto-scan @Tool methods: register this bean through a
+ * ToolCallbackProvider, e.g. MethodToolCallbackProvider.builder().toolObjects(orderMcpTools).build().
  *
  * Usage in .mcp.json:
  * {

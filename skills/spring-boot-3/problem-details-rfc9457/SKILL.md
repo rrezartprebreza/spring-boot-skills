@@ -44,6 +44,8 @@ exceptions. Validation returns 400 with field violations; unexpected failures re
 500 while retaining the full exception only in server logs. Keep nullable validation messages safe.
 Filter-level authentication failures need an `AuthenticationEntryPoint`; authorization failures
 need an `AccessDeniedHandler`. Controller advice does not cover the security filter chain.
+Method-security (`@PreAuthorize`) denials are the opposite case: `AccessDeniedException` is thrown
+inside the dispatcher, so the advice must map it to 403 or the `Exception` catch-all returns 500.
 
 ## Response fields
 

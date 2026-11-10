@@ -13,6 +13,21 @@ spec.loader.exec_module(evaluation)
 
 
 class EvaluationReferencesTest(unittest.TestCase):
+    def test_baseline_contains_only_shared_instructions_and_user_request(self):
+        case = evaluation.load_cases()[0]
+        baseline = evaluation.prompt_for(case, "baseline")
+        supported = evaluation.prompt_for(case, "skills")
+        self.assertEqual(baseline.split("USER REQUEST\n")[0],
+                         supported.split("CATALOG\n")[0])
+        self.assertTrue(baseline.endswith("USER REQUEST\n" + case["prompt"]))
+        self.assertNotIn("CATALOG\n", baseline)
+        self.assertNotIn("FILE:", baseline)
+        self.assertIn("AVAILABLE REFERENCE CONTENT", supported)
+
+    def test_unknown_context_is_rejected(self):
+        with self.assertRaises(ValueError):
+            evaluation.prompt_for(evaluation.load_cases()[0], "other")
+
     def test_sql_reference_is_available_to_tool_free_evaluator(self):
         case = next(
             case for case in evaluation.load_cases()

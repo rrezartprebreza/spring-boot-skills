@@ -30,6 +30,9 @@
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-validation</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-jpa</artifactId></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-data-redis</artifactId></dependency>
+        <dependency><groupId>org.springframework.security</groupId><artifactId>spring-security-oauth2-resource-server</artifactId></dependency>
+        <dependency><groupId>org.springframework.security</groupId><artifactId>spring-security-oauth2-jose</artifactId></dependency>
+        <dependency><groupId>org.springframework</groupId><artifactId>spring-aspects</artifactId></dependency>
         <dependency><groupId>${flyway.group}</groupId><artifactId>${flyway.artifact}</artifactId></dependency>
         <dependency><groupId>org.flywaydb</groupId><artifactId>flyway-database-postgresql</artifactId></dependency>
         <dependency><groupId>org.postgresql</groupId><artifactId>postgresql</artifactId><scope>runtime</scope></dependency>
@@ -37,12 +40,18 @@
         <dependency><groupId>io.jsonwebtoken</groupId><artifactId>jjwt-impl</artifactId><version>0.12.6</version><scope>runtime</scope></dependency>
         <dependency><groupId>io.jsonwebtoken</groupId><artifactId>jjwt-jackson</artifactId><version>0.12.6</version><scope>runtime</scope></dependency>
         <dependency><groupId>org.springframework.boot</groupId><artifactId>spring-boot-starter-test</artifactId><scope>test</scope></dependency>
+        <dependency><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId><scope>provided</scope></dependency>
     </dependencies>
     <build>
         <!-- Compile the shipped templates, not copies in the test project. -->
         <sourceDirectory>${project.basedir}/../../skills/spring-boot-${boot.major}</sourceDirectory>
         <testResources>
             <testResource><directory>src/test/resources</directory></testResource>
+            <testResource>
+                <directory>${project.basedir}/../../skills/spring-boot-${boot.major}/multi-tenancy/examples</directory>
+                <targetPath>fixtures</targetPath>
+                <includes><include>tenant-orders.sql</include></includes>
+            </testResource>
             <testResource>
                 <directory>${project.basedir}/../../skills/spring-boot-${boot.major}/idempotency-patterns/examples</directory>
                 <targetPath>fixtures</targetPath>
@@ -53,21 +62,40 @@
                 <targetPath>db/migration</targetPath>
                 <includes><include>V1__create_table_template.sql</include></includes>
             </testResource>
+            <testResource>
+                <directory>${project.basedir}/../../skills/spring-boot-${boot.major}/flyway-migrations</directory>
+                <targetPath>flyway-examples</targetPath>
+                <includes>
+                    <include>templates/V1__create_table_template.sql</include>
+                    <include>examples/good-migration.sql</include>
+                    <include>examples/good-migration-concurrent-index.sql</include>
+                    <include>SKILL.md</include>
+                </includes>
+            </testResource>
         </testResources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId><version>3.15.0</version>
                 <configuration>
                     <parameters>true</parameters>
+                    <annotationProcessorPaths>
+                        <path><groupId>org.projectlombok</groupId><artifactId>lombok</artifactId></path>
+                    </annotationProcessorPaths>
                     <includes>
                         <include>spring-security-jwt/templates/*.java</include>
                         <include>problem-details-rfc9457/templates/*.java</include>
                         <include>rest-api-conventions/templates/ApiResponse.java</include>
                         <include>rest-api-conventions/templates/PageResponse.java</include>
+                        <include>rest-api-conventions/templates/GlobalExceptionHandler.java</include>
                         <include>configuration-properties/examples/ClientProperties.java</include>
                         <include>async-execution/templates/*.java</include>
                         <include>scheduled-tasks/templates/*.java</include>
-                        <include>spring-data-redis/templates/AtomicWindowLimiter.java</include>
+                        <include>layered-architecture/templates/CreateOrderRequest.java</include>
+                        <include>oauth2-resource-server/templates/*.java</include>
+                        <include>spring-data-redis/templates/*.java</include>
+                        <include>multi-tenancy/templates/*.java</include>
+                        <include>resilience-retry/templates/*.java</include>
+                        <include>http-interface-clients/templates/*.java</include>
                     </includes>
                 </configuration>
             </plugin>
@@ -78,6 +106,9 @@
     <profiles>
         <profile>
             <id>boot3</id>
+            <dependencies>
+                <dependency><groupId>org.springframework.retry</groupId><artifactId>spring-retry</artifactId></dependency>
+            </dependencies>
             <properties>
                 <boot.major>3</boot.major><boot.version>3.5.16</boot.version>
                 <web.starter>spring-boot-starter-web</web.starter>

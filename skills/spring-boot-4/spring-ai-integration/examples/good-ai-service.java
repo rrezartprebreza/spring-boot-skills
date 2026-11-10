@@ -1,11 +1,18 @@
 // GOOD — injected ChatClient, externalized prompts, structured output, error handling
 
 @Service
-@RequiredArgsConstructor
 @Slf4j
 public class OrderAnalysisService {
 
+    // One-shot analysis: a stateless client built from the auto-configured (prototype)
+    // ChatClient.Builder. The shared ChatClient bean carries MessageChatMemoryAdvisor,
+    // which needs a per-user conversation id — without one, Spring AI 2 rejects the
+    // call and 1.x silently pools every user into one shared chat history.
     private final ChatClient chatClient;
+
+    public OrderAnalysisService(ChatClient.Builder builder) {
+        this.chatClient = builder.build();
+    }
 
     // Externalized prompt template loaded from classpath:prompts/analyze-order.st
     @Value("classpath:prompts/analyze-order.st")

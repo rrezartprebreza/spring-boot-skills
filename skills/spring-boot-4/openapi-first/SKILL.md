@@ -14,7 +14,7 @@ description: >
 <plugin>
     <groupId>org.openapitools</groupId>
     <artifactId>openapi-generator-maven-plugin</artifactId>
-    <version>7.5.0</version>
+    <version>7.26.0</version> <!-- useSpringBoot4/useJackson3 need 7.20+ -->
     <executions>
         <execution>
             <goals><goal>generate</goal></goals>
@@ -26,14 +26,17 @@ description: >
                 <configOptions>
                     <delegatePattern>true</delegatePattern>      <!-- implement delegate, not controller -->
                     <interfaceOnly>false</interfaceOnly>
-                    <useSpringBoot3>true</useSpringBoot3> <!-- still the OpenAPI Generator Jakarta/Spring 6+ switch -->
+                    <useSpringBoot4>true</useSpringBoot4>
+                    <useJackson3>true</useJackson3>
                     <useTags>true</useTags>
                     <dateLibrary>java8</dateLibrary>
-                    <serializationLibrary>jackson</serializationLibrary>
                     <openApiNullable>false</openApiNullable>
-                    <skipDefaultInterface>true</skipDefaultInterface>
+                    <skipDefaultInterface>false</skipDefaultInterface> <!-- must stay false with delegatePattern: the controller instantiates a no-op delegate -->
                 </configOptions>
-                <generateSupportingFiles>true</generateSupportingFiles>
+                <!-- NOT generateSupportingFiles=true: that adds a second @SpringBootApplication main class
+                     (repackage fails: "Unable to find a single main class") and a SpringDocConfiguration -->
+                <supportingFilesToGenerate>ApiUtil.java</supportingFilesToGenerate>
+                <modelNameSuffix>Dto</modelNameSuffix> <!-- OrderDto, not Order: no clash with domain types -->
                 <output>${project.build.directory}/generated-sources/openapi</output>
             </configuration>
         </execution>
@@ -119,6 +122,44 @@ components:
           type: string
           format: date-time
 
+    OrderItemRequest:
+      type: object
+      required: [productId, quantity]
+      properties:
+        productId:
+          type: string
+          format: uuid
+        quantity:
+          type: integer
+          minimum: 1
+
+    OrderPage:
+      type: object
+      properties:
+        content:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderResponse'
+        page:
+          type: integer
+        size:
+          type: integer
+        totalElements:
+          type: integer
+          format: int64
+
+    ApiError:
+      type: object
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        details:
+          type: array
+          items:
+            type: string
+
   responses:
     ValidationError:
       description: Validation failed
@@ -163,7 +204,8 @@ target/generated-sources/openapi/
 
 ## Gotchas
 - Agent modifies generated controller files — NEVER modify generated code, implement delegate
-- Agent generates code without `useSpringBoot3=true` — uses old `javax.*` imports; despite the name, this is still the OpenAPI Generator flag for Jakarta/Spring 6+ generation
+- Agent configures a Boot 4 build with `useSpringBoot3=true` on an old generator — use generator 7.20+ with `useSpringBoot4=true` and `useJackson3=true`
 - Agent commits generated sources — add to `.gitignore`, generate on build
-- Agent skips `skipDefaultInterface=true` — generates default methods that hide missing impls
+- Agent sets `skipDefaultInterface=true` with `delegatePattern=true` — the generated controller instantiates a no-op delegate, so it stops compiling; keep it `false` and cover every operation with a contract test
+- Agent sets `generateSupportingFiles=true` — generates a second `@SpringBootApplication` and SpringDoc config; list only `ApiUtil.java` in `supportingFilesToGenerate`
 - Agent mixes generated models with hand-written models — keep them separate

@@ -43,18 +43,29 @@ public class ResourceServerConfig {
 
     @Bean
     public JwtAuthenticationConverter jwtAuthConverter() {
-        var converter = new JwtGrantedAuthoritiesConverter();
-        converter.setAuthoritiesClaimName("roles"); // Keycloak uses "roles"
-        converter.setAuthorityPrefix("ROLE_");
-
-        var authConverter = new JwtAuthenticationConverter();
-        authConverter.setJwtGrantedAuthoritiesConverter(converter);
-        return authConverter;
+        // Keep the defaults: the "scope" OR "scp" claim (Okta/Entra use scp) -> SCOPE_*.
+        // Calling setAuthoritiesClaimName(...) replaces them — then hasAuthority("SCOPE_admin")
+        // can never pass. Extend the defaults with Keycloak realm roles instead.
+        var scopes = new JwtGrantedAuthoritiesConverter();
+        var converter = new JwtAuthenticationConverter();
+        converter.setJwtGrantedAuthoritiesConverter(jwt -> {
+            Collection<GrantedAuthority> authorities = new ArrayList<>(scopes.convert(jwt));
+            // Keycloak nests realm roles under realm_access.roles -> ROLE_* (for hasRole)
+            Map<String, Object> realmAccess = jwt.getClaimAsMap("realm_access");
+            if (realmAccess != null && realmAccess.get("roles") instanceof Collection<?> roles) {
+                roles.forEach(role -> authorities.add(new SimpleGrantedAuthority("ROLE_" + role)));
+            }
+            return authorities;
+        });
+        return converter;
     }
 }
 ```
 
 ## application.yml — Common Providers
+
+Choose the provider configuration matching your issuer; these are alternatives, not duplicate
+`spring:` mappings to paste into one YAML document.
 
 ```yaml
 # Keycloak
@@ -65,7 +76,10 @@ spring:
         jwt:
           issuer-uri: https://keycloak.example.com/realms/my-realm
           jwk-set-uri: https://keycloak.example.com/realms/my-realm/protocol/openid-connect/certs
+          audiences: my-api   # without it, tokens minted for ANY client in the realm are accepted
+```
 
+```yaml
 # Auth0
 spring:
   security:
@@ -82,8 +96,9 @@ spring:
 @Component
 public class JwtClaimExtractor {
 
-    public UUID getUserId(JwtAuthenticationToken token) {
-        return UUID.fromString(token.getToken().getClaimAsString("sub"));
+    // Provider subjects are opaque strings ("auth0|64f1c2", Okta "00u1abcd..."), not UUIDs.
+    public String getSubject(JwtAuthenticationToken token) {
+        return token.getToken().getSubject();
     }
 
     public String getEmail(JwtAuthenticationToken token) {
@@ -101,6 +116,17 @@ public class JwtClaimExtractor {
 
 ## Controller — Accessing Current User
 
+Use the exact `(iss, sub)` pair as the external identity key, with a database unique
+constraint on that pair. Email and username are optional, mutable profile attributes,
+not account lookup or automatic account-linking keys, even when email is verified.
+The [ExternalIdentity template](templates/ExternalIdentity.java) accepts an already
+verified access token; signature, issuer, audience and expiry validation must happen first.
+Allow only configured issuers; never discover an arbitrary issuer URL from an untrusted token.
+For existing subject-only mappings, backfill the known issuer before introducing a second issuer.
+Account linking requires an explicit authenticated flow proving control of both accounts.
+
+See [OpenID claim stability](https://openid.net/specs/openid-connect-core-1_0.html#ClaimStability).
+
 ```java
 @RestController
 @RequiredArgsConstructor
@@ -110,16 +136,15 @@ public class OrderController {
     public ApiResponse<List<OrderResponse>> myOrders(
         @AuthenticationPrincipal Jwt jwt  // inject JWT directly
     ) {
-        UUID userId = UUID.fromString(jwt.getSubject());
-        return ApiResponse.ok(orderService.findByUser(userId));
+        ExternalIdentity identity = ExternalIdentity.from(jwt);
+        return ApiResponse.ok(orderService.findByOwner(identity.issuer(), identity.subject()));
     }
 
     // Or with JwtAuthenticationToken for full principal
     @GetMapping("/api/v1/profile")
     public ApiResponse<ProfileResponse> profile(JwtAuthenticationToken token) {
-        return ApiResponse.ok(userService.findByEmail(
-            token.getToken().getClaimAsString("email")
-        ));
+        ExternalIdentity identity = ExternalIdentity.from(token.getToken());
+        return ApiResponse.ok(userService.findByExternalIdentity(identity.issuer(), identity.subject()));
     }
 }
 ```
@@ -138,13 +163,25 @@ public Order findById(UUID orderId) { ... }
 public class OrderSecurityService {
     public boolean isOwner(UUID orderId, Authentication auth) {
         Jwt jwt = (Jwt) auth.getPrincipal();
-        UUID userId = UUID.fromString(jwt.getSubject());
-        return orderRepository.existsByIdAndCustomerId(orderId, userId);
+        ExternalIdentity identity = ExternalIdentity.from(jwt);
+        return orderRepository.existsByIdAndOwnerIssuerAndOwnerSubject(
+            orderId, identity.issuer(), identity.subject());
     }
 }
 ```
 
+## Verification scope
+
+The repository fixture targets Boot 3.5.16 with Java 17/21 and checks
+signed-token validation and issuer/subject mapping; it does not contact a production identity provider. Check the
+[coverage matrix](https://github.com/rrezartprebreza/spring-boot-skills/blob/main/verification/MATRIX.md)
+before treating another minor version or an illustrative snippet as verified.
+
 ## Gotchas
+- Agent finds or merges accounts by email - use the verified issuer/subject pair; email changes must not change ownership.
+- Agent calls `setAuthoritiesClaimName(...)` on `JwtGrantedAuthoritiesConverter` — it replaces the default `scope`/`scp` lookup, so `SCOPE_*` authorities vanish (and Okta/Entra `scp` scopes are dropped); extend the defaults instead
+- Agent parses `jwt.getSubject()` with `UUID.fromString` — Auth0 (`auth0|...`) and Okta (`00u...`) subjects aren't UUIDs; the request fails with 500
+- Agent omits `audiences` — the resource server then accepts any token the issuer minted for any client
 - Agent uses `hasRole("ADMIN")` for scope check — scopes use `hasAuthority("SCOPE_admin")`
 - Agent forgets `issuer-uri` validation — always configure to prevent token forgery
 - Agent maps roles wrong for Keycloak — roles are nested under `realm_access.roles`

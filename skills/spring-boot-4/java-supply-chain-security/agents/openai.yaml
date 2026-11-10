@@ -1,0 +1,4 @@
+interface:
+  display_name: "Java Supply Chain Security"
+  short_description: "Review Java dependencies and release provenance"
+  default_prompt: "Use $java-supply-chain-security to review this Java project's dependencies, SBOM coverage, and release pipeline without making unrelated upgrades."

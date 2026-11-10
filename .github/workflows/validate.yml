@@ -91,9 +91,16 @@ jobs:
           TEST_DATABASE_URL: jdbc:postgresql://localhost:5432/skills
           TEST_REDIS_PORT: "6379"
         run: mvn --batch-mode --no-transfer-progress -f verification/behavior/pom.xml -P${{ matrix.boot }} -Dmaven.compiler.release=${{ matrix.java }} test
+      - name: Test shipped AI audit templates
+        run: mvn --batch-mode --no-transfer-progress -f verification/ai/pom.xml -P${{ matrix.boot }} -Dmaven.compiler.release=${{ matrix.java }} test
+      - name: Test shipped security boundaries
+        run: mvn --batch-mode --no-transfer-progress -f verification/security/pom.xml -P${{ matrix.boot }} -Dmaven.compiler.release=${{ matrix.java }} test
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: behavior-${{ matrix.boot }}-java-${{ matrix.java }}
-          path: verification/behavior/target/surefire-reports/
+          path: |
+            verification/behavior/target/surefire-reports/
+            verification/ai/target/surefire-reports/
+            verification/security/target/surefire-reports/

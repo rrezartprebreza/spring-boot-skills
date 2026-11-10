@@ -1,7 +1,7 @@
 // GOOD — proper response envelope, correct status, no entity leakage
 
 @RestController
-@RequestMapping("/api/v1/orders")
+@RequestMapping("/api/{version}/orders") // path-segment versioning: /api/v1/orders, /api/v1.1/orders
 @RequiredArgsConstructor
 public class OrderController {
 

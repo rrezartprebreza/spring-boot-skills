@@ -9,7 +9,7 @@
 
 <br/>
 
-[![skills](https://img.shields.io/badge/skills-35_%C3%97_2-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
+[![skills](https://img.shields.io/badge/skills-41_%C3%97_2-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x_%7C_4.x-6DB33F?style=for-the-badge&labelColor=0f172a&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&labelColor=0f172a&logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/License-MIT-94a3b8?style=for-the-badge&labelColor=0f172a)](LICENSE)
@@ -19,6 +19,7 @@
 [![Spring AI](https://img.shields.io/badge/Spring_AI-1.x_%7C_2.0-6DB33F?style=flat-square&labelColor=1e293b)](https://spring.io/projects/spring-ai)
 [![MCP Java SDK](https://img.shields.io/badge/MCP_Java_SDK-2.0-e879f9?style=flat-square&labelColor=1e293b)](https://github.com/modelcontextprotocol/java-sdk)
 [![GitHub Stars](https://img.shields.io/github/stars/rrezartprebreza/spring-boot-skills?style=flat-square&label=stars&labelColor=1e293b&color=fbbf24)](https://github.com/rrezartprebreza/spring-boot-skills/stargazers)
+[![XERJ Corpus Hub contributor](https://hub.xerj.org/contributors/rrezartprebreza/badge.svg)](https://hub.xerj.org/contributors/rrezartprebreza)
 
 <br/>
 
@@ -54,6 +55,18 @@ flowchart LR
 ```
 
 This repo is a collection of battle-tested skills. Copy, adapt, drop in.
+
+---
+
+## Verify your conventions with AgentAccord
+
+[**AgentAccord**](https://github.com/rrezartprebreza/agentaccord) is a free, MIT-licensed companion tool for checking team engineering rules in source code and AI instruction files.
+
+**Spring Boot Skills teaches your agent how to work. AgentAccord checks supported rules your team has explicitly approved.** It can flag field injection in application code, conflicting instructions in `AGENTS.md`, `CLAUDE.md`, and `SKILL.md`, and policy violations in supported Java examples. Run it locally through its CLI or browser app, or use its GitHub Action in CI.
+
+Choose policies that fit your project. For example, restrictions on `@Value` or `@WebMvcTest` are optional team decisions, not universal Spring Boot rules. AgentAccord checks a defined set of patterns; it does not automatically enforce every recommendation in this skills catalog.
+
+[Get started with AgentAccord](https://github.com/rrezartprebreza/agentaccord#install) · [See the v0.4.0 release](https://github.com/rrezartprebreza/agentaccord/releases/tag/v0.4.0)
 
 ---
 
@@ -168,12 +181,17 @@ versions together and recheck the linked official sources before adopting a newe
 |-------|-------------|------|
 | [**spring-security-jwt**](skills/spring-boot-4/spring-security-jwt/) | JWT auth filter chain, access and refresh token validation, RBAC with method security. Opinionated starting point. | `security` `jwt` |
 | [**oauth2-resource-server**](skills/spring-boot-4/oauth2-resource-server/) | OAuth2 resource server config, JWT claim extraction, scope-based authorization. | `security` `oauth2` |
+| [**spring-security-review**](skills/spring-boot-4/spring-security-review/) | Evidence-backed review of object authorization, tenant boundaries, untrusted inputs, and management exposure. | `security` `review` |
+| [**java-supply-chain-security**](skills/spring-boot-4/java-supply-chain-security/) | Dependency/BOM risk, offline SBOM inventory, compatible remediation, and release provenance. | `security` `supply-chain` |
+| [**security-audit-logging**](skills/spring-boot-4/security-audit-logging/) | Typed security events, privacy boundaries, durable delivery design, and explicit audit failure policies. | `security` `audit` |
+| [**spring-incident-response**](skills/spring-boot-4/spring-incident-response/) | Scoped incident triage, local evidence fingerprints, redacted handoffs, and approval before containment. | `security` `operations` |
 
 ### 🤖 AI & MCP
 
 | Skill | Description | Tags |
 |-------|-------------|------|
 | [**spring-ai-integration**](skills/spring-boot-4/spring-ai-integration/) | Spring AI ChatClient, chat memory, RAG pipeline, structured output. Real GA artifact names — no dead pre-GA coordinates. | `spring-ai` `llm` |
+| [**spring-ai-security**](skills/spring-boot-4/spring-ai-security/) | Prompt-injection threat modeling, server-authorized tools, tenant-scoped retrieval, and execution budgets. | `spring-ai` `security` |
 | [**mcp-server**](skills/spring-boot-4/mcp-server/) | Build MCP servers with the Java SDK 2.x and Spring AI 2.0 native annotations. Tool registration, Streamable HTTP, and stdio safety. | `mcp` `ai-agents` |
 | [**ai-observability**](skills/spring-boot-4/ai-observability/) | Token usage tracking, latency monitoring, prompt/response logging for Spring AI apps. | `observability` `spring-ai` |
 
@@ -188,10 +206,18 @@ versions together and recheck the linked official sources before adopting a newe
 | Skill | Description | Tags |
 |-------|-------------|------|
 | [**testing-pyramid**](skills/spring-boot-4/testing-pyramid/) | Unit → Slice → Integration conventions. `@WebMvcTest`, `@DataJpaTest`, `@MockitoBean`, Testcontainers. | `testing` |
+| [**agent-qa-browser-regression**](skills/spring-boot-4/agent-qa-browser-regression/) | Scoped browser QA with agent-qa, run evidence, and memidex memory provenance alongside backend tests. | `testing` `browser` |
 
 ---
 
 ## ⚡ Quick Start
+
+### Website catalog
+
+The [website](website/README.md) provides searchable Boot 3 and Boot 4 catalogs,
+skill pages, example previews, and installation commands for Claude Code and Codex.
+It is generated from this repository's skill files and verification matrix.
+See the website README for local development and GitHub Pages deployment.
 
 **1. Prepare your coding agent**
 
@@ -298,6 +324,10 @@ That's it. Your agent reads the skill before writing a single line.
 ---
 
 ## ⚔️ Before / After
+
+The snippets below are illustrative, not captured model outputs or benchmark results.
+For a copyable task and a reproducible comparison procedure, see the
+[practical walkthrough](evaluations/WALKTHROUGH.md).
 
 The value of these skills is not generic Spring Boot advice. The value is preventing the small mistakes AI agents make when they do not know your backend conventions.
 
@@ -465,7 +495,7 @@ Without the skill, the agent guesses: dead pre-GA artifact names, removed SDK co
 ## 🗺️ Roadmap
 
 - [x] Skills for Spring Batch
-- [x] Spring Boot 4 versions of all 35 skills (`skills/spring-boot-4/`)
+- [x] Spring Boot 4 versions of all 41 skills (`skills/spring-boot-4/`)
 - [x] Skills for Spring Cloud Gateway
 - [x] Skills for Spring WebFlux / reactive patterns
 - [x] Skills for multi-tenancy
@@ -496,9 +526,14 @@ bash scripts/validate-skills.sh
 ```
 
 The validator parses YAML safely, rejects duplicate keys, and checks both version trees, metadata,
-README links and marketplace packaging. There are **35 topics with Boot 3 and Boot 4 variants**.
+README links and marketplace packaging. There are **41 topics with Boot 3 and Boot 4 variants**.
 
 ### Executable verification
+
+The [security fixture](verification/security/README.md) tests the shipped authorization,
+AI tool-boundary and audit-record templates in both version trees. Offline Python tests cover
+SBOM inventory and evidence fingerprints. These checks do not claim live vulnerability scanning,
+provider-backed prompt-injection resistance, durable audit delivery, or production incident validation.
 
 [The behavior fixture](verification/README.md) compiles the shipped JWT, Problem Details,
 pagination, configuration, async, scheduling and Redis limiter templates. Its tests cover
@@ -506,6 +541,15 @@ token/account rejection, HTTP contracts, startup validation, bounded executor re
 cron registration, atomic Redis admission, and JPA/Flyway against PostgreSQL.
 CI runs Boot 3.5 and Boot 4.1 with Java 17 and 21. The MCP compilation fixture remains separate.
 This is targeted coverage, not a claim that every example in the catalog has executable tests.
+
+The AI audit fixture compiles both version trees and tests executor rejection and persistence
+failures without calling a model provider. Database tests cover safe Flyway baselining and an
+authenticated create/retrieve HTTP workflow. See the [per-skill coverage matrix](verification/MATRIX.md)
+for the exact scope and remaining gaps.
+
+Additional runtime checks cover external issuer/subject identity, tenant-scoped database
+access, Redis concurrency and serialization, and bounded HTTP read retries. The skills
+document failure policies and limitations rather than treating every example as a universal default.
 
 [Agent evaluations](evaluations/README.md) provide repeatable prompts and review criteria for
 Claude Code and Codex. Transcript collection and human review are separate from CI validation;
@@ -524,6 +568,7 @@ a successful model invocation is not a benchmark pass.
 
 | Repo | Description |
 |------|-------------|
+| [**AgentAccord**](https://github.com/rrezartprebreza/agentaccord) | Check approved engineering policies against source code, AI instructions, and supported Java examples — local CLI/app and GitHub Action |
 | [**Hatch**](https://github.com/rrezartprebreza/hatch) | Multi-module background job library for Spring Boot — REST polling, retry, Redis/JDBC backends, SSE dashboard |
 | [**SpringPulse**](https://github.com/rrezartprebreza/springpulse) | Runtime observability for `@Scheduled` methods — AOP interception, WebSocket dashboard |
 | [**rest-api-generator**](https://github.com/rrezartprebreza/rest-api-generator) | CLI that scaffolds Spring Boot REST APIs from plain English prompts |

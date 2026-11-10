@@ -63,7 +63,7 @@ public class OrderService {
 
     @Transactional
     public Order createOrder(CreateOrderRequest request) {
-        inventoryService.reserve(request.getItems());
+        inventoryService.reserve(request.items()); // records use accessor names, not getX()
         Order order = Order.from(request);
         return orderRepository.save(order);
     }
@@ -92,10 +92,11 @@ public class OrderService {
 
 ```java
 // GOOD
-public record OrderResponse(UUID id, String status, List<LineItemResponse> items) {
+public record OrderResponse(UUID id, String status, List<LineItemResponse> items, Instant createdAt) {
     public static OrderResponse from(Order order) {
         return new OrderResponse(order.getId(), order.getStatus().name(),
-            order.getItems().stream().map(LineItemResponse::from).toList());
+            order.getItems().stream().map(LineItemResponse::from).toList(),
+            order.getCreatedAt());
     }
 }
 ```

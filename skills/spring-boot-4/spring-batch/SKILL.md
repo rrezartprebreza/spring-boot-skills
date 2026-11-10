@@ -19,7 +19,7 @@ from 4.x) — most online examples are wrong. The rules that break the most agen
    persisted. Restartability and the `BATCH_*` audit tables require the
    `spring-boot-starter-batch-jdbc` starter (plain `spring-boot-starter-batch` = no restart after
    a crash).
-3. **`JobLauncher` and `JobExplorer` are consolidated into `JobOperator`** (which extends both).
+3. **`JobLauncher` is folded into `JobOperator`** (which extends it), and **`JobExplorer` is deprecated: `JobRepository` now extends it** — launch through `JobOperator`, query executions/instances through `JobRepository`.
    Inject `JobOperator` and call `start(job, params)`.
 4. **`JobBuilderFactory`/`StepBuilderFactory` are long gone**, and `chunk(500, txManager)` is the
    old Batch 5 style — Batch 6 takes the size alone, with an optional `.transactionManager(...)`.
@@ -205,7 +205,7 @@ spring:
 @RequiredArgsConstructor
 public class OrderExportScheduler {
 
-    private final JobOperator jobOperator; // Batch 6: replaces JobLauncher AND JobExplorer
+    private final JobOperator jobOperator; // Batch 6: JobOperator extends JobLauncher
     private final Job orderExportJob;
 
     @Scheduled(cron = "0 0 2 * * *")
@@ -265,7 +265,7 @@ For durable background jobs with retry, a job queue is a better fit. Match the t
 - Agent uses plain `spring-boot-starter-batch` and expects restart/audit — Batch 6's default repository is resourceless (in-memory); use `spring-boot-starter-batch-jdbc` for the `BATCH_*` tables
 - Agent uses `JobBuilderFactory` / `StepBuilderFactory` — removed in Batch 5; use `new JobBuilder(name, repo)` / `new StepBuilder(name, repo)`
 - Agent calls `.chunk(500, txManager)` — Batch 5 style, deprecated in 6; use `.chunk(500)` + `.transactionManager(txManager)`
-- Agent injects `JobLauncher` or `JobExplorer` — consolidated into `JobOperator` in Batch 6; inject `JobOperator` and call `start(job, params)`
+- Agent injects `JobLauncher` or `JobExplorer` — in Batch 6 launch with `JobOperator.start(job, params)` and query with `JobRepository` (it extends the deprecated `JobExplorer`); `JobOperator`'s own query methods are deprecated for removal
 - Agent calls `jobOperator.start("jobName", properties)` — deprecated for removal; use `start(Job, JobParameters)`
 - Agent writes manual config `@EnableBatchProcessing(dataSourceRef = ...)` — split in Batch 6: `@EnableBatchProcessing(taskExecutorRef = ...)` + `@EnableJdbcJobRepository(dataSourceRef = ...)`
 - Agent reuses a Boot 3 Flyway baseline for `BATCH_*` — Batch 6 renamed `BATCH_JOB_SEQ` to `BATCH_JOB_INSTANCE_SEQ`; add the migration script

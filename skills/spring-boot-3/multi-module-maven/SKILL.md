@@ -42,7 +42,7 @@ my-app/
     <parent>
         <groupId>org.springframework.boot</groupId>
         <artifactId>spring-boot-starter-parent</artifactId>
-        <version>3.3.0</version>
+        <version>3.5.16</version>
     </parent>
 
     <!-- Shared versions — all modules inherit -->
@@ -63,6 +63,11 @@ my-app/
             <dependency>
                 <groupId>com.example</groupId>
                 <artifactId>my-app-application</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.example</groupId>
+                <artifactId>my-app-infrastructure</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <!-- Third-party versions -->
@@ -93,6 +98,11 @@ my-app/
                                 <groupId>org.mapstruct</groupId>
                                 <artifactId>mapstruct-processor</artifactId>
                                 <version>${mapstruct.version}</version>
+                            </path>
+                            <path>
+                                <groupId>org.projectlombok</groupId>
+                                <artifactId>lombok-mapstruct-binding</artifactId>
+                                <version>0.2.0</version>
                             </path>
                         </annotationProcessorPaths>
                     </configuration>
@@ -170,6 +180,7 @@ my-app/
 | `web` | All modules | — |
 
 ## Gotchas
+- Agent configures Lombok and MapStruct processors without `lombok-mapstruct-binding` — the build then depends on processor order: with MapStruct first, generated mappers miss Lombok's builders/getters and fail to compile; the binding makes it order-independent
 - Agent puts `spring-boot-maven-plugin` in parent POM — only in the runnable module
 - Agent adds `<dependencies>` in parent instead of `<dependencyManagement>` — adds to all modules' classpath
 - Agent creates circular dependencies between modules — enforce the dependency direction above

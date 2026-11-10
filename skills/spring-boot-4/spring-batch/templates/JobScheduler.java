@@ -3,7 +3,8 @@
 //   spring.batch.job.enabled: false      # don't auto-run jobs on startup
 //   spring.batch.jdbc.initialize-schema: never   # (batch-jdbc starter) manage BATCH_* tables via Flyway
 //
-// Batch 6: JobLauncher and JobExplorer are consolidated into JobOperator — inject that.
+// Batch 6: JobOperator extends JobLauncher — inject it to launch jobs.
+// Execution queries belong to JobRepository (it extends the now-deprecated JobExplorer).
 // The default JobOperator is SYNCHRONOUS — start(...) blocks until the job finishes.
 // Configure an async TaskExecutor (@BatchTaskExecutor bean) if you need fire-and-forget.
 

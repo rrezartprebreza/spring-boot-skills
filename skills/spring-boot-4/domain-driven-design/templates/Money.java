@@ -11,14 +11,20 @@ import java.util.Objects;
  */
 public record Money(BigDecimal amount, Currency currency) {
 
-    public static final Money ZERO = Money.usd("0.00");
+    // No shared ZERO constant: a USD zero silently breaks every non-USD aggregate
+    // the first time it is used as a starting total or a reduce() identity.
+    public static Money zero(Currency currency) {
+        return new Money(BigDecimal.ZERO, currency);
+    }
 
     public Money {
         Objects.requireNonNull(amount, "Amount must not be null");
         Objects.requireNonNull(currency, "Currency must not be null");
         if (amount.compareTo(BigDecimal.ZERO) < 0)
             throw new IllegalArgumentException("Amount cannot be negative: " + amount);
-        amount = amount.setScale(2, RoundingMode.HALF_UP);
+        // Scale to the currency (JPY 0, EUR 2, BHD 3) and refuse to round: losing
+        // precision in a money value must fail loudly, never happen silently.
+        amount = amount.setScale(currency.getDefaultFractionDigits(), RoundingMode.UNNECESSARY);
     }
 
     public static Money of(BigDecimal amount, Currency currency) {

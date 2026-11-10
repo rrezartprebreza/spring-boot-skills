@@ -78,7 +78,7 @@ public record CreateOrderCommand(CustomerId customerId, List<OrderItemData> item
 public interface OrderRepository {
     Order save(Order order);
     Optional<Order> findById(OrderId id);
-    List<Order> findByCustomer(CustomerId customerId);
+    void deleteById(OrderId id);
 }
 
 // domain/port/out/InventoryPort.java — driven port
@@ -131,6 +131,11 @@ public class JpaOrderRepository implements OrderRepository {
     @Override
     public Optional<Order> findById(OrderId id) {
         return springDataRepo.findById(id.value()).map(mapper::toDomain);
+    }
+
+    @Override
+    public void deleteById(OrderId id) {
+        springDataRepo.deleteById(id.value());
     }
 }
 

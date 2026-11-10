@@ -7,6 +7,7 @@ import org.springframework.ai.chat.client.ChatClientResponse;
 import org.springframework.ai.chat.client.advisor.api.CallAdvisor;
 import org.springframework.ai.chat.client.advisor.api.CallAdvisorChain;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
@@ -45,8 +46,10 @@ public class AiAuditAdvisor implements CallAdvisor {
         String requestId = UUID.randomUUID().toString();
         Instant startTime = Instant.now();
 
+        String requestedModel = requestedModel(request);
+
         try {
-            ChatClientResponse response = metrics.track("chat", () -> chain.nextCall(request));
+            ChatClientResponse response = metrics.track("chat", requestedModel, () -> chain.nextCall(request));
             ChatResponse chatResponse = response.chatResponse();
 
             // Extract token usage if available
@@ -55,7 +58,9 @@ public class AiAuditAdvisor implements CallAdvisor {
                 var usage = chatResponse.getMetadata().getUsage();
                 long inputTokens = usage.getPromptTokens();
                 long outputTokens = usage.getCompletionTokens();
-                metrics.recordTokens(inputTokens, outputTokens);
+                // The response reports the model that actually served the call.
+                String servedModel = chatResponse.getMetadata().getModel();
+                metrics.recordTokens(servedModel != null ? servedModel : requestedModel, inputTokens, outputTokens);
 
                 // Log metadata only — never log prompt content (PII risk)
                 log.info("AI request completed: requestId={}, inputTokens={}, outputTokens={}",
@@ -63,14 +68,29 @@ public class AiAuditAdvisor implements CallAdvisor {
             }
 
             // Persist audit asynchronously — don't block the response
-            auditRecorder.record(requestId, "SUCCESS", null, startTime);
+            recordBestEffort(requestId, "SUCCESS", null, startTime);
 
             return response;
         } catch (Exception e) {
-            log.error("AI request failed: requestId={}", requestId, e);
-            auditRecorder.record(requestId, "ERROR", e.getMessage(), startTime);
+            log.error("AI request failed: requestId={}, failureType={}", requestId, e.getClass().getSimpleName());
+            recordBestEffort(requestId, "ERROR", e.getClass().getSimpleName(), startTime);
             throw e;
         }
+    }
+
+    private void recordBestEffort(String requestId, String status, String errorType, Instant startTime) {
+        try {
+            auditRecorder.record(requestId, status, errorType, startTime);
+        } catch (RuntimeException failure) {
+            // Submission can fail before the @Async method body runs.
+            log.warn("AI audit submission failed: requestId={}, failureType={}",
+                requestId, failure.getClass().getSimpleName());
+        }
+    }
+
+    private static String requestedModel(ChatClientRequest request) {
+        ChatOptions options = request.prompt().getOptions();
+        return options != null && options.getModel() != null ? options.getModel() : "default";
     }
 }
 
@@ -98,7 +118,8 @@ class AiAuditRecorder {
         } catch (Exception e) {
             // Never let audit failures break the AI call path
             org.slf4j.LoggerFactory.getLogger(AiAuditRecorder.class)
-                .warn("Failed to persist AI audit log: {}", requestId, e);
+                .warn("Failed to persist AI audit log: requestId={}, failureType={}",
+                    requestId, e.getClass().getSimpleName());
         }
     }
 }

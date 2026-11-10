@@ -32,9 +32,9 @@ public class RedisConfig {
         RedisTemplate<String, Object> template = new RedisTemplate<>();
         template.setConnectionFactory(factory);
         template.setKeySerializer(new StringRedisSerializer());
-        template.setValueSerializer(new GenericJackson2JsonRedisSerializer()); // JSON, not Java serialize
+        template.setValueSerializer(jsonSerializer()); // JSON, not Java serialization
         template.setHashKeySerializer(new StringRedisSerializer());
-        template.setHashValueSerializer(new GenericJackson2JsonRedisSerializer());
+        template.setHashValueSerializer(jsonSerializer());
         return template;
     }
 
@@ -43,13 +43,34 @@ public class RedisConfig {
         RedisCacheConfiguration config = RedisCacheConfiguration.defaultCacheConfig()
             .entryTtl(Duration.ofMinutes(10))
             .serializeKeysWith(RedisSerializationContext.SerializationPair.fromSerializer(new StringRedisSerializer()))
-            .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(new GenericJackson2JsonRedisSerializer()))
+            .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jsonSerializer()))
             .disableCachingNullValues();
 
         return RedisCacheManager.builder(factory)
             .cacheDefaults(config)
+            .transactionAware()   // put/evict only after the surrounding transaction commits
             .withCacheConfiguration("orders", config.entryTtl(Duration.ofMinutes(5)))
             .withCacheConfiguration("products", config.entryTtl(Duration.ofHours(1)))
+            .build();
+    }
+
+    // Records are final, so DefaultTyping.NON_FINAL writes no type id for them and every
+    // cache read fails ("missing type id property '@class'"). The builder's defaultTyping(true)
+    // types user classes too; the validator limits type ids to an allow-list instead of
+    // LaissezFaire's "any class". BigDecimal is non-final, so java.math must be allowed.
+    private GenericJackson2JsonRedisSerializer jsonSerializer() {
+        ObjectMapper mapper = JsonMapper.builder()
+            .addModule(new JavaTimeModule())
+            .polymorphicTypeValidator(BasicPolymorphicTypeValidator.builder()
+                .allowIfSubType("com.example.")   // your DTO packages
+                .allowIfSubType("java.util.")
+                .allowIfSubType("java.math.")
+                .allowIfSubType("java.time.")
+                .build())
+            .build();
+        return GenericJackson2JsonRedisSerializer.builder()
+            .objectMapper(mapper)
+            .defaultTyping(true)
             .build();
     }
 }
@@ -167,28 +188,82 @@ spring:
 
 ## Cache Stampede
 
-When a hot key expires, every concurrent request misses at once and they all hammer the DB to recompute
-the same value (the "thundering herd"). For expensive, high-traffic loads, let one caller compute while
-the rest wait:
+`sync = true` delegates loading coordination to the cache provider. The default Redis writer
+in the configuration above is non-locking: do not claim that this annotation alone prevents
+duplicate loads, even inside one application instance.
+
+For expensive read-only loads, the optional
+[CoalescingRedisCacheManager](templates/CoalescingRedisCacheManager.java) uses a locking
+writer with a finite lock TTL. Register it under a distinct bean name, keeping your normal
+cache manager primary, and pass a JSON-serialized `RedisCacheConfiguration`:
 
 ```java
-// sync = true requests provider-supported synchronized loading; verify the actual provider.
-@Cacheable(value = "products", key = "#id", sync = true)
+@Cacheable(cacheManager = "coalescingCacheManager", value = "products", key = "#id", sync = true)
 public ProductResponse findById(UUID id) { ... }
 ```
 
-`sync = true` is a provider-dependent hint, not a fleet-wide guarantee. Verify the configured
-Cache implementation. If coordination is needed, use a tested mechanism with lock ownership,
-safe release and expiry behavior; bare SETNX plus TTL is insufficient for stale-owner safety.
-Pair this with appropriate TTL jitter and an explicit stale-data policy.
-See [Spring's synchronized caching contract](https://docs.spring.io/spring-framework/reference/integration/cache/annotations.html#cache-annotations-cacheable-synchronized).
+Add this bean method to the shown `RedisConfig`, reusing its `jsonSerializer()` helper,
+and mark the normal `cacheManager` bean `@Primary` so existing annotations stay unchanged:
+
+```java
+@Bean("coalescingCacheManager")
+RedisCacheManager coalescingCacheManager(RedisConnectionFactory factory) {
+    var config = RedisCacheConfiguration.defaultCacheConfig()
+        .entryTtl(Duration.ofMinutes(5))
+        .disableCachingNullValues()
+        .serializeValuesWith(RedisSerializationContext.SerializationPair.fromSerializer(jsonSerializer()));
+    return CoalescingRedisCacheManager.create(factory, config, Duration.ofSeconds(10));
+}
+```
+
+The writer lock is cache-wide, not per key: unrelated misses may block too. Configure finite
+loader/transport timeouts and a lock TTL longer than the expected load, and test contention.
+Lock expiry during a stalled load can still permit duplicates; this is load reduction, not
+an exactly-once guarantee or protection for payment/order mutations. Redis command timeouts
+do not bound the writer's entire lock-wait loop. Use a bounded caller deadline or a different
+coalescing strategy when strict waiting bounds are required.
+
+Use `sync` loading only for committed, read-only data; transaction-aware put/evict does not make
+the loader-based cache get transactional. Prefer TTL jitter or local coalescing when the
+cache-wide lock would reduce throughput excessively. Do not implement a bare `SETNX`/delete
+lock without ownership tokens, atomic owner-checked release and a lease-expiry design.
+
+See [Spring Redis cache behavior](https://docs.spring.io/spring-data/redis/reference/redis/redis-cache.html).
+
+## Failure policy
+
+| Usage | Redis unavailable | Recovery concern |
+| --- | --- | --- |
+| Disposable read cache | Optionally fall back to the source, with bounded concurrency | Avoid a database overload during an outage |
+| Write-side eviction | Do not silently ignore failures | A committed DB update can leave stale cached values; use bounded TTL plus durable invalidation when needed |
+| Authentication/session/authorization | Do not grant access because Redis failed | Return a controlled unavailable response or require reauthentication |
+| Security rate limit | Fail closed or use an explicitly approved bounded fallback | Never silently allow unlimited traffic |
+
+[OptionalCacheLookup](templates/OptionalCacheLookup.java) demonstrates narrow read-side
+fallback for connection failures and timeouts, with an observability callback. It deliberately
+does not suppress serialization errors or write/eviction failures. Recovery restores cache
+reads; do not assume `transactionAware()` makes Redis and the database one atomic transaction.
+
+Verification must include concurrent misses, TTL expiration, DTO round-trips (including
+money/time fields), rollback, outage fallback and recovery. A short negative-cache TTL can be
+useful for repeated misses; disabling null caching is an example choice, not a universal rule.
+
+## Verification scope
+
+The repository fixture targets Boot 3.5.16 with Java 17/21 and checks
+Redis 7.4 serialization, TTL, normal concurrent loads and transaction callbacks; not failover or lease-expiry correctness. Check the
+[coverage matrix](https://github.com/rrezartprebreza/spring-boot-skills/blob/main/verification/MATRIX.md)
+before treating another minor version or an illustrative snippet as verified.
 
 ## Gotchas
+- Agent combines `@Transactional` with `@CachePut`/`@CacheEvict` on a non-transaction-aware cache manager — the cache can be updated before commit (or evicted then re-filled with stale data); build it with `.transactionAware()`
+- Agent implements a rate limiter as separate `INCR` then `EXPIRE` calls — a failure between them leaves a TTL-less key that blocks the caller forever; use one Lua script
+- Agent allow-lists only `java.util.` for default typing — `BigDecimal` is non-final and carries a type id, so cached prices/totals fail to deserialize; allow `java.math.` (and `java.time.`) too
 - Agent uses Java serialization for values — always use JSON (`GenericJackson2JsonRedisSerializer`)
+- Agent uses `new GenericJackson2JsonRedisSerializer()` — its plain mapper has no JSR-310 module, so any `Instant`/`LocalDate` field fails to serialize; build it with `JavaTimeModule`
 - Agent caches entities with JPA lazy fields — cache DTOs/response objects, not entities
 - Agent uses no TTL — always set expiry, memory is not infinite
 - Agent forgets `@EnableCaching` — `@Cacheable` silently does nothing without it
-- Agent caches `null` values — use `.disableCachingNullValues()` to avoid storing misses
-- Agent treats sync = true as a distributed lock - verify provider behavior and coordinate explicitly if needed.
-- Agent separates counter creation from expiry - use one atomic script with an expiring initial SET.
+- Agent caches misses without an expiry policy - either disable null caching or use an intentional short negative-cache TTL.
+- Agent assumes `sync = true` guarantees a single load - verify the provider/writer and test concurrent misses.
 - Agent gives every entry the same TTL — add jitter so keys don't expire in a synchronized wave

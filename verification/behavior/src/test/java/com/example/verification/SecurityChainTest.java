@@ -47,7 +47,7 @@ class SecurityChainTest {
         @Bean Controller controller() { return new Controller(); }
     }
     @RestController static class Controller {
-        @GetMapping({"/api/v1/orders", "/api/v1/admin/orders", "/api/v1/auth/ping"})
+        @GetMapping({"/api/v1/orders", "/api/v1/admin/orders", "/api/v1/auth/ping", "/error"})
         String ok() { return "ok"; }
     }
 
@@ -67,6 +67,10 @@ class SecurityChainTest {
         mvc.perform(get("/api/v1/orders")).andExpect(status().isUnauthorized())
             .andExpect(header().string("WWW-Authenticate", "Bearer"))
             .andExpect(jsonPath("$.status").value(401));
+    }
+    @Test void errorPathIsReachableWithoutToken() throws Exception {
+        // Container error dispatches carry no JWT; a protected /error turns every 404/500 into 401.
+        mvc.perform(get("/error")).andExpect(status().isOk());
     }
     @Test void publicRouteAllowsAnonymousButRejectsInvalidToken() throws Exception {
         mvc.perform(get("/api/v1/auth/ping")).andExpect(status().isOk());
