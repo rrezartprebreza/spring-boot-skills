@@ -1,4 +1,4 @@
-// ❌ BAD — pre-Security-7 API (won't compile), session-based, hardcoded secret, missing method security
+// BAD — pre-Security-7 API (won't compile), session-based, hardcoded secret, missing method security
 
 @Configuration
 @EnableWebSecurity                                        // missing @EnableMethodSecurity

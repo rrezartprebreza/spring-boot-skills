@@ -7,7 +7,7 @@
   "plugins": [
     {
       "name": "spring-boot-4-skills",
-      "description": "39 Spring Boot 4, Framework 7, security review, supply chain, incident response, Spring AI, and MCP skills.",
+      "description": "41 Spring Boot 4, Framework 7, security review, scheduling, async, supply chain, incident response, Spring AI, and MCP skills.",
       "source": "./",
       "strict": false,
       "skills": ["./skills/spring-boot-4/"],
@@ -16,7 +16,7 @@
     },
     {
       "name": "spring-boot-3-skills",
-      "description": "39 Spring Boot 3, Framework 6, security review, supply chain, incident response, Spring AI, and MCP skills.",
+      "description": "41 Spring Boot 3, Framework 6, security review, scheduling, async, supply chain, incident response, Spring AI, and MCP skills.",
       "source": "./",
       "strict": false,
       "skills": ["./skills/spring-boot-3/"],

@@ -4,7 +4,7 @@ import unittest
 from pathlib import Path
 from unittest.mock import patch
 
-from validate_repository import ROOT, frontmatter, load_json, parse_yaml
+from validate_repository import ROOT, find_icon, frontmatter, load_json, parse_yaml
 
 
 class JsonValidationTest(unittest.TestCase):
@@ -78,6 +78,18 @@ class YamlValidationTest(unittest.TestCase):
     def test_rejects_non_string_description(self):
         with contextlib.redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
             frontmatter(Path("SKILL.md"), "---\nname: api\ndescription: false\n---\n")
+
+
+class IconValidationTest(unittest.TestCase):
+    def test_detects_check_cross_and_warning_icons(self):
+        for line in ("// \u2705 GOOD", "-- \u274c Dangerous", "// \u26a0\ufe0f note", "\U0001F525 Hot"):
+            with self.subTest(line=line):
+                self.assertIsNotNone(find_icon(line))
+
+    def test_allows_plain_labels_and_typographic_arrows(self):
+        for line in ("// BAD \u2014 field injection", "Controller \u2192 Service", "-- Safe: add column"):
+            with self.subTest(line=line):
+                self.assertIsNone(find_icon(line))
 
 
 if __name__ == "__main__":

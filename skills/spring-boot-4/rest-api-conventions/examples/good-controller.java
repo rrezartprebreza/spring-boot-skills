@@ -1,4 +1,4 @@
-// ✅ GOOD — proper response envelope, correct status, no entity leakage
+// GOOD — proper response envelope, correct status, no entity leakage
 
 @RestController
 @RequestMapping("/api/{version}/orders") // path-segment versioning: /api/v1/orders, /api/v1.1/orders

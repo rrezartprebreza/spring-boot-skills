@@ -148,7 +148,7 @@ public class OrderProcessor implements ItemProcessor<Order, OrderRow> {
     @Override
     public OrderRow process(Order order) {
         if (order.getTotal().isZero()) {
-            return null; // ⚠️ null = FILTER this item; it is NOT written and NOT an error
+            return null; // Note: null = FILTER this item; it is NOT written and NOT an error
         }
         return OrderRow.from(order);
     }

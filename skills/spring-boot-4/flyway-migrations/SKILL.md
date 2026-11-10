@@ -86,13 +86,13 @@ ALTER TABLE orders
 ## Safe Migration Patterns
 
 ```sql
--- ✅ Safe: add nullable column
+-- Safe: add nullable column
 ALTER TABLE orders ADD COLUMN notes TEXT;
 
--- ✅ Safe: add column with default
+-- Safe: add column with default
 ALTER TABLE orders ADD COLUMN priority INT NOT NULL DEFAULT 0;
 
--- ✅ Safe: rename via expand → migrate → contract, spread across deploys
+-- Safe: rename via expand → migrate → contract, spread across deploys
 -- Step 1 (V5): add new column (nullable — old instances keep inserting without it)
 ALTER TABLE orders ADD COLUMN customer_email VARCHAR(255);
 -- Step 2 (V5): backfill
@@ -107,7 +107,7 @@ ALTER TABLE orders ALTER COLUMN customer_email SET NOT NULL;
 -- Step 5 (V9, after no deployed code reads user_id): drop old column
 ALTER TABLE orders DROP COLUMN user_id;
 
--- ✅ Safe: add index CONCURRENTLY (no table lock in Postgres) — TWO rules, both required:
+-- Safe: add index CONCURRENTLY (no table lock in Postgres) — TWO rules, both required:
 -- 1. Put it ALONE in its own migration file. Flyway detects CONCURRENTLY as
 --    non-transactional; mixed with any other statement the migration is rejected:
 --    "Detected both transactional and non-transactional statements".
@@ -118,10 +118,10 @@ ALTER TABLE orders DROP COLUMN user_id;
 -- V6__index_orders_email.sql (after V5 adds the column)
 CREATE INDEX CONCURRENTLY idx_orders_email ON orders(customer_email);
 
--- ❌ Dangerous: rename column directly (breaks running app)
+-- Dangerous: rename column directly (breaks running app)
 ALTER TABLE orders RENAME COLUMN user_id TO customer_id;
 
--- ❌ Dangerous: NOT NULL without default on large table (locks table)
+-- Dangerous: NOT NULL without default on large table (locks table)
 ALTER TABLE orders ADD COLUMN priority INT NOT NULL; -- will fail on existing rows
 ```
 

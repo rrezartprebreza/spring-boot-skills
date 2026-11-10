@@ -147,10 +147,10 @@ public void addItem(OrderItem item) {
 return 20. For large or infinite-scroll datasets, paginate by the last seen key (the "seek" method):
 
 ```java
-// ❌ Slow on deep pages — OFFSET grows linearly
+// BAD: Slow on deep pages — OFFSET grows linearly
 Page<Order> findByStatus(OrderStatus status, Pageable pageable);
 
-// ✅ Keyset — constant time regardless of depth. Pass the last row's createdAt + id.
+// GOOD: Keyset — constant time regardless of depth. Pass the last row's createdAt + id.
 @Query("""
     SELECT o FROM Order o
     WHERE o.status = :status

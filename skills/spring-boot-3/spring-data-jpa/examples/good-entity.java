@@ -1,4 +1,4 @@
-// ✅ GOOD — UUID ID, STRING enum, LAZY fetch, behavior methods, no public setters
+// GOOD — UUID ID, STRING enum, LAZY fetch, behavior methods, no public setters
 
 @Entity
 @Table(name = "orders", indexes = {

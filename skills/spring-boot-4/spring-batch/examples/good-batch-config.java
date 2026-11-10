@@ -1,4 +1,4 @@
-// ✅ GOOD — Spring Batch 6 / Boot 4: no @EnableBatchProcessing, builders take JobRepository,
+// GOOD — Spring Batch 6 / Boot 4: no @EnableBatchProcessing, builders take JobRepository,
 // chunk size and transaction manager are separate builder calls, reader is @StepScope with a
 // deterministic sort, job is restartable (requires spring-boot-starter-batch-jdbc for metadata).
 

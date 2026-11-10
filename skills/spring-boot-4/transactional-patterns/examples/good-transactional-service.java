@@ -1,4 +1,4 @@
-// ✅ GOOD — business mutation and success audit commit or roll back together.
+// GOOD — business mutation and success audit commit or roll back together.
 // Illustrative: imports and domain types are supplied by the application.
 
 @Service

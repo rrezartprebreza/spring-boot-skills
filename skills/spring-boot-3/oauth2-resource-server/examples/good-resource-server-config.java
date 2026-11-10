@@ -1,4 +1,4 @@
-// ✅ GOOD — JWT resource server, custom converter, scope-based auth, stateless
+// GOOD — JWT resource server, custom converter, scope-based auth, stateless
 
 @Configuration
 @EnableWebSecurity

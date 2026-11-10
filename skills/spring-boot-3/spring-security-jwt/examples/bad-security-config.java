@@ -1,4 +1,4 @@
-// ❌ BAD — deprecated API, session-based, hardcoded secret, missing method security
+// BAD — deprecated API, session-based, hardcoded secret, missing method security
 
 @Configuration
 @EnableWebSecurity                                        // missing @EnableMethodSecurity

@@ -28,14 +28,14 @@ Database
 - Exception handling via `@ControllerAdvice`, never try/catch in controllers
 
 ```java
-// ✅ GOOD
+// GOOD
 @PostMapping("/orders")
 public ResponseEntity<OrderResponse> createOrder(@Valid @RequestBody CreateOrderRequest request) {
     Order order = orderService.createOrder(request);
     return ResponseEntity.status(HttpStatus.CREATED).body(OrderResponse.from(order));
 }
 
-// ❌ BAD — business logic in controller
+// BAD — business logic in controller
 @PostMapping("/orders")
 public ResponseEntity<Order> createOrder(@RequestBody CreateOrderRequest request) {
     if (request.getItems().isEmpty()) throw new RuntimeException("No items");
@@ -54,7 +54,7 @@ public ResponseEntity<Order> createOrder(@RequestBody CreateOrderRequest request
   (enable with `@EnableResilientMethods`) — no spring-retry dependency
 
 ```java
-// ✅ GOOD
+// GOOD
 @Service
 @RequiredArgsConstructor
 public class OrderService {
@@ -69,7 +69,7 @@ public class OrderService {
     }
 }
 
-// ❌ BAD — field injection, HTTP concern in service
+// BAD — field injection, HTTP concern in service
 @Service
 public class OrderService {
     @Autowired private OrderRepository orderRepository;
@@ -91,7 +91,7 @@ public class OrderService {
 - Use records for immutable DTOs (Java 16+)
 
 ```java
-// ✅ GOOD
+// GOOD
 public record OrderResponse(UUID id, String status, List<LineItemResponse> items, Instant createdAt) {
     public static OrderResponse from(Order order) {
         return new OrderResponse(order.getId(), order.getStatus().name(),
@@ -109,7 +109,7 @@ public record OrderResponse(UUID id, String status, List<LineItemResponse> items
 - Collection mapping: use `.stream().map(OrderResponse::from).toList()` — never manual loops
 
 ```java
-// ✅ GOOD — dedicated mapper for complex mappings
+// GOOD — dedicated mapper for complex mappings
 public class OrderMapper {
 
     public static OrderResponse toResponse(Order order) {

@@ -1,4 +1,4 @@
-// ✅ GOOD — use case implements port, injects domain ports, no Spring annotations in domain
+// GOOD — use case implements port, injects domain ports, no Spring annotations in domain
 
 // --- Domain port (in domain layer, no Spring imports) ---
 public interface CreateOrderUseCase {

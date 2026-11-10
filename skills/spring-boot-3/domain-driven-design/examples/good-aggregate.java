@@ -1,4 +1,4 @@
-// ✅ GOOD — rich domain model, typed IDs, behavior methods, domain events, no public setters
+// GOOD — rich domain model, typed IDs, behavior methods, domain events, no public setters
 
 public class Order {
 

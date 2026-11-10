@@ -1,4 +1,4 @@
-// ❌ BAD — anemic model, no invariant enforcement, no typed IDs, no events
+// BAD — anemic model, no invariant enforcement, no typed IDs, no events
 
 @Entity
 @Data                                        // generates public setters — anyone can mutate state

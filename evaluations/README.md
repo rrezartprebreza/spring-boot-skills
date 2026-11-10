@@ -41,6 +41,11 @@ templates are included automatically; explicit duplicates are included only once
 The optimistic-lock retry, success-audit and durable-domain-event cases cover transaction
 boundaries and contract preservation. Adding a case does not mean a model has passed it.
 
+The async-overload, replicated-schedule and Redis-counter cases check executor boundaries,
+durability, expired-lease behavior and atomic admission decisions. They are unexecuted model
+evaluation protocols until transcripts are collected and reviewed. Their Java regression
+tests cover narrower executable invariants, not agent behavior or production readiness.
+
 See [the initial smoke review](SMOKE-REVIEW.md) for the limited run completed during development.
 
 For a practical task and a baseline-versus-skills collection procedure, see the

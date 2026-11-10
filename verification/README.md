@@ -6,6 +6,12 @@ PostgreSQL and validates JPA mappings, version updates and rollback. Idempotency
 shipped schema and check actual lock contention, rollback, tenant isolation and retained hashes.
 They verify the database claim protocol, not a complete payment workflow.
 
+The async fixture invokes the shipped worker through a Spring proxy and checks named executor
+selection, thread-bound transaction isolation, failure propagation and bounded rejection/recovery.
+Scheduling tests cover disabled/configured cron registration and the bounded adapter, not a
+distributed scheduler, lease implementation or durable retry system. Redis tests exercise the
+shipped Lua limiter against real Redis for concurrency, expiry, window retention and key scope.
+
 The fixture also runs the shipped Flyway examples in an isolated schema, proving that
 `CREATE INDEX CONCURRENTLY` applies from its own migration with a session-level lock and that
 mixing it into a transactional migration is rejected. It validates the layered request DTO with a
@@ -41,9 +47,11 @@ Wait until pg_isready reports that PostgreSQL is accepting connections before ru
 Wait for Redis PONG too. Use TEST_REDIS_PORT to override its localhost port (default 56389).
 Use TEST_DATABASE_URL to select a different disposable database URL. The fixture username
 and password are both skills. Clean between Boot profiles to avoid stale compiled classes.
+Set TEST_REDIS_PORT when Redis is mapped to another local port. Tests delete only their own
+randomly scoped keys; never point the fixture at production or shared services.
 To verify Java 21 compilation, select JDK 21 and pass -Dmaven.compiler.release=21.
 
-CI runs all four Boot/Java combinations with independent PostgreSQL service containers.
+CI runs all four Boot/Java combinations with independent PostgreSQL and Redis service containers.
 The fixture baselines are Boot 3.5.16 and Boot 4.1.0; they do not claim coverage of every minor
 release. Dependency versions are aligned through the respective Boot BOM.
 

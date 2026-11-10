@@ -1,4 +1,4 @@
--- ✅ GOOD — V5__index_orders_shipping_address.sql
+-- GOOD — V5__index_orders_shipping_address.sql
 -- CREATE INDEX CONCURRENTLY builds the index without blocking writes on PostgreSQL.
 -- Two requirements, both verified against Flyway 12 + PostgreSQL:
 --   1. This statement is ALONE in the file. Flyway runs it outside a transaction;

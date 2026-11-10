@@ -46,6 +46,8 @@ ROOT = Path(__file__).resolve().parents[1]
 BOOT_ROOTS = {version: ROOT / "skills" / f"spring-boot-{version}" for version in (3, 4)}
 PLACEHOLDER = re.compile(r"\b(?:TODO|FIXME|TBD)\b|\[TODO:", re.IGNORECASE)
 LINK = re.compile(r"\[[^\]]*\]\(([^)]+)\)")
+# Emoji, pictographs, dingbats such as check and cross marks, and the emoji variation selector.
+ICON = re.compile("[\U0001F000-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\uFE0F]")
 
 
 def fail(message: str) -> None:
@@ -147,6 +149,30 @@ def validate_skill(version: int, skill_dir: Path, catalog_version: int) -> None:
     readme_path = f"skills/spring-boot-{catalog_version}/{skill_name}/"
     if readme_path not in (ROOT / "README.md").read_text(encoding="utf-8"):
         fail(f"README.md is missing the catalog entry for {skill_name}")
+
+
+def find_icon(text: str) -> str | None:
+    match = ICON.search(text)
+    return match.group(0) if match else None
+
+
+def validate_no_icons() -> None:
+    """Skills are agent instructions: label good and bad code with words, not icons."""
+    for root in BOOT_ROOTS.values():
+        for path in sorted(root.rglob("*")):
+            if not path.is_file():
+                continue
+            try:
+                text = path.read_text(encoding="utf-8")
+            except UnicodeDecodeError:
+                continue
+            for number, line in enumerate(text.splitlines(), start=1):
+                icon = find_icon(line)
+                if icon:
+                    fail(
+                        f"{path.relative_to(ROOT)}:{number} contains the icon {icon!r}; "
+                        "use a text label such as BAD or GOOD instead"
+                    )
 
 
 def validate_markdown_links() -> None:
@@ -284,6 +310,7 @@ def main() -> None:
             catalog_version = 4 if skill_name in skill_sets[4] else 3
             validate_skill(version, root / skill_name, catalog_version)
 
+    validate_no_icons()
     validate_markdown_links()
     validate_packaging({version: len(skills) for version, skills in skill_sets.items()})
     validate_version_sensitive_examples()

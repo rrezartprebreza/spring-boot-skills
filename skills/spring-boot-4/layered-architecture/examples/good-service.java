@@ -1,4 +1,4 @@
-// ✅ GOOD — proper layer separation, constructor injection, @Transactional on service
+// GOOD — proper layer separation, constructor injection, @Transactional on service
 
 @Service
 @RequiredArgsConstructor

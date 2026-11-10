@@ -1,0 +1,4 @@
+interface:
+  display_name: "Async Execution"
+  short_description: "Bounded executors, failures and context boundaries"
+  default_prompt: "Use $async-execution to add bounded asynchronous work without losing failure handling or transaction boundaries."

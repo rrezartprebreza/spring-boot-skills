@@ -87,7 +87,7 @@ public void processOrder(Order order) {
 ## Self-Invocation Pitfall
 
 ```java
-// ❌ BROKEN — self-invocation bypasses Spring proxy, @Transactional ignored
+// BROKEN — self-invocation bypasses Spring proxy, @Transactional ignored
 @Service
 public class OrderService {
     @Transactional
@@ -99,7 +99,7 @@ public class OrderService {
     public void processSingle(UUID id) { ... } // never creates new TX
 }
 
-// ✅ FIX — extract the independently transactional operation to another bean
+// FIX — extract the independently transactional operation to another bean
 @Service
 @RequiredArgsConstructor
 public class OrderService {

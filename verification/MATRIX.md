@@ -13,6 +13,7 @@ Spring AI 1.0.0 / 2.0.0 respectively. Database CI uses PostgreSQL 16.
 | agent-qa-browser-regression | No Java shipped | Response-level cases and illustrative plans; no live browser/provider execution |
 | ai-observability | Advisor and metrics, both trees | Async saturation, shutdown, writes and failure isolation |
 | api-versioning | No | No |
+| async-execution | ReportTasks and executor configuration, both trees | Proxy dispatch, thread-bound transaction isolation, failed futures and saturation rejection/recovery; no durable job recovery |
 | configuration-properties | ClientProperties, both trees | Valid and invalid startup configuration |
 | container-native-deployment | No | No |
 | domain-driven-design | No | No |
@@ -34,6 +35,7 @@ Spring AI 1.0.0 / 2.0.0 respectively. Database CI uses PostgreSQL 16.
 | production-observability | No | No |
 | resilience-retry | CatalogRetryService, both trees | Real proxies: recovery, exhaustion, permanent errors and interruption |
 | rest-api-conventions | Envelope, page DTO and handler, both trees | Pagination, HTTP errors and fixture create/retrieve |
+| scheduled-tasks | StaleOrderSchedule, both trees | Disabled/configured cron registration, next-fire calculation and bounded adapter; no distributed scheduler or lease implementation |
 | security-audit-logging | SecurityAuditRecord, both trees | Typed fields, identity requirements and correlation validation; no sink/outbox integration |
 | spring-ai-integration | No | No provider or conversation tests |
 | spring-ai-security | DocumentReadTool, both trees | Scoped in-memory reads, argument validation, concurrent call budget and output limits; no model/adapter tests |
@@ -41,7 +43,7 @@ Spring AI 1.0.0 / 2.0.0 respectively. Database CI uses PostgreSQL 16.
 | spring-boot-migration | No | No generated application migration tests |
 | spring-cloud-gateway | No | No |
 | spring-data-jpa | No | Fixture entity checks mappings, versioning and rollback; not every shipped snippet |
-| spring-data-redis | Config, coalescing manager and optional lookup, both trees | Redis 7.4: concurrent loads, TTL, serialization, transaction callbacks; injected outage failures and real recovered reads |
+| spring-data-redis | Config, coalescing manager, optional lookup and atomic limiter, both trees | Redis 7.4: concurrent loads, TTL, serialization, transaction callbacks, concurrent admission and fixed-window expiry; injected outage failures and real recovered reads |
 | spring-incident-response | Python helper, not Java | Local hashes, changed/non-regular file rejection and CLI; no live collection or provenance proof |
 | spring-modulith | No | No |
 | spring-security-jwt | Templates, both trees | Token/account rejection, authorization and real HTTP authentication |

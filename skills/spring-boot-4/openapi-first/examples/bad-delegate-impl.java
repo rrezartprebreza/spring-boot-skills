@@ -1,4 +1,4 @@
-// ❌ BAD — modifies generated controller, mixes models, wrong config
+// BAD — modifies generated controller, mixes models, wrong config
 
 // Editing the GENERATED controller directly — will be overwritten on next build!
 @RestController

@@ -88,6 +88,8 @@
                         <include>rest-api-conventions/templates/PageResponse.java</include>
                         <include>rest-api-conventions/templates/GlobalExceptionHandler.java</include>
                         <include>configuration-properties/examples/ClientProperties.java</include>
+                        <include>async-execution/templates/*.java</include>
+                        <include>scheduled-tasks/templates/*.java</include>
                         <include>layered-architecture/templates/CreateOrderRequest.java</include>
                         <include>oauth2-resource-server/templates/*.java</include>
                         <include>spring-data-redis/templates/*.java</include>

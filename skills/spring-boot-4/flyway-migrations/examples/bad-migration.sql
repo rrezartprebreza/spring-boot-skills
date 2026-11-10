@@ -1,4 +1,4 @@
--- ❌ BAD — V4_add_column.sql (single underscore — Flyway won't recognize this!)
+-- BAD — V4_add_column.sql (single underscore — Flyway won't recognize this!)
 
 -- Adding NOT NULL column without default — fails on tables with existing rows
 ALTER TABLE orders ADD COLUMN shipping_address TEXT NOT NULL;

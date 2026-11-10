@@ -9,7 +9,7 @@
 
 <br/>
 
-[![skills](https://img.shields.io/badge/skills-39_%C3%97_2-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
+[![skills](https://img.shields.io/badge/skills-41_%C3%97_2-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x_%7C_4.x-6DB33F?style=for-the-badge&labelColor=0f172a&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&labelColor=0f172a&logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/License-MIT-94a3b8?style=for-the-badge&labelColor=0f172a)](LICENSE)
@@ -155,6 +155,8 @@ versions together and recheck the linked official sources before adopting a newe
 
 | Skill | Description | Tags |
 |-------|-------------|------|
+| [**scheduled-tasks**](skills/spring-boot-4/scheduled-tasks/) | Cron/time zones, disabled triggers, bounded sweeps, replica coordination and recovery boundaries. | `scheduling` `jobs` |
+| [**async-execution**](skills/spring-boot-4/async-execution/) | Named bounded executors, rejection, failed futures, context isolation and transaction boundaries. | `async` `concurrency` |
 | [**spring-batch**](skills/spring-boot-4/spring-batch/) | Spring Batch 6 chunk jobs, JDBC versus resourceless repositories, `JobOperator`, restartability, reader sort/thread-safety, and transaction boundaries. | `batch` `etl` |
 
 ### 🚀 Migration & Deployment
@@ -493,7 +495,7 @@ Without the skill, the agent guesses: dead pre-GA artifact names, removed SDK co
 ## 🗺️ Roadmap
 
 - [x] Skills for Spring Batch
-- [x] Spring Boot 4 versions of all 39 skills (`skills/spring-boot-4/`)
+- [x] Spring Boot 4 versions of all 41 skills (`skills/spring-boot-4/`)
 - [x] Skills for Spring Cloud Gateway
 - [x] Skills for Spring WebFlux / reactive patterns
 - [x] Skills for multi-tenancy
@@ -524,7 +526,7 @@ bash scripts/validate-skills.sh
 ```
 
 The validator parses YAML safely, rejects duplicate keys, and checks both version trees, metadata,
-README links and marketplace packaging. There are **39 topics with Boot 3 and Boot 4 variants**.
+README links and marketplace packaging. There are **41 topics with Boot 3 and Boot 4 variants**.
 
 ### Executable verification
 
@@ -534,8 +536,9 @@ SBOM inventory and evidence fingerprints. These checks do not claim live vulnera
 provider-backed prompt-injection resistance, durable audit delivery, or production incident validation.
 
 [The behavior fixture](verification/README.md) compiles the shipped JWT, Problem Details,
-pagination and configuration templates. Its tests cover token/account rejection, HTTP error
-contracts, configuration startup validation, and JPA/Flyway against PostgreSQL.
+pagination, configuration, async, scheduling and Redis limiter templates. Its tests cover
+token/account rejection, HTTP contracts, startup validation, bounded executor rejection,
+cron registration, atomic Redis admission, and JPA/Flyway against PostgreSQL.
 CI runs Boot 3.5 and Boot 4.1 with Java 17 and 21. The MCP compilation fixture remains separate.
 This is targeted coverage, not a claim that every example in the catalog has executable tests.
 

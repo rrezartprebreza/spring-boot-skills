@@ -1,4 +1,4 @@
-// ❌ BAD — caches entities, Java serialization, no TTL, missing @EnableCaching
+// BAD — caches entities, Java serialization, no TTL, missing @EnableCaching
 
 // Missing @EnableCaching on configuration — annotations silently do nothing!
 

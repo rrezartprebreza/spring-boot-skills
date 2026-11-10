@@ -1,4 +1,4 @@
--- ✅ GOOD — V4__add_shipping_address_to_orders.sql
+-- GOOD — V4__add_shipping_address_to_orders.sql
 -- Correct double-underscore naming, nullable column, multi-step rename.
 -- The index for shipping_address lives in its own file:
 -- good-migration-concurrent-index.sql (V5). CREATE INDEX CONCURRENTLY must not

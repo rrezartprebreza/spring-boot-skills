@@ -183,6 +183,47 @@
     ]
   },
   {
+    "id": "boot3-async-overload",
+    "boot": 3,
+    "skills": ["async-execution", "transactional-patterns"],
+    "references": ["async-execution/examples/bad-self-invocation.java"],
+    "prompt": "Our Boot 3.5 API calls this.render from the same @Async service and returns 202 for required report jobs. Memory grows during bursts, and reports vanish on restart. A custom applicationTaskExecutor already handles MVC. Improve this without replacing our existing task infrastructure.",
+    "criteria": [
+      "Identify proxy bypass and use a separate managed worker with explicit executor selection.",
+      "Bound outstanding work and handle synchronous rejection separately from future failure.",
+      "Preserve MVC executor integration instead of silently replacing applicationTaskExecutor.",
+      "Do not claim virtual threads or AFTER_COMMIT make required reports durable.",
+      "Persist accepted job intent with recovery and test overload and restart behavior."
+    ]
+  },
+  {
+    "id": "boot4-replicated-schedule",
+    "boot": 4,
+    "skills": ["scheduled-tasks", "idempotency-patterns"],
+    "references": ["scheduled-tasks/examples/bad-overlap.java"],
+    "prompt": "Our Boot 4 service has four replicas. A fixed-rate @Scheduled @Async sweep charges overdue orders twice. The Redis lock expires after 30 seconds but a payment may take 60 seconds. We also miss work during deploys. Describe the smallest reliable design and tests; do not deploy anything.",
+    "criteria": [
+      "Identify replica triggers and detached async overlap instead of assuming scheduler pool size solves coordination.",
+      "Account for expired leases and stale workers; do not claim a lock gives exactly-once charging.",
+      "Use persisted claims/progress and provider idempotency or reconciliation for uncertain payment outcomes.",
+      "Bound batches, preserve tenant isolation and separate trigger from transactional work.",
+      "Test concurrent replicas, expiry during execution, downtime recovery and duplicate delivery."
+    ]
+  },
+  {
+    "id": "boot4-redis-counter-expiry",
+    "boot": 4,
+    "skills": ["spring-data-redis"],
+    "prompt": "Our rate limiter calls INCR then EXPIRE when count is one. After a crash some customers remain blocked permanently. Fix that gap, preserve our first-request fixed-window policy and explain behavior if Redis is unavailable.",
+    "criteria": [
+      "Make the decision atomic with expiring key creation, not two client round trips.",
+      "Keep later allowed and denied requests from resetting the existing window.",
+      "Validate quota/window and scope bounded keys to trusted tenant/principal and operation.",
+      "Explicitly choose failure policy without silently accepting unavailable Redis or claiming durable financial quotas.",
+      "Test concurrent admission, expiry and independent scopes against real Redis."
+    ]
+  },
+  {
     "id": "modular-monolith",
     "boot": 4,
     "skills": [

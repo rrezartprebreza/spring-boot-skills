@@ -1,4 +1,4 @@
-// ✅ GOOD — implements generated delegate, never modifies generated code, maps between models
+// GOOD — implements generated delegate, never modifies generated code, maps between models
 
 @Service
 @RequiredArgsConstructor

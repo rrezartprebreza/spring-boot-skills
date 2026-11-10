@@ -1,4 +1,4 @@
-// ❌ BAD — every common layering violation in one class
+// BAD — every common layering violation in one class
 
 @Service
 public class OrderService {
