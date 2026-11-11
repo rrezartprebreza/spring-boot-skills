@@ -61,7 +61,7 @@ Not as a summary of what's inside. The agent decides whether to load the skill b
 - [ ] Both Boot 3 and Boot 4 versions are updated, or the version-specific scope is documented
 - [ ] `bash scripts/validate-skills.sh` passes
 
-Install validator dependencies in a virtual environment first:
+Install validator dependencies with Python 3.11+ in a virtual environment first:
 
 ```sh
 python3 -m venv .venv
@@ -76,3 +76,9 @@ For executable template changes, run the matching Boot profiles in
 For skill selection or instruction changes, add a representative prompt and observable
 criteria to the [agent evaluations](evaluations/README.md). Record model results separately;
 do not describe structural validation as proof of model correctness.
+
+For specialist agents, edit `specialists/roles.json` and `specialists/shared.md`, not the
+generated client definitions. Run `python3 scripts/specialist_agents.py generate` and then
+the repository validation and unit tests above. Keep skill routes valid for both Boot
+versions. See [the specialist guide](specialists/README.md) for installation and native-client
+smoke tests; distinguish those behavioral runs from static schema checks.

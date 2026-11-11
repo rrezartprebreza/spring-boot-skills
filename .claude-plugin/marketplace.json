@@ -7,19 +7,35 @@
   "plugins": [
     {
       "name": "spring-boot-4-skills",
-      "description": "41 Spring Boot 4, Framework 7, security review, scheduling, async, supply chain, incident response, Spring AI, and MCP skills.",
+      "description": "41 Spring Boot 4, Framework 7, security review, scheduling, async, supply chain, incident response, Spring AI, and MCP skills, plus six specialist agents.",
       "source": "./",
       "strict": false,
       "skills": ["./skills/spring-boot-4/"],
+      "agents": [
+        "./specialists/claude/spring-architect.md",
+        "./specialists/claude/spring-implementer.md",
+        "./specialists/claude/spring-migration-engineer.md",
+        "./specialists/claude/spring-reviewer.md",
+        "./specialists/claude/spring-security-reviewer.md",
+        "./specialists/claude/spring-test-engineer.md"
+      ],
       "category": "development",
       "tags": ["java", "spring-boot", "spring-framework", "spring-ai", "mcp"]
     },
     {
       "name": "spring-boot-3-skills",
-      "description": "41 Spring Boot 3, Framework 6, security review, scheduling, async, supply chain, incident response, Spring AI, and MCP skills.",
+      "description": "41 Spring Boot 3, Framework 6, security review, scheduling, async, supply chain, incident response, Spring AI, and MCP skills, plus six specialist agents.",
       "source": "./",
       "strict": false,
       "skills": ["./skills/spring-boot-3/"],
+      "agents": [
+        "./specialists/claude/spring-architect.md",
+        "./specialists/claude/spring-implementer.md",
+        "./specialists/claude/spring-migration-engineer.md",
+        "./specialists/claude/spring-reviewer.md",
+        "./specialists/claude/spring-security-reviewer.md",
+        "./specialists/claude/spring-test-engineer.md"
+      ],
       "category": "development",
       "tags": ["java", "spring-boot", "spring-framework", "spring-ai", "mcp"]
     }

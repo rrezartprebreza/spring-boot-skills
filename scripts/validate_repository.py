@@ -177,6 +177,7 @@ def validate_no_icons() -> None:
 
 def validate_markdown_links() -> None:
     markdown_files = [ROOT / "README.md", ROOT / "CONTRIBUTING.md"]
+    markdown_files.extend((ROOT / "specialists").glob("*.md"))
     markdown_files.extend(ROOT.glob("skills/**/SKILL.md"))
     for path in markdown_files:
         text = path.read_text(encoding="utf-8")
@@ -314,6 +315,9 @@ def main() -> None:
     validate_markdown_links()
     validate_packaging({version: len(skills) for version, skills in skill_sets.items()})
     validate_version_sensitive_examples()
+    from specialist_agents import check as check_specialists
+
+    check_specialists(ROOT)
 
     for version in (3, 4):
         jwt_templates = BOOT_ROOTS[version] / "spring-security-jwt" / "templates"

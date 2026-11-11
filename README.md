@@ -306,6 +306,27 @@ The Codex package metadata lives in [`.agents/plugins/marketplace.json`](.agents
 and the two plugin manifests under [`plugins/`](plugins/). Direct copying into `.codex/skills/`
 remains supported for projects that do not use plugins.
 
+### Specialist agents for Claude Code and Codex
+
+Six optional specialists coordinate work using the existing versioned skills:
+`spring-architect`, `spring-implementer`, `spring-reviewer`, `spring-security-reviewer`,
+`spring-test-engineer`, and `spring-migration-engineer`.
+
+The Claude marketplace packages include these agents. For Codex, install project-local
+definitions after installing the matching skills (Python 3.11+ and
+`scripts/requirements.txt` required):
+
+```bash
+python3 scripts/specialist_agents.py install --client codex --project /path/to/my-app --dry-run
+python3 scripts/specialist_agents.py install --client codex --project /path/to/my-app
+```
+
+Use `--client claude` for local Claude definitions or `--client both` for both clients.
+Existing modified files are never overwritten. The agents check the effective Boot version,
+load relevant skills, and report evidence and test results; read roles do not implement fixes.
+They do not authorize commits, pushes, or deployments. See the
+[specialist guide](specialists/README.md) for roles, permissions, installation, and examples.
+
 **3. Tell your agent what you want**
 ```
 claude
@@ -516,7 +537,7 @@ Without the skill, the agent guesses: dead pre-GA artifact names, removed SDK co
 
 Skills get better with real-world use. If you find a gap — the agent did something stupid in your Spring Boot project — open a PR and add it to the Gotchas section of the relevant skill.
 
-Before opening a PR, install the validator dependency in a virtual environment and run:
+Before opening a PR, use Python 3.11+, install the validator dependency in a virtual environment, and run:
 
 ```bash
 python3 -m venv .venv
