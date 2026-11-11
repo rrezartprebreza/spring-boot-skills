@@ -176,7 +176,14 @@ def validate_no_icons() -> None:
 
 
 def validate_markdown_links() -> None:
+    """Check local file targets in repository guides and skill entrypoints.
+
+    Ignore remote URLs and fragment-only links, resolving file targets relative
+    to their Markdown source. Exit through fail() for a missing target; section
+    anchors and remote availability are outside this check's scope.
+    """
     markdown_files = [ROOT / "README.md", ROOT / "CONTRIBUTING.md"]
+    markdown_files.extend((ROOT / "specialists").glob("*.md"))
     markdown_files.extend(ROOT.glob("skills/**/SKILL.md"))
     for path in markdown_files:
         text = path.read_text(encoding="utf-8")
@@ -297,6 +304,12 @@ def validate_version_sensitive_examples() -> None:
 
 
 def main() -> None:
+    """Validate both Boot catalogs, packaging, specialists, and sensitive examples.
+
+    Stop at the first failed invariant and print catalog counts only after all
+    structural checks pass. This entrypoint does not execute Java fixtures or
+    model-driven agent evaluations.
+    """
     skill_sets = {
         version: {path.name for path in root.iterdir() if path.is_dir()}
         for version, root in BOOT_ROOTS.items()
@@ -314,6 +327,9 @@ def main() -> None:
     validate_markdown_links()
     validate_packaging({version: len(skills) for version, skills in skill_sets.items()})
     validate_version_sensitive_examples()
+    from specialist_agents import check as check_specialists
+
+    check_specialists(ROOT)
 
     for version in (3, 4):
         jwt_templates = BOOT_ROOTS[version] / "spring-security-jwt" / "templates"
