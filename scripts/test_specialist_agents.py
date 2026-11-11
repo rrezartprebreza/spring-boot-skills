@@ -6,12 +6,45 @@ from unittest.mock import patch
 
 import yaml
 
-from specialist_agents import CLIENTS, READ_ROLES, artifacts, check, install, load_roles, render
+from specialist_agents import CLIENTS, READ_ROLES, ROOT, artifacts, check, install, load_roles, render
+from validate_repository import load_json
 
 
 class SpecialistDefinitionTest(unittest.TestCase):
     def test_generated_files_and_marketplace_match_sources(self):
         check()
+
+    def test_standalone_check_requires_both_unique_marketplace_plugins(self):
+        """Reject absent, incomplete, duplicated, and malformed plugin collections."""
+        plugins = load_json(ROOT / ".claude-plugin" / "marketplace.json")["plugins"]
+        invalid_marketplaces = [
+            {},
+            {"plugins": None},
+            {"plugins": {}},
+            {"plugins": []},
+            {"plugins": [plugins[0]]},
+            {"plugins": [plugins[1]]},
+            {"plugins": [plugins[0], plugins[0]]},
+            {"plugins": [*plugins, plugins[0]]},
+            {"plugins": [plugins[0], {**plugins[1], "name": "unexpected-plugin"}]},
+            {"plugins": [plugins[0], {"name": []}]},
+            {"plugins": [plugins[0], None]},
+        ]
+        for marketplace in invalid_marketplaces:
+            with self.subTest(marketplace=marketplace):
+                with patch("specialist_agents.load_json", side_effect=lambda path: marketplace if path.name == "marketplace.json" else load_json(path)):
+                    with self.assertRaisesRegex(ValueError, "exactly one Boot 3 and one Boot 4"):
+                        check()
+
+    def test_standalone_check_accepts_reordered_plugins_but_rejects_missing_agents(self):
+        """Treat plugin ordering as irrelevant while still checking each agent list."""
+        marketplace = load_json(ROOT / ".claude-plugin" / "marketplace.json")
+        marketplace["plugins"].reverse()
+        with patch("specialist_agents.load_json", side_effect=lambda path: marketplace if path.name == "marketplace.json" else load_json(path)):
+            check()
+            marketplace["plugins"][0]["agents"] = []
+            with self.assertRaisesRegex(ValueError, "does not expose the six specialists"):
+                check()
 
     def test_clients_share_role_workflow_and_skill_routes(self):
         """Require both native formats to preserve every role's workflow and routes."""

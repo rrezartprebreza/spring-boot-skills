@@ -142,8 +142,17 @@ def check(root: Path = ROOT) -> None:
         else:
             parse_yaml(content.split("---\n", 2)[1], path)
     marketplace = load_json(root / ".claude-plugin" / "marketplace.json")
+    plugins = marketplace.get("plugins")
+    expected_names = {"spring-boot-3-skills", "spring-boot-4-skills"}
+    if (
+        not isinstance(plugins, list)
+        or len(plugins) != len(expected_names)
+        or any(not isinstance(plugin, dict) or not isinstance(plugin.get("name"), str) for plugin in plugins)
+        or {plugin["name"] for plugin in plugins} != expected_names
+    ):
+        raise ValueError("Claude marketplace must contain exactly one Boot 3 and one Boot 4 plugin")
     paths = sorted("./" + p.as_posix() for p in expected if p.parts[1] == "claude")
-    for plugin in marketplace["plugins"]:
+    for plugin in plugins:
         if plugin.get("agents") != paths:
             raise ValueError(f"Claude plugin {plugin['name']} does not expose the six specialists")
 
