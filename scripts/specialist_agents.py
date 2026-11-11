@@ -20,6 +20,12 @@ CLIENTS = {"claude": (".claude", ".md"), "codex": (".codex", ".toml")}
 
 
 def load_roles(root: Path = ROOT) -> dict:
+    """Return the six role definitions after validating their schema and skill routes.
+
+    Enforce each role's read/edit classification and require every referenced
+    skill in both Boot trees. Semantic violations raise ValueError; malformed
+    JSON is reported by the repository loader through SystemExit.
+    """
     roles = load_json(root / "specialists" / "roles.json")
     if set(roles) != ROLES:
         raise ValueError("the specialist catalog must contain exactly the six documented roles")
@@ -46,6 +52,12 @@ def load_roles(root: Path = ROOT) -> dict:
 
 
 def render(name: str, role: dict, common: str, client: str) -> str:
+    """Render a validated role as Claude Markdown or Codex TOML without writing.
+
+    The caller supplies a client from CLIENTS and shared instructions. Add
+    client-specific skill discovery and read-role boundaries while preserving
+    the role workflow; native string escaping keeps instructions intact.
+    """
     instructions = common.strip() + "\n\n## Skill discovery\n\n"
     if client == "claude":
         instructions += (
@@ -93,6 +105,11 @@ def render(name: str, role: dict, common: str, client: str) -> str:
 
 
 def artifacts(root: Path = ROOT) -> dict[Path, str]:
+    """Build repository-relative paths and contents for all twelve agent files.
+
+    Read and validate the canonical roles and shared instructions, raising
+    ValueError for empty shared content. No generated files are written here.
+    """
     roles = load_roles(root)
     common = (root / "specialists" / "shared.md").read_text(encoding="utf-8")
     if not common.strip():
@@ -105,6 +122,12 @@ def artifacts(root: Path = ROOT) -> dict[Path, str]:
 
 
 def check(root: Path = ROOT) -> None:
+    """Validate generated files, native syntax, and Claude marketplace exposure.
+
+    Require exactly the expected files and byte-for-byte agreement with the
+    canonical sources. Raise ValueError on drift or packaging mismatches;
+    filesystem and parser failures propagate without modifying the repository.
+    """
     expected = artifacts(root)
     for client in CLIENTS:
         actual = {p.relative_to(root) for p in (root / "specialists" / client).iterdir()}
@@ -126,6 +149,15 @@ def check(root: Path = ROOT) -> None:
 
 
 def install(project: Path, clients: list[str], dry_run: bool, root: Path = ROOT) -> list[Path]:
+    """Install missing definitions for selected CLIENTS and return their paths.
+
+    Preflight the existing project and all destinations before writing. Reject
+    symlink destinations, invalid parent directories, and differing files with
+    ValueError; identical definitions are left untouched. A dry run returns
+    planned paths without creating files or directories. On a write OSError,
+    remove files created by this call and re-raise; created directories may
+    remain. This is not an atomic transaction against concurrent filesystem edits.
+    """
     if not project.is_dir():
         raise ValueError(f"project directory does not exist: {project}")
     project = project.resolve()
@@ -163,6 +195,12 @@ def install(project: Path, clients: list[str], dry_run: bool, root: Path = ROOT)
 
 
 def main() -> None:
+    """Dispatch generate, check, or install from command-line arguments.
+
+    Generate updates checked-in definitions; install first checks their source
+    consistency and expands the 'both' client selection. Report filesystem and
+    validation errors as CLI diagnostics with exit status 1.
+    """
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("generate")

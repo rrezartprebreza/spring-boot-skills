@@ -14,6 +14,7 @@ class SpecialistDefinitionTest(unittest.TestCase):
         check()
 
     def test_clients_share_role_workflow_and_skill_routes(self):
+        """Require both native formats to preserve every role's workflow and routes."""
         generated = artifacts()
         roles = load_roles()
         self.assertEqual(len(generated), 12)
@@ -33,6 +34,7 @@ class SpecialistDefinitionTest(unittest.TestCase):
                     self.assertIn(f"`{skill}`", codex["developer_instructions"])
 
     def test_read_roles_have_no_claude_write_or_shell_tools(self):
+        """Check Claude tool restrictions and Codex's inherited-permission contract."""
         generated = artifacts()
         for name in READ_ROLES:
             with self.subTest(role=name):
@@ -94,6 +96,7 @@ class SpecialistInstallTest(unittest.TestCase):
         self.assertEqual(list(self.project.iterdir()), [])
 
     def test_install_is_idempotent_and_preserves_unrelated_config(self):
+        """Verify repeat installation is a no-op and preserves existing client config."""
         config = self.project / ".codex" / "config.toml"
         config.parent.mkdir()
         config.write_text('model = "existing-model"\n')
@@ -146,6 +149,7 @@ class SpecialistInstallTest(unittest.TestCase):
         protected.write_text("keep")
 
         def failing_open(path, *args, **kwargs):
+            """Fail one exclusive agent-file creation after an earlier file was written."""
             if path.name == "spring-implementer.toml" and args and args[0] == "x":
                 raise OSError("simulated write failure")
             return original_open(path, *args, **kwargs)
