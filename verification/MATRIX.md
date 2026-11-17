@@ -17,13 +17,14 @@ Spring AI 1.0.0 / 2.0.0 respectively. Database CI uses PostgreSQL 16.
 | configuration-properties | ClientProperties, both trees | Valid and invalid startup configuration |
 | container-native-deployment | No | No |
 | domain-driven-design | No | No |
-| event-driven-messaging | No | No |
+| event-driven-messaging | good-consumer.java, both trees | PostgreSQL duplicate/concurrent invocation and atomic claim/effect rollback; direct calls, no broker/offset/DLT verification |
 | flyway-migrations | SQL, not Java | Shipped migration examples, concurrent index and documented baseline setting |
 | hateoas | No | No |
 | hexagonal-architecture | No | No |
 | http-interface-clients | CatalogHttpClient, both trees | Real stub HTTP server: transient/permanent status classification and read timeout |
 | idempotency-patterns | SQL, not Java | Claim schema, contention, tenant isolation and rollback; not a payment workflow |
 | java-supply-chain-security | Python helper, not Java | Offline CycloneDX inventory, malformed input, size/depth limits and CLI; no scanner/signature verification |
+| jvm-diagnostics | No Java shipped | Synthetic scenarios; no live attach/profiling or tuning benchmark |
 | layered-architecture | CreateOrderRequest, both trees | Bean Validation and HTTP validation; not the full architecture |
 | mcp-server | Boot 4 OrderMcpTools | Compilation only; no protocol session tests |
 | multi-module-maven | No | No |
@@ -39,18 +40,20 @@ Spring AI 1.0.0 / 2.0.0 respectively. Database CI uses PostgreSQL 16.
 | security-audit-logging | SecurityAuditRecord, both trees | Typed fields, identity requirements and correlation validation; no sink/outbox integration |
 | spring-ai-integration | No | No provider or conversation tests |
 | spring-ai-security | DocumentReadTool, both trees | Scoped in-memory reads, argument validation, concurrent call budget and output limits; no model/adapter tests |
-| spring-batch | No | No |
+| spring-batch | No shipped templates | Equivalent two-step tasklet fixture: H2 JDBC metadata, rollback, same-instance restart and completed-instance rejection; no chunk/JPA reader or crash-recovery tests |
+| spring-boot-scaffolding | No generator shipped | Synthetic scenarios; no live Initializr-generated application verification |
+| spring-boot-verification | No runner shipped | Synthetic scenarios; no proof of an arbitrary application's readiness |
 | spring-boot-migration | No | No generated application migration tests |
 | spring-cloud-gateway | No | No |
 | spring-data-jpa | No | Fixture entity checks mappings, versioning and rollback; not every shipped snippet |
 | spring-data-redis | Config, coalescing manager, optional lookup and atomic limiter, both trees | Redis 7.4: concurrent loads, TTL, serialization, transaction callbacks, concurrent admission and fixed-window expiry; injected outage failures and real recovered reads |
 | spring-incident-response | Python helper, not Java | Local hashes, changed/non-regular file rejection and CLI; no live collection or provenance proof |
-| spring-modulith | No | No |
+| spring-modulith | Minimal fixture packages, not shipped examples | Modulith 1.4.13 / 2.1.0 accept public API dependency and reject internal access; no durable event publication tests |
 | spring-security-jwt | Templates, both trees | Token/account rejection, authorization and real HTTP authentication |
 | spring-security-review | DocumentAccess, both trees | Identity/scope rejection and scoped in-memory lookup; no HTTP chain or real SQL for this template |
 | testing-pyramid | No inline examples | Equivalent HTTP workflow fixture; application fixtures and Testcontainers snippets not compiled |
 | transactional-patterns | No | Fixture rollback only; no full skill-specific suite |
-| webflux-reactive-patterns | No | No |
+| webflux-reactive-patterns | good-reactive-service.java, both trees | Reactor found/missing/error, timeout and cancellation; no HTTP/R2DBC/context propagation tests |
 
 ## Agent evidence
 

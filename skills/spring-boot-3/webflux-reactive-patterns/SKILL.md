@@ -42,6 +42,14 @@ Use WebFlux when the complete request path can benefit from non-blocking I/O.
 
 - See `examples/good-reactive-service.java` and `examples/bad-reactive-service.java`.
 
+## Verification scope
+
+The workflow fixture compiles good-reactive-service.java directly and checks found/missing
+results, upstream errors, virtual-time timeout and cancellation propagation. It does not
+verify a WebFlux HTTP server, R2DBC driver or reactive tenant context.
+See the [coverage matrix](https://github.com/rrezartprebreza/spring-boot-skills/blob/main/verification/MATRIX.md)
+for pinned versions and remaining gaps.
+
 ## Gotchas
 
 - Agent calls `block()` in a controller or service - keep the full request path non-blocking.

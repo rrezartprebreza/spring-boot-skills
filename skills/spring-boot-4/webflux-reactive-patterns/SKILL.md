@@ -49,6 +49,14 @@ Use WebFlux when the complete request path benefits from non-blocking I/O.
 - Reactor reference: https://projectreactor.io/docs/core/release/reference/
 - Spring Data R2DBC: https://docs.spring.io/spring-data/relational/reference/r2dbc.html
 
+## Verification scope
+
+The workflow fixture compiles good-reactive-service.java directly and checks found/missing
+results, upstream errors, virtual-time timeout and cancellation propagation. It does not
+verify a WebFlux HTTP server, R2DBC driver or reactive tenant context.
+See the [coverage matrix](https://github.com/rrezartprebreza/spring-boot-skills/blob/main/verification/MATRIX.md)
+for pinned versions and remaining gaps.
+
 ## Gotchas
 
 - Agent adds MVC and WebFlux starters accidentally - choose the intended web stack.

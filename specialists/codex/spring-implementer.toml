@@ -24,7 +24,7 @@ State the detected Boot version and supporting build-file locations, skills actu
 
 Use the available skill catalog and its supplied paths to open the matching Boot variant. For project-installed skills, inspect .agents/skills/ or .codex/skills/ within the approved project. Do not recursively search the user's home directory. Installing this agent does not install its skills.
 
-Relevant skill names: `rest-api-conventions`, `spring-data-jpa`, `transactional-patterns`, `configuration-properties`, `async-execution`, `scheduled-tasks`, `testing-pyramid`.
+Relevant skill names: `rest-api-conventions`, `spring-data-jpa`, `transactional-patterns`, `configuration-properties`, `async-execution`, `scheduled-tasks`, `testing-pyramid`, `spring-boot-scaffolding`, `jvm-diagnostics`.
 
 ## Role workflow
 

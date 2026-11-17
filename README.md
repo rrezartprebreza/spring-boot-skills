@@ -9,7 +9,7 @@
 
 <br/>
 
-[![skills](https://img.shields.io/badge/skills-41_%C3%97_2-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
+[![skills](https://img.shields.io/badge/skills-44_%C3%97_2-6DB33F?style=for-the-badge&labelColor=0f172a)](skills/)
 [![Spring Boot](https://img.shields.io/badge/Spring_Boot-3.x_%7C_4.x-6DB33F?style=for-the-badge&labelColor=0f172a&logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Java](https://img.shields.io/badge/Java-17%2B-ED8B00?style=for-the-badge&labelColor=0f172a&logo=openjdk&logoColor=white)](https://openjdk.org/)
 [![License](https://img.shields.io/badge/License-MIT-94a3b8?style=for-the-badge&labelColor=0f172a)](LICENSE)
@@ -107,6 +107,17 @@ versions together and recheck the linked official sources before adopting a newe
 | Skill | Description | Tags |
 |-------|-------------|------|
 | [**configuration-properties**](skills/spring-boot-4/configuration-properties/) | Typed binding, startup validation, duration units and secret handling. | `configuration` `validation` |
+
+### Project Workflows
+
+| Skill | Description | Tags |
+|-------|-------------|------|
+| [**spring-boot-scaffolding**](skills/spring-boot-4/spring-boot-scaffolding/) | Metadata-driven new projects, safe staging, Maven/Gradle selection and verified startup. | `scaffolding` `workflow` |
+| [**spring-boot-verification**](skills/spring-boot-4/spring-boot-verification/) | Configured build, analysis, test and security gates with explicit blocked/skipped evidence. | `verification` `testing` |
+| [**jvm-diagnostics**](skills/spring-boot-4/jvm-diagnostics/) | Scoped CPU, heap, GC and thread diagnosis with bounded, approved evidence collection. | `jvm` `operations` |
+
+These workflows target **Claude Code and Codex**, with separate Boot 3 and Boot 4 variants.
+Scaffolding is guidance, not a bundled generator; verification does not deploy or bypass gates.
 
 ### 🏗️ Architecture
 
@@ -516,7 +527,7 @@ Without the skill, the agent guesses: dead pre-GA artifact names, removed SDK co
 ## 🗺️ Roadmap
 
 - [x] Skills for Spring Batch
-- [x] Spring Boot 4 versions of all 41 skills (`skills/spring-boot-4/`)
+- [x] Spring Boot 4 versions of all 44 skills (`skills/spring-boot-4/`)
 - [x] Skills for Spring Cloud Gateway
 - [x] Skills for Spring WebFlux / reactive patterns
 - [x] Skills for multi-tenancy
@@ -547,7 +558,7 @@ bash scripts/validate-skills.sh
 ```
 
 The validator parses YAML safely, rejects duplicate keys, and checks both version trees, metadata,
-README links and marketplace packaging. There are **41 topics with Boot 3 and Boot 4 variants**.
+README links and marketplace packaging. There are **44 topics with Boot 3 and Boot 4 variants**.
 
 ### Executable verification
 
@@ -571,6 +582,11 @@ for the exact scope and remaining gaps.
 Additional runtime checks cover external issuer/subject identity, tenant-scoped database
 access, Redis concurrency and serialization, and bounded HTTP read retries. The skills
 document failure policies and limitations rather than treating every example as a universal default.
+
+The [workflow fixture](verification/README.md#workflow-contract-verification) adds Reactor
+timeout/cancellation tests, PostgreSQL message deduplication/rollback, JDBC Batch restart
+semantics and Modulith boundary checks. Broker delivery, chunk/JPA templates, crash recovery
+and durable module-event publication remain outside this fixture's scope.
 
 [Agent evaluations](evaluations/README.md) provide repeatable prompts and review criteria for
 Claude Code and Codex. Transcript collection and human review are separate from CI validation;

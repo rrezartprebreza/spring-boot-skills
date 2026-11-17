@@ -48,6 +48,15 @@ Design for at-least-once delivery unless the complete system proves stronger sem
 - Spring Kafka reference: https://docs.spring.io/spring-kafka/reference/
 - Spring AMQP reference: https://docs.spring.io/spring-amqp/reference/
 
+## Verification scope
+
+The workflow fixture compiles good-consumer.java directly and checks duplicate delivery,
+concurrent invocation and claim/effect rollback against PostgreSQL. It calls the consumer
+directly: broker serialization, listener wiring, offsets, retries and dead-letter delivery
+are not covered.
+See the [coverage matrix](https://github.com/rrezartprebreza/spring-boot-skills/blob/main/verification/MATRIX.md)
+for pinned versions and remaining gaps.
+
 ## Gotchas
 
 - Agent assumes broker transactions make external side effects exactly once - consumers still need idempotency.

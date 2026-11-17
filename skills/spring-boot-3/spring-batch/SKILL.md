@@ -232,6 +232,15 @@ Spring Batch earns its complexity (metadata tables, restart, chunking) on **larg
 auditable bulk jobs**. For a quick one-off async task, `@Async` or a `@Scheduled` loop is lighter.
 For durable background jobs with retry, a job queue is a better fit. Match the tool to the scale.
 
+## Verification scope
+
+The workflow fixture exercises a two-step tasklet job with real JDBC metadata in H2: a
+failed step rolls back, a restart retains the completed step, and a completed instance
+cannot be rerun with the same identifying parameters. It does not compile ChunkJobConfig
+or validate JPA readers, chunk retry/skip, crash recovery or PostgreSQL Batch metadata.
+See the [coverage matrix](https://github.com/rrezartprebreza/spring-boot-skills/blob/main/verification/MATRIX.md)
+for pinned versions and remaining gaps.
+
 ## Gotchas
 - Agent adds `@EnableBatchProcessing` — on Boot 3 it **disables** auto-config; remove it, just inject `JobRepository`
 - Agent uses `JobBuilderFactory` / `StepBuilderFactory` — removed in Batch 5; use `new JobBuilder(name, repo)` / `new StepBuilder(name, repo)`
