@@ -28,6 +28,11 @@ suite and project-specific tests.
 No unattended model calls run in CI. CI validates case structure; model evaluation requires an
 authenticated CLI. No model benchmark score is claimed without reviewed transcripts.
 
+Verification, JVM diagnosis and scaffolding scenarios cover blocked gates/stale reports,
+offline-only incident evidence, occupied destinations and unavailable metadata in both
+Boot trees. They are evaluation protocols, not native-client discovery results or completed
+Claude/Codex model benchmarks.
+
 Security scenarios cover object authorization, SBOM interpretation, AI tool/memory boundaries,
 audit commit/failure behavior, and offline incident handling in both Boot trees. They use
 synthetic inputs and do not authorize active scans, private-data uploads or production changes.

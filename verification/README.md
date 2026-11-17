@@ -64,6 +64,33 @@ mvn -f verification/spring-boot-4-mcp/pom.xml package
 Illustrative snippets outside the selected source includes are not compiled. Agent
 [response evaluations](../evaluations/README.md) are separate from Java regression tests.
 
+## Workflow contract verification
+
+`verification/workflows` uses the same Boot 3.5.16 / 4.1.0 profiles and Java 17/21
+matrix. It directly compiles the selected tree's reactive service and message consumer.
+Run against the disposable PostgreSQL instance described above:
+
+```sh
+mvn -f verification/workflows/pom.xml -Pboot3 clean test
+mvn -f verification/workflows/pom.xml -Pboot4 clean test
+```
+
+- Reactor tests assert success/missing/error and cancellation on timeout or caller cancellation.
+  Virtual time avoids real sleeps. They do not start a WebFlux server or R2DBC connection.
+- Message tests use PostgreSQL unique claims and the consumer's real TransactionTemplate;
+  duplicate and concurrent calls apply one effect, while a failure rolls back claim and effect.
+  No Kafka broker runs: serialization, offset acknowledgement, listener wiring and DLT remain unverified.
+- Batch fixtures use version-specific APIs with isolated H2 JDBC job metadata. They prove
+  failed-step rollback and restart with the same identifying parameters, retained completed
+  steps and completed-instance rejection. These are equivalent tasklet fixtures, not compilation
+  of the illustrative chunk/JPA template or proof of crash/distributed-job recovery.
+- Modulith 1.4.13 / 2.1.0 checks use minimal compiled application packages; public API access
+  passes and internal access fails. Fixtures live in main sources because Modulith excludes
+  test classes by default. No event publication registry or listener recovery is tested.
+
+Missing PostgreSQL fails the suite rather than silently skipping it. Only randomly named
+schemas created by these tests are removed. Keep the fixture away from shared/production data.
+
 ## AI audit verification
 
 ```sh

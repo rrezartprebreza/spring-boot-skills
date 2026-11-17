@@ -41,6 +41,15 @@ Design for at-least-once delivery unless the complete system proves stronger sem
 
 - See `examples/good-consumer.java` and `examples/bad-consumer.java`.
 
+## Verification scope
+
+The workflow fixture compiles good-consumer.java directly and checks duplicate delivery,
+concurrent invocation and claim/effect rollback against PostgreSQL. It calls the consumer
+directly: broker serialization, listener wiring, offsets, retries and dead-letter delivery
+are not covered.
+See the [coverage matrix](https://github.com/rrezartprebreza/spring-boot-skills/blob/main/verification/MATRIX.md)
+for pinned versions and remaining gaps.
+
 ## Gotchas
 
 - Agent assumes exactly-once delivery because the broker supports transactions - end-to-end side effects still need idempotency.

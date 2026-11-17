@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring Boot 4 JVM Diagnostics"
+  short_description: "Diagnose JVM CPU, memory and thread problems"
+  default_prompt: "Use $jvm-diagnostics for this Spring Boot 4 project and report evidence, scope and unverified steps."

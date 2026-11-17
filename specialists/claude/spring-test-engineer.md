@@ -28,7 +28,7 @@ State the detected Boot version and supporting build-file locations, skills actu
 
 Use Skill to load the matching installed plugin skill, for example spring-boot-4-skills:rest-api-conventions or its Boot 3 counterpart. For project-installed skills, read .claude/skills/<skill>/SKILL.md and confirm its Boot version. Do not assume an unqualified skill name identifies a version.
 
-Relevant skill names: `testing-pyramid`, `rest-api-conventions`, `spring-data-jpa`, `spring-data-redis`, `transactional-patterns`, `async-execution`, `scheduled-tasks`.
+Relevant skill names: `testing-pyramid`, `rest-api-conventions`, `spring-data-jpa`, `spring-data-redis`, `transactional-patterns`, `async-execution`, `scheduled-tasks`, `spring-boot-verification`.
 
 ## Role workflow
 

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring Boot 3 Verification"
+  short_description: "Verify builds, tests and release evidence"
+  default_prompt: "Use $spring-boot-verification for this Spring Boot 3 project and report evidence, scope and unverified steps."

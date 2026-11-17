@@ -41,6 +41,15 @@ can cause redelivery. Define retry/republication and retention explicitly, and t
 listeners and application restarts. For external brokers, use supported event externalization
 with persistent publication tracking; do not promise end-to-end exactly-once processing.
 
+## Verification scope
+
+The workflow fixture checks a valid public-API dependency and rejection of an internal
+package dependency using real ApplicationModules verification. It uses separate minimal
+fixture packages, not the application's Application class; durable event publication,
+listener retries and process-restart behavior are not covered.
+See the [coverage matrix](https://github.com/rrezartprebreza/spring-boot-skills/blob/main/verification/MATRIX.md)
+for pinned versions and remaining gaps.
+
 ## Gotchas
 
 - Agent imports a repository from another module's internal package - call its public API or consume an event.

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Spring Boot 3 Scaffolding"
+  short_description: "Scaffold and verify a new Spring Boot project"
+  default_prompt: "Use $spring-boot-scaffolding for this Spring Boot 3 project and report evidence, scope and unverified steps."
